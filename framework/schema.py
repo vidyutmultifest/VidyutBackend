@@ -23,7 +23,6 @@ class SocialAuth(graphql_social_auth.SocialAuthJWT):
             raise ImportError(
                 'django-graphql-jwt not installed.\n'
                 'Use `pip install \'django-graphql-social-auth[jwt]\'`.')
-        print(get_refresh_token(social.user))
         return cls(user=social.user, token=get_token(social.user))
 
 
