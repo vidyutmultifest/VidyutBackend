@@ -7,6 +7,7 @@ class Query(graphene.ObjectType):
     users = graphene.Field(graphene.Boolean)
 
 
+
 class UserType(graphene.ObjectType):
     username = graphene.Field(graphene.String)
 

@@ -80,6 +80,7 @@ AUTHENTICATION_BACKENDS = [
     'graphql_jwt.backends.JSONWebTokenBackend',
     'django.contrib.auth.backends.ModelBackend',
     'social_core.backends.google.GoogleOAuth2',
+    'social_core.backends.microsoft.MicrosoftOAuth2',
 ]
 
 LANGUAGE_CODE = 'en-us'
