@@ -1,0 +1,50 @@
+{% extends 'admin/login.html' %}
+{% load static %}
+{% block branding %}
+<style>
+body.login {
+    background: #ffc107;
+    min-height: 100vh;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+ }
+.login #header {
+    height: auto;
+    padding: 1rem;
+    background: #222;
+}
+.login #branding { width: 100%; }
+.login .head { display: flex; align-items: center; justify-content: center; }
+.login #container {
+    background: #fff;
+    border: none;
+    border-radius: 4px;
+    box-shadow: 2px 3px 5px #333;
+    overflow: hidden;
+    width: 50vw;
+    margin: 0;
+    max-width: 400px;
+}
+.login .submit-row
+{
+    display: flex;
+    justify-content: center;
+    padding: 1.5rem 0;
+}
+
+.login .submit-row input
+{
+    background: #ffc107;
+    color: black;
+    display: block;
+    width: 100%;
+}
+</style>
+    <div class="head">
+        <h1>CMS</h1>
+    </div>
+{% endblock %}
+{% block body %}
+        <a href="{% url 'social:begin' backend='google-oauth2' %}"><button>Login With Google</button></a>
+{% endblock %}
