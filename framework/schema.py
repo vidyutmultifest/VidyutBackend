@@ -2,10 +2,11 @@ import graphene
 import graphql_jwt
 import graphql_social_auth
 
+from participants.schema import Query as ParticipantQueries
 
-class Query(graphene.ObjectType):
-    users = graphene.Field(graphene.Boolean)
 
+class Query(ParticipantQueries, graphene.ObjectType):
+    pass
 
 
 class UserType(graphene.ObjectType):

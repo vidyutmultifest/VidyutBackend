@@ -10,3 +10,6 @@ urlpatterns = [
     url('', include('social_django.urls', namespace='social')),
     path('', csrf_exempt(GraphQLView.as_view(graphiql=True))),
 ]
+
+admin.site.index_title = 'Vidyut Admin Dashboard'
+admin.site.site_title = 'Vidyut Backend'
