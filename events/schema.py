@@ -25,12 +25,24 @@ class CompetitionObj(WorkshopObj, graphene.ObjectType):
 
 
 class Query(object):
+    getCompetition = graphene.Field(CompetitionObj, slug=graphene.String(required=True))
     listCompetitions = graphene.List(CompetitionObj)
+    getWorkshop = graphene.Field(WorkshopObj, slug=graphene.String(required=True))
     listWorkshops = graphene.List(WorkshopObj)
+
+    @staticmethod
+    def resolve_getCompetition(self, info, **kwargs):
+        slug = kwargs.get('slug')
+        return Competition.objects.values().get(slug=slug)
 
     @staticmethod
     def resolve_listCompetitions(self, info, **kwargs):
         return Competition.objects.values().all()
+
+    @staticmethod
+    def resolve_getWorkshop(self, info, **kwargs):
+        slug = kwargs.get('slug')
+        return Workshop.objects.values().get(slug=slug)
 
     @staticmethod
     def resolve_listWorkshops(self, info, **kwargs):
