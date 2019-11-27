@@ -1,15 +1,26 @@
+import uuid
 from django.db import models
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
+from events.models import Workshop, Competition
 
 
 class Product(models.Model):
-    name = models.CharField(max_length=150)
-    slug = models.SlugField()
-    description = models.CharField(max_length=200)
-    price = models.IntegerField()
+    productID = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
+    workshop = models.OneToOneField(Workshop, on_delete=models.PROTECT, null=True, blank=True)
+    competition = models.OneToOneField(Competition, on_delete=models.PROTECT, null=True, blank=True)
+    isAvailable = models.BooleanField(default=True)
 
     def __str__(self):
-        return self.name
+        return str(self.product)
+
+    @property
+    def product(self):
+        if self.workshop is not None:
+            return self.workshop
+        if self.competition is not None:
+            return self.competition
+        return None
 
 
 class PromoCode(models.Model):

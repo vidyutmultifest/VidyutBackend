@@ -2,13 +2,27 @@ import graphene
 from .models import *
 
 
-class WorkshopObj(graphene.ObjectType):
+class DepartmentObj(graphene.ObjectType):
+    name = graphene.String()
+    slug = graphene.String()
+
+
+class ContactPersonObj(graphene.ObjectType):
+    name = graphene.String()
+    phone = graphene.String()
+    email = graphene.String()
+
+
+class EventObj(graphene.ObjectType):
     name = graphene.String()
     slug = graphene.String()
     cover = graphene.String()
     description = graphene.String()
+    organizer = graphene.String()
     details = graphene.String()
     fee = graphene.Int()
+    department = graphene.Field(DepartmentObj)
+    contacts = graphene.List(ContactPersonObj)
 
     def resolve_cover(self, info):
         url = None
@@ -16,12 +30,27 @@ class WorkshopObj(graphene.ObjectType):
             url = info.context.build_absolute_uri(self['cover'])
         return url
 
+    def resolve_department(self, info):
+        return Department.objects.values().get(id=self['dept_id'])
 
-class CompetitionObj(WorkshopObj, graphene.ObjectType):
+
+class WorkshopObj(EventObj, graphene.ObjectType):
+    duration = graphene.String()
+
+    def resolve_contacts(self, info):
+        contacts = Workshop.objects.get(slug=self['slug']).contacts
+        return contacts.values()
+
+
+class CompetitionObj(EventObj, graphene.ObjectType):
     entryFee = graphene.Int()
     firstPrize = graphene.String()
     secondPrize = graphene.String()
     thirdPrize = graphene.String()
+
+    def resolve_contacts(self, info):
+        contacts = Competition.objects.get(slug=self['slug']).contacts
+        return contacts.values()
 
 
 class Query(object):

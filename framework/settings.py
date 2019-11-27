@@ -23,7 +23,8 @@ INSTALLED_APPS = [
     'ckeditor',
     'events',
     'participants',
-    'products'
+    'products',
+    'payment'
 ]
 
 MIDDLEWARE = [

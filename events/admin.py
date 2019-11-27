@@ -23,3 +23,8 @@ class WorkshopAdmin(admin.ModelAdmin):
     list_display = ('name', 'dept', 'fee',)
     select2 = select2_modelform(Workshop, attrs={'width': '250px'})
     form = select2
+
+
+@admin.register(ContactPerson)
+class ContactPersonAdmin(admin.ModelAdmin):
+    list_display = ('name', 'phone', 'email',)

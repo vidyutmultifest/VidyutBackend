@@ -6,8 +6,6 @@ from .models import *
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('name', 'price',)
-    search_fields = ['name']
     select2 = select2_modelform(Product, attrs={'width': '250px'})
     form = select2
 
