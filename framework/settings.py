@@ -21,7 +21,9 @@ INSTALLED_APPS = [
     'social_django',
     'easy_select2',
     'ckeditor',
-    'participants'
+    'events',
+    'participants',
+    'products'
 ]
 
 MIDDLEWARE = [

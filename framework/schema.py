@@ -2,10 +2,12 @@ import graphene
 import graphql_jwt
 import graphql_social_auth
 
+from events.schema import Query as EventQueries
 from participants.schema import Query as ParticipantQueries
+from products.schema import Query as ProductQueries
 
 
-class Query(ParticipantQueries, graphene.ObjectType):
+class Query(EventQueries, ParticipantQueries, ProductQueries, graphene.ObjectType):
     pass
 
 

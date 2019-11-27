@@ -16,15 +16,21 @@ class College(models.Model):
 
 
 class Profile(models.Model):
+    def get_image_path(self, filename):
+        ext = filename.split('.')[-1]
+        filename = "%s.%s" % (uuid.uuid4(), ext)
+        return '/uploads/images/profile/' + filename
+
     vidyutID = models.CharField(max_length=256, unique=True)
     vidyutHash = models.UUIDField(primary_key=True, default=uuid.uuid4)
     user = models.OneToOneField(
-                User, on_delete=models.CASCADE,
-                related_name='Profile',
-                verbose_name='User',
+        User, on_delete=models.CASCADE,
+        related_name='Profile',
+        verbose_name='User',
     )
     college = models.ForeignKey(College, on_delete=models.PROTECT, null=True, blank=True)
-    photo = models.ImageField(upload_to='./static/avatars', null=True, blank=True)
+    photo = models.ImageField(upload_to=get_image_path, null=True, blank=True)
+    idPhoto = models.ImageField(upload_to=get_image_path, null=True, blank=True)
     graduationYear = models.IntegerField(null=True, blank=True)
     phone = models.CharField(max_length=15, null=True, blank=True)
     location = models.CharField(max_length=50, null=True, blank=True)
@@ -35,7 +41,7 @@ class Profile(models.Model):
 
 @receiver(post_save, sender=User)
 def create_item(sender, instance, **kwargs):
-     p, created = Profile.objects.get_or_create(user=instance)
-     if created:
-         p.vidyutID = 'V' + str(1000 + p.user.id)
-         p.save()
+    p, created = Profile.objects.get_or_create(user=instance)
+    if created:
+        p.vidyutID = 'V' + str(1000 + p.user.id)
+        p.save()
