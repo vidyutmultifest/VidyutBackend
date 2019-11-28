@@ -3,6 +3,7 @@ from .models import *
 from pytz import timezone
 from datetime import datetime, timedelta
 
+
 class DepartmentObj(graphene.ObjectType):
     name = graphene.String()
     slug = graphene.String()
@@ -29,7 +30,7 @@ class EventObj(graphene.ObjectType):
 
     def resolve_cover(self, info):
         url = None
-        if self['cover'] is not None:
+        if self['cover'] is not '':
             url = info.context.build_absolute_uri(self['cover'])
         return url
 

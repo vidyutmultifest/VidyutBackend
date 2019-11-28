@@ -1,7 +1,6 @@
 import graphene
 from graphql_jwt.decorators import login_required
 from django.db.models import Q
-from events.schema import EventObj
 from .models import *
 
 
