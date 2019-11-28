@@ -12,7 +12,9 @@ class PromocodeObj(graphene.ObjectType):
 class ProductDetailObj(graphene.ObjectType):
     name = graphene.String()
     photo = graphene.String()
-    fee = graphene.Int()
+    price = graphene.Int()
+    slug = graphene.String()
+    type = graphene.String()
 
 
 class ProductObj(graphene.ObjectType):
@@ -23,9 +25,10 @@ class ProductObj(graphene.ObjectType):
     def resolve_product(self, info):
         product = Product.objects.get(productID=self['productID']).product
         photo = None
-        if product.cover is not None:
+        productType = type(product).__name__
+        if product.cover:
             photo = info.context.build_absolute_uri(product.cover.url)
-        return {"name": product.name, "photo": photo, "price": product.fee}
+        return {"name": product.name, "photo": photo, "price": product.fee, "slug": product.slug, "type": productType}
 
 
 class Query(object):
