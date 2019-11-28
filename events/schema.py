@@ -2,6 +2,7 @@ import graphene
 from .models import *
 from pytz import timezone
 from datetime import datetime, timedelta
+from products.models import *
 
 
 class DepartmentObj(graphene.ObjectType):
@@ -27,6 +28,7 @@ class EventObj(graphene.ObjectType):
     isRecommended = graphene.Boolean()
     department = graphene.Field(DepartmentObj)
     contacts = graphene.List(ContactPersonObj)
+    productID = graphene.String()
 
     def resolve_cover(self, info):
         url = None
@@ -51,6 +53,9 @@ class WorkshopObj(EventObj, graphene.ObjectType):
         contacts = Workshop.objects.get(slug=self['slug']).contacts
         return contacts.values()
 
+    def resolve_productID(self, info):
+        return Product.objects.get(workshop_id=self['id']).productID
+
 
 class CompetitionObj(EventObj, graphene.ObjectType):
     entryFee = graphene.Int()
@@ -61,6 +66,9 @@ class CompetitionObj(EventObj, graphene.ObjectType):
     def resolve_contacts(self, info):
         contacts = Competition.objects.get(slug=self['slug']).contacts
         return contacts.values()
+
+    def resolve_productID(self, info):
+        return Product.objects.get(competition_id=self['id']).productID
 
 
 class Query(object):
