@@ -58,6 +58,8 @@ class Competition(models.Model):
     secondPrize = models.CharField(max_length=150, null=True, blank=True)
     thirdPrize = models.CharField(max_length=150, null=True, blank=True)
     contacts = models.ManyToManyField(ContactPerson, blank=True)
+    createdAt = models.DateTimeField(auto_now_add=True)
+    isRecommended = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name

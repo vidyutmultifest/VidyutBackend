@@ -1,6 +1,7 @@
 import graphene
 from .models import *
-
+from pytz import timezone
+from datetime import datetime, timedelta
 
 class DepartmentObj(graphene.ObjectType):
     name = graphene.String()
@@ -21,6 +22,8 @@ class EventObj(graphene.ObjectType):
     organizer = graphene.String()
     details = graphene.String()
     fee = graphene.Int()
+    isNew = graphene.Boolean()
+    isRecommended = graphene.Boolean()
     department = graphene.Field(DepartmentObj)
     contacts = graphene.List(ContactPersonObj)
 
@@ -32,6 +35,12 @@ class EventObj(graphene.ObjectType):
 
     def resolve_department(self, info):
         return Department.objects.values().get(id=self['dept_id'])
+
+    def resolve_isNew(self, info):
+        limit = datetime.now() - timedelta(days=3)
+        if self['createdAt'].replace(tzinfo=timezone('Asia/Calcutta')) > limit.replace(tzinfo=timezone('Asia/Calcutta')):
+            return True
+        return False
 
 
 class WorkshopObj(EventObj, graphene.ObjectType):

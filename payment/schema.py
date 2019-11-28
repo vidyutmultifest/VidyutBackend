@@ -2,6 +2,7 @@ import graphene
 from .models import *
 from graphql_jwt.decorators import login_required
 from products.schema import ProductObj
+from pytz import timezone
 
 
 class TransactionObj(graphene.ObjectType):
@@ -9,12 +10,18 @@ class TransactionObj(graphene.ObjectType):
     timestamp = graphene.String()
     amount = graphene.String()
 
+    def resolve_timestamp(self, info):
+        return self['timestamp'].replace(tzinfo=timezone('Asia/Calcutta'))
+
 
 class OrderObj(graphene.ObjectType):
     orderID = graphene.String()
     timestamp = graphene.String()
     products = graphene.List(ProductObj)
     transaction = graphene.Field(TransactionObj)
+
+    def resolve_timestamp(self, info):
+        return self['timestamp'].replace(tzinfo=timezone('Asia/Calcutta'))
 
     def resolve_products(self, info, **kwargs):
         return Order.objects.get(orderID=self['orderID']).products.values()
