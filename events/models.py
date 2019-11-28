@@ -20,6 +20,38 @@ class Department(models.Model):
         return self.name
 
 
+class Ticket(models.Model):
+    def get_image_path(self, filename):
+        ext = filename.split('.')[-1]
+        filename = 'vidyut_ticket_' + "%s.%s" % (uuid.uuid4(), ext)
+        return 'static/events/covers/' + filename
+
+    name = models.CharField(max_length=150)
+    slug = models.SlugField(unique=True)
+    organizer = models.CharField(max_length=200, null=True, blank=True)
+    cover = models.ImageField(upload_to=get_image_path, null=True, blank=True)
+    description = models.CharField(max_length=200, null=True, blank=True)
+    details = RichTextField(null=True, blank=True)
+    fee = models.PositiveIntegerField(null=True, blank=True)
+    contacts = models.ManyToManyField(ContactPerson, blank=True)
+
+
+class Merchandise(models.Model):
+    def get_image_path(self, filename):
+        ext = filename.split('.')[-1]
+        filename = 'vidyut_merchandise_' + "%s.%s" % (uuid.uuid4(), ext)
+        return 'static/events/covers/' + filename
+
+    name = models.CharField(max_length=150)
+    slug = models.SlugField(unique=True)
+    organizer = models.CharField(max_length=200, null=True, blank=True)
+    cover = models.ImageField(upload_to=get_image_path, null=True, blank=True)
+    description = models.CharField(max_length=200, null=True, blank=True)
+    details = RichTextField(null=True, blank=True)
+    fee = models.PositiveIntegerField(null=True, blank=True)
+    contacts = models.ManyToManyField(ContactPerson, blank=True)
+
+
 class Workshop(models.Model):
     def get_image_path(self, filename):
         ext = filename.split('.')[-1]

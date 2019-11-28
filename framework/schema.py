@@ -7,9 +7,31 @@ from participants.schema import Query as ParticipantQueries
 from products.schema import Query as ProductQueries
 from payment.schema import Query as PaymentQueries
 
+from framework.settings import *
+
+
+class StatusObj(graphene.ObjectType):
+    onlinePayment = graphene.Boolean()
+    offlinePayment = graphene.Boolean()
+    promocodes = graphene.Boolean()
+    referrals = graphene.Boolean()
+    googleSignIn = graphene.Boolean()
+    updatePhoto = graphene.Boolean()
+
 
 class Query(EventQueries, ParticipantQueries, ProductQueries, PaymentQueries, graphene.ObjectType):
-    pass
+    status = graphene.Field(StatusObj)
+
+    @staticmethod
+    def resolve_status(self, info, **kwargs):
+        return StatusObj(
+            onlinePayment=ONLINE_PAYMENT_STATUS,
+            offlinePayment=OFFLINE_PAYMENT_STATUS,
+            promocodes=PROMOCODES_STATUS,
+            referrals=REFERRAL_STATUS,
+            googleSignIn=GOOGLE_SIGNIN_STATUS,
+            updatePhoto=UPDATE_PHOTO_STATUS
+        )
 
 
 class UserType(graphene.ObjectType):

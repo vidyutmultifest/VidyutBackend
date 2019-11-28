@@ -46,6 +46,14 @@ class EventObj(graphene.ObjectType):
         return False
 
 
+class TicketObj(EventObj, graphene.ObjectType):
+    pass
+
+
+class MerchandiseObj(EventObj, graphene.ObjectType):
+    pass
+
+
 class WorkshopObj(EventObj, graphene.ObjectType):
     duration = graphene.String()
 
