@@ -28,6 +28,18 @@ class WorkshopAdmin(admin.ModelAdmin):
     form = select2
 
 
+@admin.register(Ticket)
+class TicketAdmin(admin.ModelAdmin):
+    select2 = select2_modelform(Ticket, attrs={'width': '250px'})
+    form = select2
+
+
+@admin.register(Merchandise)
+class MerchandiseAdmin(admin.ModelAdmin):
+    select2 = select2_modelform(Ticket, attrs={'width': '250px'})
+    form = select2
+
+
 @admin.register(ContactPerson)
 class ContactPersonAdmin(admin.ModelAdmin):
     list_display = ('name', 'phone', 'email',)
@@ -45,3 +57,17 @@ def create_Workshop(sender, instance, created, **kwargs):
     count = Product.objects.filter(workshop=instance).count()
     if count == 0:
         Product.objects.create(workshop=instance)
+
+
+@receiver(post_save, sender=Ticket)
+def create_Ticket(sender, instance, created, **kwargs):
+    count = Product.objects.filter(ticket=instance).count()
+    if count == 0:
+        Product.objects.create(ticket=instance)
+
+
+@receiver(post_save, sender=Merchandise)
+def create_Merchandise(sender, instance, created, **kwargs):
+    count = Product.objects.filter(merchandise=instance).count()
+    if count == 0:
+        Product.objects.create(merchandise=instance)

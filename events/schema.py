@@ -47,11 +47,15 @@ class EventObj(graphene.ObjectType):
 
 
 class TicketObj(EventObj, graphene.ObjectType):
-    pass
+
+    def resolve_productID(self, info):
+        return Product.objects.get(ticket_id=self['id']).productID
 
 
 class MerchandiseObj(EventObj, graphene.ObjectType):
-    pass
+
+    def resolve_productID(self, info):
+        return Product.objects.get(merchandise_id=self['id']).productID
 
 
 class WorkshopObj(EventObj, graphene.ObjectType):
@@ -84,6 +88,10 @@ class Query(object):
     listCompetitions = graphene.List(CompetitionObj)
     getWorkshop = graphene.Field(WorkshopObj, slug=graphene.String(required=True))
     listWorkshops = graphene.List(WorkshopObj)
+    getMerchandise = graphene.Field(MerchandiseObj, slug=graphene.String(required=True))
+    listMerchandise = graphene.List(MerchandiseObj)
+    getTicketEvent = graphene.Field(TicketObj, slug=graphene.String(required=True))
+    listTicketEvents = graphene.List(TicketObj)
 
     @staticmethod
     def resolve_getCompetition(self, info, **kwargs):
@@ -102,3 +110,21 @@ class Query(object):
     @staticmethod
     def resolve_listWorkshops(self, info, **kwargs):
         return Workshop.objects.values().all()
+
+    @staticmethod
+    def resolve_getMerchandise(self, info, **kwargs):
+        slug = kwargs.get('slug')
+        return Merchandise.objects.values().get(slug=slug)
+
+    @staticmethod
+    def resolve_listMerchandise(self, info, **kwargs):
+        return Merchandise.objects.values().all()
+
+    @staticmethod
+    def resolve_getTicketEvent(self, info, **kwargs):
+        slug = kwargs.get('slug')
+        return Ticket.objects.values().get(slug=slug)
+
+    @staticmethod
+    def resolve_listTicketEvents(self, info, **kwargs):
+        return Merchandise.objects.values().all()

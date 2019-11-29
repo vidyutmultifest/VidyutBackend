@@ -2,13 +2,15 @@ import uuid
 from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
-from events.models import Workshop, Competition
+from events.models import Workshop, Competition, Merchandise, Ticket
 
 
 class Product(models.Model):
     productID = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
     workshop = models.OneToOneField(Workshop, on_delete=models.PROTECT, null=True, blank=True)
     competition = models.OneToOneField(Competition, on_delete=models.PROTECT, null=True, blank=True)
+    merchandise = models.OneToOneField(Merchandise, on_delete=models.PROTECT, null=True, blank=True)
+    ticket = models.OneToOneField(Ticket, on_delete=models.PROTECT, null=True, blank=True)
     isAvailable = models.BooleanField(default=True)
 
     def __str__(self):
@@ -20,6 +22,10 @@ class Product(models.Model):
             return self.workshop
         if self.competition is not None:
             return self.competition
+        if self.ticket is not None:
+            return self.ticket
+        if self.merchandise is not None:
+            return self.merchandise
         return None
 
 
