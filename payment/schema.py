@@ -5,7 +5,9 @@ from graphql_jwt.decorators import login_required
 from django.utils import timezone
 from datetime import datetime
 
+from django.contrib.auth.models import User
 from access.models import UserAccess
+from participants.models import Profile
 
 to_tz = timezone.get_default_timezone()
 
@@ -79,9 +81,14 @@ class Mutation(object):
     collectPayment = CollectPayment.Field()
 
 
+class BuyerObj(graphene.ObjectType):
+    firstName = graphene.String()
+    lastName = graphene.String()
+    vidyutID = graphene.String()
+
+
 class OrderProductObj(graphene.ObjectType):
     name = graphene.String()
-    photo = graphene.String()
     price = graphene.Int()
     qty = graphene.Int()
 
@@ -112,10 +119,25 @@ class TransactionObj(graphene.ObjectType):
         return self['timestamp'].astimezone(to_tz)
 
 
+class TransactionDetailObj(TransactionObj, graphene.ObjectType):
+    products = graphene.List(OrderProductObj)
+    user = graphene.Field(BuyerObj)
+
+    def resolve_products(self, info):
+        oid = Order.objects.filter(transaction_id=self['id']).first().id
+        return OrderProduct.objects.values().filter(order_id=oid)
+
+    def resolve_user(self, info):
+        user = User.objects.get(id=self['user_id'])
+        vidyutID = Profile.objects.get(user=self['user_id']).vidyutID
+        return BuyerObj(firstName=user.first_name, lastName=user.last_name, vidyutID=vidyutID)
+
+
 class OrderObj(graphene.ObjectType):
     orderID = graphene.String()
     timestamp = graphene.String()
     products = graphene.List(OrderProductObj)
+    user = graphene.Field(BuyerObj)
     transaction = graphene.Field(TransactionObj)
 
     def resolve_timestamp(self, info):
@@ -127,10 +149,15 @@ class OrderObj(graphene.ObjectType):
     def resolve_transaction(self, info, **kwargs):
         return Transaction.objects.values().get(id=self['transaction_id'])
 
+    def resolve_user(self, info, **kwargs):
+        user = User.objects.get(id=self['user_id'])
+        vidyutID = Profile.objects.get(user=self['user_id'])
+        return BuyerObj(firstName=user.first_name, lastName=user.last_name, vidyutID=vidyutID)
+
 
 class Query(object):
     myOrders = graphene.List(OrderObj)
-    getTransactionDetail = graphene.Field(TransactionObj, transactionID=graphene.String())
+    getTransactionDetail = graphene.Field(TransactionDetailObj, transactionID=graphene.String())
 
     @login_required
     def resolve_myOrders(self, info, **kwargs):
