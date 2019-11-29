@@ -1,13 +1,14 @@
 import graphene
-
-from .models import *
-from graphql_jwt.decorators import login_required
-from django.utils import timezone
 from datetime import datetime
-
+from graphql_jwt.decorators import login_required
+from django.db.models import Sum
+from django.utils import timezone
 from django.contrib.auth.models import User
 from access.models import UserAccess
 from participants.models import Profile
+
+from .models import Transaction, OrderProduct, Order
+from products.models import Product
 
 to_tz = timezone.get_default_timezone()
 
@@ -122,6 +123,7 @@ class TransactionObj(graphene.ObjectType):
 class TransactionDetailObj(TransactionObj, graphene.ObjectType):
     products = graphene.List(OrderProductObj)
     user = graphene.Field(BuyerObj)
+    issuer = graphene.Field(BuyerObj)
 
     def resolve_products(self, info):
         oid = Order.objects.filter(transaction_id=self['id']).first().id
@@ -132,6 +134,12 @@ class TransactionDetailObj(TransactionObj, graphene.ObjectType):
         vidyutID = Profile.objects.get(user=self['user_id']).vidyutID
         return BuyerObj(firstName=user.first_name, lastName=user.last_name, vidyutID=vidyutID)
 
+    def resolve_issuer(self, info):
+        if self['issuer_id']:
+            user = User.objects.get(id=self['issuer_id'])
+            vidyutID = Profile.objects.get(user=self['issuer_id']).vidyutID
+            return BuyerObj(firstName=user.first_name, lastName=user.last_name, vidyutID=vidyutID)
+        return None
 
 class OrderObj(graphene.ObjectType):
     orderID = graphene.String()
@@ -158,6 +166,9 @@ class OrderObj(graphene.ObjectType):
 class Query(object):
     myOrders = graphene.List(OrderObj)
     getTransactionDetail = graphene.Field(TransactionDetailObj, transactionID=graphene.String())
+    getTransactionsApproved = graphene.List(TransactionDetailObj)
+    getAmountCollected = graphene.Int()
+    getTransactionsApprovedCount = graphene.Int()
 
     @login_required
     def resolve_myOrders(self, info, **kwargs):
@@ -170,3 +181,21 @@ class Query(object):
         user = info.context.user
         if UserAccess.objects.get(user=user).canAcceptPayment:
             return Transaction.objects.values().get(transactionID=transactionID)
+
+    @login_required
+    def resolve_getTransactionsApproved(self, info, **kwargs):
+        user = info.context.user
+        if UserAccess.objects.get(user=user).canAcceptPayment:
+            return Transaction.objects.values().filter(issuer=user)
+
+    @login_required
+    def resolve_getAmountCollected(self, info, **kwargs):
+        user = info.context.user
+        if UserAccess.objects.get(user=user).canAcceptPayment:
+            return Transaction.objects.filter(issuer=user, isSuccessful=True).aggregate(Sum('amount'))['amount__sum']
+
+    @login_required
+    def resolve_getTransactionsApprovedCount(self, info, **kwargs):
+        user = info.context.user
+        if UserAccess.objects.get(user=user).canAcceptPayment:
+            return Transaction.objects.filter(issuer=user, isSuccessful=True).count()

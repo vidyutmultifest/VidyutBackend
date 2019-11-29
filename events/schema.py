@@ -127,4 +127,4 @@ class Query(object):
 
     @staticmethod
     def resolve_listTicketEvents(self, info, **kwargs):
-        return Merchandise.objects.values().all()
+        return Ticket.objects.values().all()

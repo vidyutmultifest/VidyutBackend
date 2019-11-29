@@ -2,6 +2,7 @@ import graphene
 import graphql_jwt
 import graphql_social_auth
 
+from access.schema import Query as AccessQueries
 from events.schema import Query as EventQueries
 from participants.schema import Query as ParticipantQueries
 from products.schema import Query as ProductQueries
@@ -19,7 +20,7 @@ class StatusObj(graphene.ObjectType):
     updatePhoto = graphene.Boolean()
 
 
-class Query(EventQueries, ParticipantQueries, ProductQueries, PaymentQueries, graphene.ObjectType):
+class Query(AccessQueries, EventQueries, ParticipantQueries, ProductQueries, PaymentQueries, graphene.ObjectType):
     status = graphene.Field(StatusObj)
 
     @staticmethod
