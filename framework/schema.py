@@ -4,7 +4,7 @@ import graphql_social_auth
 
 from access.schema import Query as AccessQueries
 from events.schema import Query as EventQueries
-from participants.schema import Query as ParticipantQueries
+from participants.schema import Query as ParticipantQueries, Mutation as ParticipantMutation
 from products.schema import Query as ProductQueries
 from payment.schema import Query as PaymentQueries, Mutation as PaymentMutations
 
@@ -54,7 +54,7 @@ class SocialAuth(graphql_social_auth.SocialAuthJWT):
         return cls(user=social.user, token=get_token(social.user))
 
 
-class Mutation(PaymentMutations, graphene.ObjectType):
+class Mutation(ParticipantMutation, PaymentMutations, graphene.ObjectType):
     token_auth = graphql_jwt.ObtainJSONWebToken.Field()
     verify_token = graphql_jwt.Verify.Field()
     refresh_token = graphql_jwt.Refresh.Field()

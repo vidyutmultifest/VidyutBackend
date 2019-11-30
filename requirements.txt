@@ -12,13 +12,16 @@ django-graphql-social-auth==0.1.4
 django-js-asset==1.2.2
 graphene==2.1.8
 graphene-django==2.6.0
+graphene-file-upload==1.2.2
 graphql-core==2.2.1
 graphql-relay==2.0.0
 idna==2.8
 oauthlib==3.1.0
+Pillow==6.2.1
 pkg-resources==0.0.0
 promise==2.2.1
 PyJWT==1.7.1
+python-dateutil==2.8.1
 python3-openid==3.1.0
 pytz==2019.3
 requests==2.22.0
@@ -30,3 +33,4 @@ social-auth-app-django==3.1.0
 social-auth-core==3.2.0
 sqlparse==0.3.0
 urllib3==1.25.7
+opencv-python-headless=4.1.2.30

@@ -16,10 +16,15 @@ class College(models.Model):
 
 
 class Profile(models.Model):
-    def get_image_path(self, filename):
+    def get_selfie_path(self, filename):
         ext = filename.split('.')[-1]
         filename = "%s.%s" % (uuid.uuid4(), ext)
-        return '/uploads/images/profile/' + filename
+        return 'static/uploads/profile/selfies/' + filename
+
+    def get_id_path(self, filename):
+        ext = filename.split('.')[-1]
+        filename = "%s.%s" % (uuid.uuid4(), ext)
+        return 'static/uploads/profile/collegeID/' + filename
 
     vidyutID = models.CharField(max_length=256, unique=True)
     vidyutHash = models.UUIDField(primary_key=True, default=uuid.uuid4)
@@ -29,9 +34,10 @@ class Profile(models.Model):
         verbose_name='User',
     )
     college = models.ForeignKey(College, on_delete=models.PROTECT, null=True, blank=True)
-    photo = models.ImageField(upload_to=get_image_path, null=True, blank=True)
-    idPhoto = models.ImageField(upload_to=get_image_path, null=True, blank=True)
+    photo = models.ImageField(upload_to=get_selfie_path, null=True, blank=True)
+    idPhoto = models.ImageField(upload_to=get_id_path, null=True, blank=True)
     graduationYear = models.IntegerField(null=True, blank=True)
+    rollNo = models.CharField(max_length=50, null=True, blank=True)
     phone = models.CharField(max_length=15, null=True, blank=True)
     location = models.CharField(max_length=50, null=True, blank=True)
 
