@@ -15,4 +15,8 @@ class Query(graphene.ObjectType):
     @login_required
     def resolve_myPermissions(self, info, **kwargs):
         user = info.context.user
-        return UserAccess.objects.values().get(user=user)
+        try:
+            access = UserAccess.objects.values().get(user=user)
+        except UserAccess.DoesNotExist:
+            access = None
+        return access

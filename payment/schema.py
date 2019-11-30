@@ -182,12 +182,37 @@ class OrderObj(graphene.ObjectType):
         return BuyerObj(firstName=user.first_name, lastName=user.last_name, vidyutID=vidyutID)
 
 
+class TransactionStatusObj(graphene.ObjectType):
+    status = graphene.Boolean()
+    issuer = graphene.Field(IssuerObj)
+    timestamp = graphene.String()
+
+    def resolve_status(self, info):
+        return self.isSuccessful
+
+    def resolve_issuer(self, info):
+        if self.issuer:
+            vidyutID = Profile.objects.get(user=self.issuer).vidyutID
+            return IssuerObj(
+                firstName=self.issuer.first_name,
+                lastName=self.issuer.last_name,
+                vidyutID=vidyutID,
+                location=self.issuerLocation,
+                device=self.issuerDevice
+            )
+        return None
+
+    def resolve_timestamp(self, info):
+        return self.timestamp
+
+
 class Query(object):
     myOrders = graphene.List(OrderObj)
     getTransactionDetail = graphene.Field(TransactionDetailObj, transactionID=graphene.String())
     getTransactionsApproved = graphene.List(TransactionDetailObj)
     getAmountCollected = graphene.Int()
     getTransactionsApprovedCount = graphene.Int()
+    getTransactionStatus = graphene.Field(TransactionStatusObj, transactionID=graphene.String())
 
     @login_required
     def resolve_myOrders(self, info, **kwargs):
@@ -199,6 +224,9 @@ class Query(object):
         transactionID = kwargs.get('transactionID')
         user = info.context.user
         if UserAccess.objects.get(user=user).canAcceptPayment:
+            tobj = Transaction.objects.get(transactionID=transactionID)
+            tobj.issuer = user
+            tobj.save()
             return Transaction.objects.values().get(transactionID=transactionID)
 
     @login_required
@@ -218,3 +246,11 @@ class Query(object):
         user = info.context.user
         if UserAccess.objects.get(user=user).canAcceptPayment:
             return Transaction.objects.filter(issuer=user, isSuccessful=True).count()
+
+    @login_required
+    def resolve_getTransactionStatus(self, info, **kwargs):
+        user = info.context.user
+        transactionID = kwargs.get('transactionID')
+        tobj = Transaction.objects.get(transactionID=transactionID)
+        if tobj.user == user:
+            return tobj
