@@ -8,7 +8,7 @@ from access.models import UserAccess
 from participants.models import Profile
 
 from .models import Transaction, OrderProduct, Order
-from products.models import Product
+from products.models import Product, PromoCode
 
 to_tz = timezone.get_default_timezone()
 
@@ -44,10 +44,13 @@ class InitiateOrder(graphene.Mutation):
         customer = info.context.user
         for product in products.products:
             fee = fee + Product.objects.get(productID=product.productID).product.fee
-
         timestamp = datetime.now().astimezone(to_tz)
         tObj = Transaction.objects.create(amount=fee, user=customer, manualIssue=False, isSuccessful=False, timestamp=timestamp)
         oObj = Order.objects.create(user=customer, transaction=tObj, timestamp=timestamp)
+        if promocode is not None:
+            pobj = PromoCode.objects.get(code=promocode)
+            if (pobj.users is None | customer in pobj.users) & pobj.isActive:
+                oObj.promoCode = pobj
         for product in products.products:
             p = Product.objects.get(productID=product.productID)
             OrderProduct.objects.create(product=p, qty=product.qty, order=oObj)
@@ -58,11 +61,13 @@ class InitiateOrder(graphene.Mutation):
 class CollectPayment(graphene.Mutation):
     class Arguments:
         transactionID = graphene.String(required=True)
+        deviceDetails = graphene.String(required=True)
+        location = graphene.String(required=True)
 
     Output = OrderStatusObj
 
     @login_required
-    def mutate(self, info, transactionID):
+    def mutate(self, info, transactionID, deviceDetails, location):
         issuer = info.context.user
         if UserAccess.objects.get(user=issuer).canAcceptPayment:
             t = Transaction.objects.get(transactionID=transactionID)
@@ -70,6 +75,8 @@ class CollectPayment(graphene.Mutation):
                 timestamp = datetime.now().astimezone(to_tz)
                 t.isSuccessful = True
                 t.manualIssue = True
+                t.issuerDevice = deviceDetails
+                t.issuerLocation = location
                 t.issuer = issuer
                 t.timestamp = timestamp
                 t.save()
@@ -86,6 +93,11 @@ class BuyerObj(graphene.ObjectType):
     firstName = graphene.String()
     lastName = graphene.String()
     vidyutID = graphene.String()
+
+
+class IssuerObj(BuyerObj, graphene.ObjectType):
+    location = graphene.String()
+    device = graphene.String()
 
 
 class OrderProductObj(graphene.ObjectType):
@@ -123,7 +135,7 @@ class TransactionObj(graphene.ObjectType):
 class TransactionDetailObj(TransactionObj, graphene.ObjectType):
     products = graphene.List(OrderProductObj)
     user = graphene.Field(BuyerObj)
-    issuer = graphene.Field(BuyerObj)
+    issuer = graphene.Field(IssuerObj)
 
     def resolve_products(self, info):
         oid = Order.objects.filter(transaction_id=self['id']).first().id
@@ -138,8 +150,15 @@ class TransactionDetailObj(TransactionObj, graphene.ObjectType):
         if self['issuer_id']:
             user = User.objects.get(id=self['issuer_id'])
             vidyutID = Profile.objects.get(user=self['issuer_id']).vidyutID
-            return BuyerObj(firstName=user.first_name, lastName=user.last_name, vidyutID=vidyutID)
+            return IssuerObj(
+                firstName=user.first_name,
+                lastName=user.last_name,
+                vidyutID=vidyutID,
+                location=self['issuerLocation'],
+                device=self['issuerDevice']
+            )
         return None
+
 
 class OrderObj(graphene.ObjectType):
     orderID = graphene.String()

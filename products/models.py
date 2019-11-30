@@ -30,7 +30,8 @@ class Product(models.Model):
 
 
 class PromoCode(models.Model):
-    code = models.CharField(max_length=100)
+    code = models.CharField(max_length=100, unique=True)
+    isActive = models.BooleanField(default=False)
     description = models.CharField(max_length=200)
     products = models.ManyToManyField(Product, blank=True)
     users = models.ManyToManyField(User, blank=True)
