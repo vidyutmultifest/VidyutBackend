@@ -60,6 +60,7 @@ class InitiateOrder(graphene.Mutation):
 
 class CollectPayment(graphene.Mutation):
     class Arguments:
+        status = graphene.String(required=True)
         transactionID = graphene.String(required=True)
         deviceDetails = graphene.String(required=True)
         location = graphene.String(required=True)
@@ -67,13 +68,22 @@ class CollectPayment(graphene.Mutation):
     Output = OrderStatusObj
 
     @login_required
-    def mutate(self, info, transactionID, deviceDetails, location):
+    def mutate(self, info, status, transactionID, deviceDetails, location):
         issuer = info.context.user
         if UserAccess.objects.get(user=issuer).canAcceptPayment:
             t = Transaction.objects.get(transactionID=transactionID)
             if t.isSuccessful is False:
                 timestamp = datetime.now().astimezone(to_tz)
-                t.isSuccessful = True
+                t.isProcessed = True
+                if status == "paid":
+                    t.isPaid = True
+                    t.isPending = False
+                elif status == "reject":
+                    t.isPaid = False
+                    t.isPending = False
+                elif status == "pending":
+                    t.isPaid = False
+                    t.isPending = True
                 t.manualIssue = True
                 t.issuerDevice = deviceDetails
                 t.issuerLocation = location
@@ -126,7 +136,9 @@ class TransactionObj(graphene.ObjectType):
     transactionID = graphene.String()
     timestamp = graphene.String()
     amount = graphene.String()
-    isSuccessful = graphene.Boolean()
+    isPaid = graphene.Boolean()
+    isPending = graphene.Boolean()
+    isProcessed = graphene.Boolean()
 
     def resolve_timestamp(self, info):
         return self['timestamp'].astimezone(to_tz)
@@ -165,6 +177,7 @@ class OrderObj(graphene.ObjectType):
     timestamp = graphene.String()
     products = graphene.List(OrderProductObj)
     user = graphene.Field(BuyerObj)
+    issuer = graphene.Field(IssuerObj)
     transaction = graphene.Field(TransactionObj)
 
     def resolve_timestamp(self, info):
@@ -180,6 +193,17 @@ class OrderObj(graphene.ObjectType):
         user = User.objects.get(id=self['user_id'])
         vidyutID = Profile.objects.get(user=self['user_id'])
         return BuyerObj(firstName=user.first_name, lastName=user.last_name, vidyutID=vidyutID)
+
+    def resolve_issuer(self, info):
+        user = User.objects.get(id=self['issuer_id'])
+        vidyutID = Profile.objects.get(user=self['issuer_id']).vidyutID
+        return IssuerObj(
+            firstName=user.first_name,
+            lastName=user.last_name,
+            vidyutID=vidyutID,
+            location=self['issuerLocation'],
+            device=self['issuerDevice']
+        )
 
 
 class TransactionStatusObj(graphene.ObjectType):
@@ -226,6 +250,9 @@ class Query(object):
         if UserAccess.objects.get(user=user).canAcceptPayment:
             tobj = Transaction.objects.get(transactionID=transactionID)
             tobj.issuer = user
+            tobj.isPending = True
+            tobj.isProcessed = False
+            tobj.isPaid = False
             tobj.save()
             return Transaction.objects.values().get(transactionID=transactionID)
 
