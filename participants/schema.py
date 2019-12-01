@@ -1,6 +1,9 @@
 import graphene
 from graphql_jwt.decorators import login_required
 from .models import *
+import boto3
+import base64
+from framework.settings import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
 
 
 class UpdateProfileObj(graphene.ObjectType):
@@ -77,9 +80,14 @@ class ProfileObj(graphene.ObjectType):
     graduationYear = graphene.String()
 
 
+class FaceObj(graphene.ObjectType):
+    jsonData = graphene.String()
+
+
 class Query(object):
     myProfile = graphene.Field(ProfileObj)
     colleges = graphene.List(CollegeObj)
+    detectFace = graphene.Field(FaceObj)
 
     @login_required
     def resolve_myProfile(self, info, **kwargs):
@@ -117,3 +125,14 @@ class Query(object):
     @staticmethod
     def resolve_colleges(self, info, **kwargs):
         return College.objects.values().all()
+
+    @login_required
+    def resolve_detectFace(self, info, **kwargs):
+        rekognition = boto3.client("rekognition", 'ap-south-1', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+        photo = info.context.FILES['photo']
+        return FaceObj(jsonData=str(rekognition.detect_faces(
+            Image={
+                "Bytes": photo.read()
+            },
+            Attributes=["DEFAULT"],
+        )))
