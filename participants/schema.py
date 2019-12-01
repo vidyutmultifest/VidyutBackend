@@ -1,32 +1,59 @@
 import graphene
 from graphql_jwt.decorators import login_required
 from .models import *
-import cv2
-import os
-
-FACE_DETECTOR_PATH = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
 
 
-class SelfieUploadObj(graphene.ObjectType):
+class UpdateProfileObj(graphene.ObjectType):
     status = graphene.Boolean()
 
 
-class UploadSelfie(graphene.Mutation):
-    Output = SelfieUploadObj
+class ProfileDetailsObj(graphene.InputObjectType):
+    firstName = graphene.String(required=False)
+    lastName = graphene.String(required=False)
+    rollNo = graphene.String(required=False)
+    phone = graphene.String(required=False)
+    location = graphene.String(required=False)
+
+
+class UpdateProfile(graphene.Mutation):
+    class Arguments:
+        details = ProfileDetailsObj(required=False)
+
+    Output = UpdateProfileObj
 
     @login_required
-    def mutate(self, info):
+    def mutate(self, info, details=None):
         user = info.context.user
-        file = info.context.FILES['imageFile']
         profile = Profile.objects.get(user=user)
-        profile.photo = file
+
+        if info.context.FILES is not None:
+            if "profilePhoto" in info.context.FILES:
+                profilePhoto = info.context.FILES['profilePhoto']
+                if profilePhoto is not None:
+                    profile.photo = profilePhoto
+            if "profileCollegeID" in info.context.FILES:
+                profileCollegeID = info.context.FILES['profileCollegeID']
+                if profileCollegeID is not None:
+                    profile.idPhoto = profileCollegeID
+        if details is not None:
+            if details.firstName is not None:
+                user.first_name = details.firstName
+            if details.lastName is not None:
+                user.last_name = details.lastName
+            if details.rollNo is not None:
+                profile.rollNo = details.rollNo
+            if details.phone is not None:
+                profile.phone = details.phone
+            if details.location is not None:
+                profile.location = details.location
+            user.save()
         profile.save()
 
-        return SelfieUploadObj(status=True)
+        return UpdateProfileObj(status=True)
 
 
 class Mutation(graphene.ObjectType):
-    uploadSelfie = UploadSelfie.Field()
+    updateProfile = UpdateProfile.Field()
 
 
 class CollegeObj(graphene.ObjectType):
@@ -53,7 +80,6 @@ class ProfileObj(graphene.ObjectType):
 class Query(object):
     myProfile = graphene.Field(ProfileObj)
     colleges = graphene.List(CollegeObj)
-    isValidFace = graphene.Boolean()
 
     @login_required
     def resolve_myProfile(self, info, **kwargs):
@@ -91,14 +117,3 @@ class Query(object):
     @staticmethod
     def resolve_colleges(self, info, **kwargs):
         return College.objects.values().all()
-
-    @staticmethod
-    def resolve_isValidFace(self, info, **kwargs):
-        photo = Profile.objects.get(user=info.context.user).photo
-        imgUMat = cv2.imread(photo)
-        image = cv2.cvtColor(imgUMat, cv2.COLOR_BGR2GRAY)
-        detector = cv2.CascadeClassifier(FACE_DETECTOR_PATH)
-        rects = detector.detectMultiScale(image, scaleFactor=1.1, minNeighbors=5,
-                                          minSize=(30, 30), flags=cv2.cv.CV_HAAR_SCALE_IMAGE)
-        rects = [(int(x), int(y), int(x + w), int(y + h)) for (x, y, w, h) in rects]
-        return len(rects) == 1
