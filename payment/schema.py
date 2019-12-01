@@ -45,7 +45,7 @@ class InitiateOrder(graphene.Mutation):
         for product in products.products:
             fee = fee + Product.objects.get(productID=product.productID).product.fee
         timestamp = datetime.now().astimezone(to_tz)
-        tObj = Transaction.objects.create(amount=fee, user=customer, manualIssue=False, isSuccessful=False, timestamp=timestamp)
+        tObj = Transaction.objects.create(amount=fee, user=customer, timestamp=timestamp)
         oObj = Order.objects.create(user=customer, transaction=tObj, timestamp=timestamp)
         if promocode is not None:
             pobj = PromoCode.objects.get(code=promocode)
@@ -72,7 +72,7 @@ class CollectPayment(graphene.Mutation):
         issuer = info.context.user
         if UserAccess.objects.get(user=issuer).canAcceptPayment:
             t = Transaction.objects.get(transactionID=transactionID)
-            if t.isSuccessful is False:
+            if t.isPaid is False:
                 timestamp = datetime.now().astimezone(to_tz)
                 t.isProcessed = True
                 if status == "paid":
@@ -207,12 +207,20 @@ class OrderObj(graphene.ObjectType):
 
 
 class TransactionStatusObj(graphene.ObjectType):
-    status = graphene.Boolean()
+    isPaid = graphene.Boolean()
+    isPending = graphene.Boolean()
+    isProcessed = graphene.Boolean()
     issuer = graphene.Field(IssuerObj)
     timestamp = graphene.String()
 
-    def resolve_status(self, info):
-        return self.isSuccessful
+    def resolve_isPaid(self, info):
+        return self.isPaid
+
+    def resolve_isPending(self, info):
+        return self.isPending
+
+    def resolve_isProcessed(self, info):
+        return self.isProcessed
 
     def resolve_issuer(self, info):
         if self.issuer:
@@ -266,13 +274,13 @@ class Query(object):
     def resolve_getAmountCollected(self, info, **kwargs):
         user = info.context.user
         if UserAccess.objects.get(user=user).canAcceptPayment:
-            return Transaction.objects.filter(issuer=user, isSuccessful=True).aggregate(Sum('amount'))['amount__sum']
+            return Transaction.objects.filter(issuer=user, isPaid=True).aggregate(Sum('amount'))['amount__sum']
 
     @login_required
     def resolve_getTransactionsApprovedCount(self, info, **kwargs):
         user = info.context.user
         if UserAccess.objects.get(user=user).canAcceptPayment:
-            return Transaction.objects.filter(issuer=user, isSuccessful=True).count()
+            return Transaction.objects.filter(issuer=user, isPaid=True).count()
 
     @login_required
     def resolve_getTransactionStatus(self, info, **kwargs):

@@ -6,6 +6,14 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+from django.template.loader import get_template
+
+from framework import settings
+from django.core.mail import send_mail
+from django.utils.html import strip_tags
+
+from_email = settings.EMAIL_HOST_USER
+
 
 class College(models.Model):
     name = models.CharField(max_length=100)
@@ -49,5 +57,31 @@ class Profile(models.Model):
 def create_item(sender, instance, **kwargs):
     p, created = Profile.objects.get_or_create(user=instance)
     if created:
-        p.vidyutID = 'V' + str(1000 + p.user.id)
+        prefix = 'V'
+        if instance.email:
+            isAmritian = True
+            if instance.email.split('@')[-1].find('amrita.edu') == -1:
+                isAmritian = False
+            if isAmritian:
+                prefix = 'VA'
+            isAmritapurian = True
+            if instance.email.split('@')[-1].find('am.students.amrita.edu') == -1:
+                isAmritapurian = False
+            if isAmritapurian:
+                prefix = 'VAM'
+        p.vidyutID = prefix + str(1000 + p.user.id)
+
+        if instance.email:
+            htmly = get_template('./emails/signup.html')
+            d = {'name': instance.first_name, 'vidyutID': prefix + str(1000 + p.user.id)}
+            html_content = htmly.render(d)
+
+            send_mail(
+                'Thank you for Registering for Vidyut 2020',
+                strip_tags(html_content),
+                from_email,
+                [instance.email],
+                html_message=html_content,
+                fail_silently=False,
+            )
         p.save()
