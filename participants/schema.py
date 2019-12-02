@@ -2,7 +2,6 @@ import graphene
 from graphql_jwt.decorators import login_required
 from .models import *
 import boto3
-import base64
 from framework.settings import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
 
 
@@ -86,16 +85,28 @@ class RekognitionObj(graphene.ObjectType):
 
 
 class Query(object):
+    isProfileComplete = graphene.Boolean()
     myProfile = graphene.Field(ProfileObj)
     colleges = graphene.List(CollegeObj)
     detectFace = graphene.Field(RekognitionObj)
     detectText = graphene.Field(RekognitionObj)
 
     @login_required
+    def resolve_isProfileComplete(self, info, **kwargs):
+        user = info.context.user
+        profile = Profile.objects.get(user=user)
+        if profile.photo is None:
+            return False
+        if profile.idPhoto is None:
+            return False
+        if profile.college is None or profile.rollNo is None:
+            return False
+        return True
+
+    @login_required
     def resolve_myProfile(self, info, **kwargs):
         user = info.context.user
         profile = Profile.objects.get(user=user)
-        user = profile.user
 
         isAmritian = True
         if user.email.split('@')[-1].find('amrita.edu') == -1:
