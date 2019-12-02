@@ -157,6 +157,7 @@ class OrderProductObj(graphene.ObjectType):
         return self['qty']
 
 
+
 class TransactionObj(graphene.ObjectType):
     transactionID = graphene.String()
     timestamp = graphene.String()
@@ -164,24 +165,10 @@ class TransactionObj(graphene.ObjectType):
     isPaid = graphene.Boolean()
     isPending = graphene.Boolean()
     isProcessed = graphene.Boolean()
+    issuer = graphene.Field(IssuerObj)
 
     def resolve_timestamp(self, info):
         return self['timestamp'].astimezone(to_tz)
-
-
-class TransactionDetailObj(TransactionObj, graphene.ObjectType):
-    products = graphene.List(OrderProductObj)
-    user = graphene.Field(BuyerObj)
-    issuer = graphene.Field(IssuerObj)
-
-    def resolve_products(self, info):
-        oid = Order.objects.filter(transaction_id=self['id']).first().id
-        return OrderProduct.objects.values().filter(order_id=oid)
-
-    def resolve_user(self, info):
-        user = User.objects.get(id=self['user_id'])
-        vidyutID = Profile.objects.get(user=self['user_id']).vidyutID
-        return BuyerObj(firstName=user.first_name, lastName=user.last_name, vidyutID=vidyutID)
 
     def resolve_issuer(self, info):
         if self['issuer_id']:
@@ -197,12 +184,25 @@ class TransactionDetailObj(TransactionObj, graphene.ObjectType):
         return None
 
 
+class TransactionDetailObj(TransactionObj, graphene.ObjectType):
+    products = graphene.List(OrderProductObj)
+    user = graphene.Field(BuyerObj)
+
+    def resolve_products(self, info):
+        oid = Order.objects.filter(transaction_id=self['id']).first().id
+        return OrderProduct.objects.values().filter(order_id=oid)
+
+    def resolve_user(self, info):
+        user = User.objects.get(id=self['user_id'])
+        vidyutID = Profile.objects.get(user=self['user_id']).vidyutID
+        return BuyerObj(firstName=user.first_name, lastName=user.last_name, vidyutID=vidyutID)
+
+
 class OrderObj(graphene.ObjectType):
     orderID = graphene.String()
     timestamp = graphene.String()
     products = graphene.List(OrderProductObj)
     user = graphene.Field(BuyerObj)
-    issuer = graphene.Field(IssuerObj)
     transaction = graphene.Field(TransactionObj)
 
     def resolve_timestamp(self, info):
@@ -218,17 +218,6 @@ class OrderObj(graphene.ObjectType):
         user = User.objects.get(id=self['user_id'])
         vidyutID = Profile.objects.get(user=self['user_id'])
         return BuyerObj(firstName=user.first_name, lastName=user.last_name, vidyutID=vidyutID)
-
-    def resolve_issuer(self, info):
-        user = User.objects.get(id=self['issuer_id'])
-        vidyutID = Profile.objects.get(user=self['issuer_id']).vidyutID
-        return IssuerObj(
-            firstName=user.first_name,
-            lastName=user.last_name,
-            vidyutID=vidyutID,
-            location=self['issuerLocation'],
-            device=self['issuerDevice']
-        )
 
 
 class TransactionStatusObj(graphene.ObjectType):
@@ -270,6 +259,7 @@ class Query(object):
     getAmountCollected = graphene.Int()
     getTransactionsApprovedCount = graphene.Int()
     getTransactionStatus = graphene.Field(TransactionStatusObj, transactionID=graphene.String())
+    getTransactionsPendingCount = graphene.Int()
 
     @login_required
     def resolve_myOrders(self, info, **kwargs):
@@ -293,7 +283,7 @@ class Query(object):
     def resolve_getTransactionsApproved(self, info, **kwargs):
         user = info.context.user
         if UserAccess.objects.get(user=user).canAcceptPayment:
-            return Transaction.objects.values().filter(issuer=user)
+            return Transaction.objects.values().filter(issuer=user, isPaid=True)
 
     @login_required
     def resolve_getAmountCollected(self, info, **kwargs):
@@ -306,6 +296,12 @@ class Query(object):
         user = info.context.user
         if UserAccess.objects.get(user=user).canAcceptPayment:
             return Transaction.objects.filter(issuer=user, isPaid=True).count()
+
+    @login_required
+    def resolve_getTransactionsPendingCount(self, info, **kwargs):
+        user = info.context.user
+        if UserAccess.objects.get(user=user).canAcceptPayment:
+            return Transaction.objects.filter(issuer=user, isPending=True).count()
 
     @login_required
     def resolve_getTransactionStatus(self, info, **kwargs):

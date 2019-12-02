@@ -34,6 +34,11 @@ class Ticket(models.Model):
     details = RichTextField(null=True, blank=True)
     fee = models.PositiveIntegerField(null=True, blank=True)
     contacts = models.ManyToManyField(ContactPerson, blank=True)
+    createdAt = models.DateTimeField(auto_now_add=True)
+    isRecommended = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.name
 
 
 class Merchandise(models.Model):
@@ -50,6 +55,11 @@ class Merchandise(models.Model):
     details = RichTextField(null=True, blank=True)
     fee = models.PositiveIntegerField(null=True, blank=True)
     contacts = models.ManyToManyField(ContactPerson, blank=True)
+    createdAt = models.DateTimeField(auto_now_add=True)
+    isRecommended = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.name
 
 
 class Workshop(models.Model):
@@ -68,6 +78,8 @@ class Workshop(models.Model):
     details = RichTextField(null=True, blank=True)
     fee = models.PositiveIntegerField(null=True, blank=True)
     contacts = models.ManyToManyField(ContactPerson, blank=True)
+    createdAt = models.DateTimeField(auto_now_add=True)
+    isRecommended = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name

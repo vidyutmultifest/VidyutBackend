@@ -85,12 +85,12 @@ class CompetitionObj(EventObj, graphene.ObjectType):
 
 class Query(object):
     getCompetition = graphene.Field(CompetitionObj, slug=graphene.String(required=True))
-    listCompetitions = graphene.List(CompetitionObj)
     getWorkshop = graphene.Field(WorkshopObj, slug=graphene.String(required=True))
-    listWorkshops = graphene.List(WorkshopObj)
-    getMerchandise = graphene.Field(MerchandiseObj, slug=graphene.String(required=True))
-    listMerchandise = graphene.List(MerchandiseObj)
     getTicketEvent = graphene.Field(TicketObj, slug=graphene.String(required=True))
+    getMerchandise = graphene.Field(MerchandiseObj, slug=graphene.String(required=True))
+    listCompetitions = graphene.List(CompetitionObj)
+    listWorkshops = graphene.List(WorkshopObj)
+    listMerchandise = graphene.List(MerchandiseObj)
     listTicketEvents = graphene.List(TicketObj)
 
     @staticmethod

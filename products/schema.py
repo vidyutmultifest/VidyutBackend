@@ -21,7 +21,7 @@ class ProductObj(graphene.ObjectType):
     isAvailable = graphene.String()
     productID = graphene.String()
     product = graphene.Field(ProductDetailObj)
-    freebies = graphene.List(ProductDetailObj)
+    # freebies = graphene.List(FreebieObj)
 
     def resolve_product(self, info):
         product = Product.objects.get(productID=self['productID']).product
@@ -29,15 +29,19 @@ class ProductObj(graphene.ObjectType):
         productType = type(product).__name__
         if product.cover:
             photo = info.context.build_absolute_uri(product.cover.url)
-        freebies = None
-
+        # freebies = Product.objects.get(productID=self['productID']).freebies.all()
+        # fids = []
+        # for freebie in freebies:
+        #     fids.append(freebie.productID)
+        #
+        # print(fids)
         return {
             "name": product.name,
             "photo": photo,
             "price": product.fee,
             "slug": product.slug,
             "type": productType,
-            "freebies": freebies
+            # "freebies": fids
         }
 
 
@@ -49,6 +53,11 @@ class Query(object):
     def resolve_listPromocodes(self, info, **kwargs):
         user = info.context.user
         return PromoCode.objects.values().filter(Q(users=user) | Q(users=None))
+
+    @login_required
+    def resolve_getPromocode(self, info, **kwargs):
+        code = kwargs.get('code')
+        return PromoCode.objects.values().filter(code=code)
 
     @login_required
     def resolve_getProduct(self, info, **kwargs):

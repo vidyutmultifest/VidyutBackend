@@ -18,6 +18,11 @@ class StatusObj(graphene.ObjectType):
     referrals = graphene.Boolean()
     googleSignIn = graphene.Boolean()
     updatePhoto = graphene.Boolean()
+    enableTicketing = graphene.Boolean()
+    enableWorkshopRegistration = graphene.Boolean()
+    enableCompetitionRegistration = graphene.Boolean()
+    enableMerchandiseShopping = graphene.Boolean()
+    pushNotification = graphene.String()
 
 
 class Query(AccessQueries, EventQueries, ParticipantQueries, ProductQueries, PaymentQueries, graphene.ObjectType):
@@ -31,7 +36,12 @@ class Query(AccessQueries, EventQueries, ParticipantQueries, ProductQueries, Pay
             promocodes=PROMOCODES_STATUS,
             referrals=REFERRAL_STATUS,
             googleSignIn=GOOGLE_SIGNIN_STATUS,
-            updatePhoto=UPDATE_PHOTO_STATUS
+            updatePhoto=UPDATE_PHOTO_STATUS,
+            enableTicketing=ENABLE_TICKETING,
+            enableWorkshopRegistration=ENABLE_WORKSHOP_REGISTRATION,
+            enableCompetitionRegistration=ENABLE_COMPETITION_REGISTRATION,
+            enableMerchandiseShopping=ENABLE_MERCHANDISE_SHOPPING,
+            pushNotification=PUSH_NOTIFICATION
         )
 
 
