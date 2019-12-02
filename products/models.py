@@ -12,6 +12,7 @@ class Product(models.Model):
     merchandise = models.OneToOneField(Merchandise, on_delete=models.PROTECT, null=True, blank=True)
     ticket = models.OneToOneField(Ticket, on_delete=models.PROTECT, null=True, blank=True)
     isAvailable = models.BooleanField(default=True)
+    freebies = models.ManyToManyField('self', blank=True)
 
     def __str__(self):
         return str(self.product)

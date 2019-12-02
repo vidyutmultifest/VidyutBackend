@@ -249,7 +249,7 @@ class Query(object):
     @login_required
     def resolve_myOrders(self, info, **kwargs):
         user = info.context.user
-        return Order.objects.values().filter(user=user)
+        return Order.objects.values().filter(user=user).order_by("-timestamp")
 
     @login_required
     def resolve_getTransactionDetail(self, info, **kwargs):
