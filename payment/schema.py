@@ -1,17 +1,23 @@
 import graphene
 from datetime import datetime
+
+from django.core.mail import send_mail
+from django.template.loader import get_template
+from django.utils.html import strip_tags
 from graphql_jwt.decorators import login_required
 from django.db.models import Sum
 from django.utils import timezone
 from django.contrib.auth.models import User
 from access.models import UserAccess
 from participants.models import Profile
+from framework import settings
+
 
 from .models import Transaction, OrderProduct, Order
 from products.models import Product, PromoCode
 
 to_tz = timezone.get_default_timezone()
-
+from_email = settings.EMAIL_HOST_USER
 
 class InitiateOrderObj(graphene.ObjectType):
     transactionID = graphene.String()
@@ -72,12 +78,30 @@ class CollectPayment(graphene.Mutation):
         issuer = info.context.user
         if UserAccess.objects.get(user=issuer).canAcceptPayment:
             t = Transaction.objects.get(transactionID=transactionID)
+            order = Order.objects.get(transaction=t)
             if t.isPaid is False:
                 timestamp = datetime.now().astimezone(to_tz)
                 t.isProcessed = True
                 if status == "paid":
                     t.isPaid = True
                     t.isPending = False
+                    htmly = get_template('./emails/payment-confirmation.html')
+                    d = {
+                        'name': t.user.first_name,
+                        'transactionID': t.transactionID,
+                        'orderID': order.orderID,
+                        'paymentMode': 'offline',
+                        'issuer': issuer.first_name
+                    }
+                    html_content = htmly.render(d)
+                    send_mail(
+                        'Payment Confirmation for Order #' + order.orderID,
+                        strip_tags(html_content),
+                        from_email,
+                        [t.user.email],
+                        html_message=html_content,
+                        fail_silently=False,
+                    )
                 elif status == "reject":
                     t.isPaid = False
                     t.isPending = False
