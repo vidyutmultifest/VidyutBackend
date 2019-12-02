@@ -75,6 +75,7 @@ class ProfileObj(graphene.ObjectType):
     isAmritapurian = graphene.Boolean()
     college = graphene.Field(CollegeObj)
     photo = graphene.String()
+    idPhoto = graphene.String()
     location = graphene.String()
     graduationYear = graphene.String()
     rollNo = graphene.String()
@@ -90,6 +91,7 @@ class Query(object):
     colleges = graphene.List(CollegeObj)
     detectFace = graphene.Field(RekognitionObj)
     detectText = graphene.Field(RekognitionObj)
+    sendOTP = graphene.Boolean(phoneNo=graphene.String(required=True), message=graphene.String(required=True))
 
     @login_required
     def resolve_isProfileComplete(self, info, **kwargs):
@@ -99,7 +101,7 @@ class Query(object):
             return False
         if profile.idPhoto is None:
             return False
-        if profile.college is None or profile.rollNo is None:
+        if profile.college is None and profile.rollNo is None:
             return False
         return True
 
@@ -120,6 +122,10 @@ class Query(object):
         if profile.photo and hasattr(profile.photo, 'url') is not None:
             photoUrl = info.context.build_absolute_uri(profile.photo.url)
 
+        idPhotoUrl = None
+        if profile.idPhoto and hasattr(profile.photo, 'url') is not None:
+            idPhotoUrl = info.context.build_absolute_uri(profile.idPhoto.url)
+
         return ProfileObj(
             firstName=user.first_name,
             lastName=user.last_name,
@@ -132,6 +138,7 @@ class Query(object):
             phone=profile.phone,
             college=profile.college,
             photo=photoUrl,
+            idPhoto=idPhotoUrl,
             graduationYear=profile.graduationYear,
             rollNo=profile.rollNo
         )
@@ -142,7 +149,12 @@ class Query(object):
 
     @login_required
     def resolve_detectFace(self, info, **kwargs):
-        rekognition = boto3.client("rekognition", 'ap-south-1', aws_access_key_id=AWS_ACCESS_KEY_ID, aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+        rekognition = boto3.client(
+            "rekognition",
+            'ap-south-1',
+            aws_access_key_id=AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=AWS_SECRET_ACCESS_KEY
+        )
         photo = info.context.FILES['photo']
         return RekognitionObj(jsonData=str(rekognition.detect_faces(
             Image={
@@ -153,11 +165,31 @@ class Query(object):
 
     @login_required
     def resolve_detectText(self, info, **kwargs):
-        rekognition = boto3.client("rekognition", 'ap-south-1', aws_access_key_id=AWS_ACCESS_KEY_ID,
-                                   aws_secret_access_key=AWS_SECRET_ACCESS_KEY)
+        rekognition = boto3.client(
+            "rekognition",
+            'ap-south-1',
+            aws_access_key_id=AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=AWS_SECRET_ACCESS_KEY
+        )
         photo = info.context.FILES['photo']
         return RekognitionObj(jsonData=str(rekognition.detect_text(
             Image={
                 "Bytes": photo.read()
             }
         )))
+
+    @login_required
+    def resolve_sendOTP(self, info, **kwargs):
+        phoneNo = kwargs.get('phoneNo')
+        message = kwargs.get('message')
+        client = boto3.client(
+            "sns",
+            'us-east-1',
+            aws_access_key_id=AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=AWS_SECRET_ACCESS_KEY
+        )
+        client.publish(
+            PhoneNumber=phoneNo,
+            Message=message
+        )
+        return True

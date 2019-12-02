@@ -73,7 +73,10 @@ def create_item(sender, instance, **kwargs):
 
         if instance.email:
             htmly = get_template('./emails/signup.html')
-            d = {'name': instance.first_name, 'vidyutID': prefix + str(1000 + p.user.id)}
+            d = {
+                    'name': instance.first_name,
+                    'vidyutID': prefix + str(1000 + p.user.id)
+             }
             html_content = htmly.render(d)
 
             send_mail(

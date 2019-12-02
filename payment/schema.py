@@ -88,14 +88,15 @@ class CollectPayment(graphene.Mutation):
                     htmly = get_template('./emails/payment-confirmation.html')
                     d = {
                         'name': t.user.first_name,
-                        'transactionID': t.transactionID,
-                        'orderID': order.orderID,
+                        'transactionID': str(t.transactionID),
+                        'orderID': str(order.orderID),
+                        'amount': str(t.amount),
                         'paymentMode': 'offline',
                         'issuer': issuer.first_name
                     }
                     html_content = htmly.render(d)
                     send_mail(
-                        'Payment Confirmation for Order #' + order.orderID,
+                        'Payment Confirmation for Order #' + str(order.orderID),
                         strip_tags(html_content),
                         from_email,
                         [t.user.email],

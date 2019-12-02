@@ -21,7 +21,7 @@ class ProductObj(graphene.ObjectType):
     isAvailable = graphene.String()
     productID = graphene.String()
     product = graphene.Field(ProductDetailObj)
-    freebies = graphene.List('self')
+    freebies = graphene.List(ProductDetailObj)
 
     def resolve_product(self, info):
         product = Product.objects.get(productID=self['productID']).product
@@ -30,11 +30,6 @@ class ProductObj(graphene.ObjectType):
         if product.cover:
             photo = info.context.build_absolute_uri(product.cover.url)
         freebies = None
-        if self['freebies'] is not None:
-            try:
-                freebies = Product.objects.values().get(productID=self['freebies'])
-            except Product.DoesNotExist:
-                freebies = None
 
         return {
             "name": product.name,
