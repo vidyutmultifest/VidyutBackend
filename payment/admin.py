@@ -3,7 +3,7 @@ from .models import *
 from easy_select2 import select2_modelform
 
 
-class op_inline(admin.TabularInline):
+class OPInline(admin.TabularInline):
     model = OrderProduct
     extra = 0
     select2 = select2_modelform(OrderProduct, attrs={'width': '250px'})
@@ -12,15 +12,16 @@ class op_inline(admin.TabularInline):
 
 @admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):
-    list_display = ('transactionID', 'isProcessed', 'isPending', 'isPaid', 'amount', 'user', 'timestamp',)
+    list_display = ('transactionID', 'isProcessed', 'isPending', 'isPaid', 'amount', 'user', 'issuer', 'timestamp',)
+    filter = ('isPaid', 'isPending', 'isProcessed', 'issuer')
     select2 = select2_modelform(Transaction, attrs={'width': '250px'})
     form = select2
 
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ('orderID', 'user', 'timestamp',)
-    inlines = (op_inline,)
+    list_display = ('orderID', 'user', 'timestamp')
+    inlines = (OPInline,)
     select2 = select2_modelform(Order, attrs={'width': '250px'})
     form = select2
 

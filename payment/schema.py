@@ -157,7 +157,6 @@ class OrderProductObj(graphene.ObjectType):
         return self['qty']
 
 
-
 class TransactionObj(graphene.ObjectType):
     transactionID = graphene.String()
     timestamp = graphene.String()

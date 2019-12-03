@@ -6,6 +6,8 @@ class UserAccess(models.Model):
     user = models.OneToOneField(User, on_delete=models.PROTECT)
     adminAccess = models.BooleanField(default=False)
     canAcceptPayment = models.BooleanField(default=False)
+    viewAllTransactions = models.BooleanField(default=False)
+    canIssueTickets = models.BooleanField(default=False)
 
     def __str__(self):
         return self.user.username

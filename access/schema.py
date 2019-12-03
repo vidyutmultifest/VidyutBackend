@@ -7,6 +7,8 @@ from .models import *
 class UserAccessObj(graphene.ObjectType):
     adminAccess = graphene.Boolean()
     canAcceptPayment = graphene.Boolean()
+    canViewAllTransactions = graphene.Boolean()
+    canIssueTickets = graphene.Boolean()
 
 
 class Query(graphene.ObjectType):

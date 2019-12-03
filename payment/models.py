@@ -42,3 +42,4 @@ class OrderProduct(models.Model):
     class Meta:
         verbose_name_plural = "Order Products"
         verbose_name = "Order Product"
+
