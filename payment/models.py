@@ -1,8 +1,17 @@
 import uuid
-
 from django.db import models
+
 from products.models import *
 from django.contrib.auth.models import User
+
+from django.db.models.signals import post_save
+from django.core.mail import send_mail
+from django.template.loader import get_template
+from django.utils.html import strip_tags
+from django.dispatch import receiver
+from framework import settings
+
+from_email = settings.EMAIL_HOST_USER
 
 
 class Transaction(models.Model):
@@ -43,3 +52,26 @@ class OrderProduct(models.Model):
         verbose_name_plural = "Order Products"
         verbose_name = "Order Product"
 
+
+@receiver(post_save, sender=Transaction)
+def onPayTrans(sender, instance, **kwargs):
+    if instance.isPaid:
+        order = Order.objects.get(transaction=instance)
+        htmly = get_template('./emails/payment-confirmation.html')
+        d = {
+            'name': instance.user.first_name,
+            'transactionID': str(instance.transactionID),
+            'orderID': str(order.orderID),
+            'amount': str(instance.amount),
+            'paymentMode': 'offline',
+            'issuer': instance.issuer.first_name
+        }
+        html_content = htmly.render(d)
+        send_mail(
+            'Payment Confirmation for Order #' + str(order.orderID),
+            strip_tags(html_content),
+            from_email,
+            [instance.user.email],
+            html_message=html_content,
+            fail_silently=False,
+        )
