@@ -71,20 +71,20 @@ def create_item(sender, instance, **kwargs):
                 prefix = 'VAM'
         p.vidyutID = prefix + str(1000 + p.user.id)
 
-        if instance.email:
-            htmly = get_template('./emails/signup.html')
-            d = {
-                    'name': instance.first_name,
-                    'vidyutID': prefix + str(1000 + p.user.id)
-             }
-            html_content = htmly.render(d)
-
-            send_mail(
-                'Thank you for Registering for Vidyut 2020',
-                strip_tags(html_content),
-                from_email,
-                [instance.email],
-                html_message=html_content,
-                fail_silently=False,
-            )
+        # if instance.email:
+        #     htmly = get_template('./emails/signup.html')
+        #     d = {
+        #             'name': instance.first_name,
+        #             'vidyutID': prefix + str(1000 + p.user.id)
+        #      }
+        #     html_content = htmly.render(d)
+        #
+        #     send_mail(
+        #         'Thank you for Registering for Vidyut 2020',
+        #         strip_tags(html_content),
+        #         from_email,
+        #         [instance.email],
+        #         html_message=html_content,
+        #         fail_silently=False,
+        #     )
         p.save()

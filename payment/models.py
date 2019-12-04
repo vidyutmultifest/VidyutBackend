@@ -53,25 +53,25 @@ class OrderProduct(models.Model):
         verbose_name = "Order Product"
 
 
-@receiver(post_save, sender=Transaction)
-def onPayTrans(sender, instance, **kwargs):
-    if instance.isPaid:
-        order = Order.objects.get(transaction=instance)
-        htmly = get_template('./emails/payment-confirmation.html')
-        d = {
-            'name': instance.user.first_name,
-            'transactionID': str(instance.transactionID),
-            'orderID': str(order.orderID),
-            'amount': str(instance.amount),
-            'paymentMode': 'offline',
-            'issuer': instance.issuer.first_name
-        }
-        html_content = htmly.render(d)
-        send_mail(
-            'Payment Confirmation for Order #' + str(order.orderID),
-            strip_tags(html_content),
-            from_email,
-            [instance.user.email],
-            html_message=html_content,
-            fail_silently=False,
-        )
+# @receiver(post_save, sender=Transaction)
+# def onPayTrans(sender, instance, **kwargs):
+#     if instance.isPaid:
+#         order = Order.objects.get(transaction=instance)
+#         htmly = get_template('./emails/payment-confirmation.html')
+#         d = {
+#             'name': instance.user.first_name,
+#             'transactionID': str(instance.transactionID),
+#             'orderID': str(order.orderID),
+#             'amount': str(instance.amount),
+#             'paymentMode': 'offline',
+#             'issuer': instance.issuer.first_name
+#         }
+#         html_content = htmly.render(d)
+#         send_mail(
+#             'Payment Confirmation for Order #' + str(order.orderID),
+#             strip_tags(html_content),
+#             from_email,
+#             [instance.user.email],
+#             html_message=html_content,
+#             fail_silently=False,
+#         )
