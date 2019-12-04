@@ -56,7 +56,7 @@ class Query(object):
                 htmly = get_template('./emails/email-issued-ticket.html')
                 d = {
                     'ticketID': str(tObj.ticketID),
-                    'image': tObj.product.product.cover,
+                    'image':  info.context.build_absolute_uri(tObj.product.product.cover.url),
                     'productName': str(tObj.product.product.name),
                     'amount': str(tObj.product.product.fee),
                     'purchaser': tObj.purchaser.first_name
