@@ -15,4 +15,4 @@ class Ticket(models.Model):
     isActive = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.ticketID
+        return str(self.ticketID)
