@@ -121,10 +121,10 @@ class Query(object):
         photoUrl = None
         if profile.photo and hasattr(profile.photo, 'url') is not None:
             photoUrl = info.context.build_absolute_uri(profile.photo.url)
-
-        idPhotoUrl = None
-        if profile.idPhoto and hasattr(profile.photo, 'url') is not None:
-            idPhotoUrl = info.context.build_absolute_uri(profile.idPhoto.url)
+        #
+        # idPhotoUrl = None
+        # if profile.idPhoto and hasattr(profile.idPhoto, 'url') is not None:
+        #     idPhotoUrl = info.context.build_absolute_uri(profile.idPhoto.url)
 
         return ProfileObj(
             firstName=user.first_name,
@@ -138,7 +138,7 @@ class Query(object):
             phone=profile.phone,
             college=profile.college,
             photo=photoUrl,
-            idPhoto=idPhotoUrl,
+            idPhoto=None,
             graduationYear=profile.graduationYear,
             rollNo=profile.rollNo
         )
