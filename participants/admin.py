@@ -8,7 +8,7 @@ from .models import *
 class ProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'vidyutID', 'graduationYear', 'college')
     list_filter = ('college', 'graduationYear')
-    search_fields = ['vidyutID', 'user', 'phone', 'graduationYear']
+    search_fields = ['vidyutID', 'user__username', 'phone', 'graduationYear']
     select2 = select2_modelform(Profile, attrs={'width': '250px'})
     form = select2
 

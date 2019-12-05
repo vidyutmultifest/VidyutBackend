@@ -12,8 +12,10 @@ class OPInline(admin.TabularInline):
 
 @admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):
-    list_display = ('transactionID', 'isProcessed', 'isPending', 'isPaid', 'amount', 'user', 'issuer', 'timestamp',)
-    list_filter = ('isPaid', 'isPending', 'isProcessed')
+    list_display = ('transactionID', 'isProcessed', 'isPending', 'isPaid', 'amount', 'user', 'issuer', 'timestamp', 'issuerLocation')
+    list_filter = ('isPaid', 'isPending', 'isProcessed', 'amount')
+    date_hierarchy = 'timestamp'
+    search_fields = ['user__username', 'issuer__username', 'isPaid', 'amount']
     select2 = select2_modelform(Transaction, attrs={'width': '250px'})
     form = select2
 
@@ -21,6 +23,8 @@ class TransactionAdmin(admin.ModelAdmin):
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     list_display = ('orderID', 'user', 'timestamp')
+    autocomplete_fields = ['transaction']
+    date_hierarchy = 'timestamp'
     inlines = (OPInline,)
     select2 = select2_modelform(Order, attrs={'width': '250px'})
     form = select2
