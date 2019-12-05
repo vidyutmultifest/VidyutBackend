@@ -13,7 +13,7 @@ class OPInline(admin.TabularInline):
 @admin.register(Transaction)
 class TransactionAdmin(admin.ModelAdmin):
     list_display = ('transactionID', 'isProcessed', 'isPending', 'isPaid', 'amount', 'user', 'issuer', 'timestamp',)
-    filter = ('isPaid', 'isPending', 'isProcessed', 'issuer')
+    list_filter = ('isPaid', 'isPending', 'isProcessed')
     select2 = select2_modelform(Transaction, attrs={'width': '250px'})
     form = select2
 

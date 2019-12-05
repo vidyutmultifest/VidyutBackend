@@ -170,7 +170,11 @@ class TransactionDetailObj(TransactionObj, graphene.ObjectType):
     def resolve_user(self, info):
         user = User.objects.get(id=self['user_id'])
         vidyutID = Profile.objects.get(user=self['user_id']).vidyutID
-        return BuyerObj(firstName=user.first_name, lastName=user.last_name, vidyutID=vidyutID)
+        return BuyerObj(
+            firstName=user.first_name,
+            lastName=user.last_name,
+            vidyutID=vidyutID
+        )
 
 
 class OrderObj(graphene.ObjectType):
@@ -227,6 +231,21 @@ class TransactionStatusObj(graphene.ObjectType):
         return self.timestamp
 
 
+class TransactionListObj(graphene.ObjectType):
+    user = graphene.Field(BuyerObj)
+    transactionID = graphene.String()
+    isPaid = graphene.Boolean()
+    isProcessed = graphene.Boolean()
+    timestamp = graphene.String()
+    fee = graphene.Int()
+    manualIssue = graphene.Boolean()
+    issuerLocation = graphene.String()
+    issuerDevice = graphene.String()
+
+    def resolve_user(self, info):
+        return User.objects.get(user__id=self['user_id'])
+
+
 class Query(object):
     myOrders = graphene.List(OrderObj)
     getTransactionDetail = graphene.Field(TransactionDetailObj, transactionID=graphene.String())
@@ -235,6 +254,7 @@ class Query(object):
     getTransactionsApprovedCount = graphene.Int()
     getTransactionStatus = graphene.Field(TransactionStatusObj, transactionID=graphene.String())
     getTransactionsPendingCount = graphene.Int()
+    getTransactionList = graphene.List(TransactionListObj)
 
     @login_required
     def resolve_myOrders(self, info, **kwargs):
@@ -285,3 +305,10 @@ class Query(object):
         tobj = Transaction.objects.get(transactionID=transactionID)
         if tobj.user == user:
             return tobj
+
+    @login_required
+    def resolve_getTransactionList(self, info, **kwargs):
+        user = info.context.user
+        if UserAccess.objects.get(user=user).viewAllTransactions:
+            return Transaction.objects.values().all()
+
