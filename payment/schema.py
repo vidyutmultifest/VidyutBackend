@@ -44,10 +44,22 @@ class InitiateOrder(graphene.Mutation):
         fee = 0
         customer = info.context.user
         for product in products.products:
-            fee = fee + Product.objects.get(productID=product.productID).product.fee
+            p = Product.objects.get(productID=product.productID)
+            fee = fee + p.product.fee
+            if p.restrictMultiplePurchases is False or Order.objects.filter(
+                    products=p,
+                    user=customer,
+                    transaction__isPaid=True,
+                    transaction__isProcessed=True
+            ).count() < 1:
+                pass
+            else:
+                return InitiateOrderObj(transactionID=None, orderID=None)
+
         timestamp = datetime.now().astimezone(to_tz)
         tObj = Transaction.objects.create(amount=fee, user=customer, timestamp=timestamp)
         oObj = Order.objects.create(user=customer, transaction=tObj, timestamp=timestamp)
+
         if promocode is not None:
             pobj = PromoCode.objects.get(code=promocode)
             if (pobj.users is None | customer in pobj.users) & pobj.isActive:
@@ -104,6 +116,10 @@ class BuyerObj(graphene.ObjectType):
     firstName = graphene.String()
     lastName = graphene.String()
     vidyutID = graphene.String()
+    photo = graphene.String()
+
+    def resolve_photo(self, info):
+        return ''
 
 
 class IssuerObj(BuyerObj, graphene.ObjectType):

@@ -13,6 +13,7 @@ class Product(models.Model):
     ticket = models.OneToOneField(Ticket, on_delete=models.PROTECT, null=True, blank=True)
     isAvailable = models.BooleanField(default=True)
     freebies = models.ManyToManyField('self', blank=True)
+    restrictMultiplePurchases = models.BooleanField(default=True)
 
     def __str__(self):
         return str(self.product)
