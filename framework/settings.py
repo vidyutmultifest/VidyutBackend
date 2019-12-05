@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     'social_django',
     'easy_select2',
     'ckeditor',
+    'rangefilter',
     'access',
     'events',
     'participants',
