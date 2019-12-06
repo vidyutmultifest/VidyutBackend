@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     'easy_select2',
     'ckeditor',
     'rangefilter',
+    'import_export',
     'access',
     'events',
     'participants',

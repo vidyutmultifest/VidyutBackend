@@ -6,6 +6,7 @@ chardet==3.0.4
 cycler==0.10.0
 decorator==4.4.1
 defusedxml==0.6.0
+diff-match-patch==20181111
 Django==2.2.6
 django-admin-rangefilter==0.5.2
 django-ckeditor==5.7.1
@@ -14,8 +15,10 @@ django-easy-select2==1.5.6
 django-filter==2.2.0
 django-graphql-jwt==0.2.2
 django-graphql-social-auth==0.1.4
+django-import-export==2.0
 django-js-asset==1.2.2
 docutils==0.15.2
+et-xmlfile==1.0.1
 graphene==2.1.8
 graphene-django==2.6.0
 graphene-file-upload==1.2.2
@@ -23,10 +26,14 @@ graphql-core==2.2.1
 graphql-relay==2.0.0
 idna==2.8
 imageio==2.6.1
+jdcal==1.4.1
 jmespath==0.9.4
 kiwisolver==1.1.0
+MarkupPy==1.14
 networkx==2.4
 oauthlib==3.1.0
+odfpy==1.4.0
+openpyxl==3.0.2
 Pillow==6.2.1
 pkg-resources==0.0.0
 promise==2.2.1
@@ -36,6 +43,7 @@ python-dateutil==2.8.0
 python3-openid==3.1.0
 pytz==2019.3
 PyWavelets==1.1.1
+PyYAML==5.2
 requests==2.22.0
 requests-oauthlib==1.3.0
 Rx==1.6.1
@@ -45,4 +53,7 @@ six==1.12.0
 social-auth-app-django==3.1.0
 social-auth-core==3.2.0
 sqlparse==0.3.0
+tablib==0.14.0
 urllib3==1.25.7
+xlrd==1.2.0
+xlwt==1.3.0
