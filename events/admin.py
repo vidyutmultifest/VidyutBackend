@@ -7,6 +7,27 @@ from products.models import *
 from .models import *
 
 
+class CSInline(admin.TabularInline):
+    model = CompetitionSchedule
+    extra = 0
+    select2 = select2_modelform(CompetitionSchedule, attrs={'width': '250px'})
+    form = select2
+
+
+class WSInline(admin.TabularInline):
+    model = WorkshopSchedule
+    extra = 0
+    select2 = select2_modelform(WorkshopSchedule, attrs={'width': '250px'})
+    form = select2
+
+
+class TSInline(admin.TabularInline):
+    model = TicketSchedule
+    extra = 0
+    select2 = select2_modelform(TicketSchedule, attrs={'width': '250px'})
+    form = select2
+
+
 @admin.register(Department)
 class DepartmentAdmin(admin.ModelAdmin):
     select2 = select2_modelform(Department, attrs={'width': '250px'})
@@ -15,23 +36,105 @@ class DepartmentAdmin(admin.ModelAdmin):
 
 @admin.register(Competition)
 class CompetitionAdmin(admin.ModelAdmin):
+    fieldsets = [
+        ('Basic Details', {
+            'fields': [
+                ('name', 'slug'),
+                'cover',
+                ('dept', 'organizer'),
+            ]
+        }),
+        ('Competition Details', {
+            'fields': [
+                'description',
+                'details',
+                'fee',
+                ('firstPrize', 'secondPrize', 'thirdPrize')
+            ]
+        }),
+        ('Contacts', {
+            'fields': [
+                'contacts'
+            ]
+        }),
+        ('Curation', {
+            'fields': [
+                'isRecommended'
+            ]
+        }),
+    ]
     list_display = ('name', 'dept', 'fee',)
     search_fields = ['name']
     select2 = select2_modelform(Competition, attrs={'width': '250px'})
+    inlines = (CSInline,)
     form = select2
 
 
 @admin.register(Workshop)
 class WorkshopAdmin(admin.ModelAdmin):
+    fieldsets = [
+        ('Basic Details', {
+            'fields': [
+                ('name', 'slug'),
+                'cover',
+                ('dept', 'organizer'),
+            ]
+        }),
+        ('Competition Details', {
+            'fields': [
+                'description',
+                'details',
+                'fee',
+            ]
+        }),
+        ('Contacts', {
+            'fields': [
+                'contacts'
+            ]
+        }),
+        ('Curation', {
+            'fields': [
+                'isRecommended'
+            ]
+        }),
+    ]
     list_display = ('name', 'dept', 'fee',)
     select2 = select2_modelform(Workshop, attrs={'width': '250px'})
     form = select2
+    inlines = (WSInline,)
 
 
 @admin.register(Ticket)
 class TicketAdmin(admin.ModelAdmin):
+    fieldsets = [
+        ('Basic Details', {
+            'fields': [
+                ('name', 'slug'),
+                'cover',
+                'organizer',
+            ]
+        }),
+        ('Competition Details', {
+            'fields': [
+                'description',
+                'details',
+                'fee',
+            ]
+        }),
+        ('Contacts', {
+            'fields': [
+                'contacts'
+            ]
+        }),
+        ('Curation', {
+            'fields': [
+                'isRecommended'
+            ]
+        }),
+    ]
     select2 = select2_modelform(Ticket, attrs={'width': '250px'})
     form = select2
+    inlines = (TSInline,)
 
 
 @admin.register(Merchandise)
@@ -43,6 +146,18 @@ class MerchandiseAdmin(admin.ModelAdmin):
 @admin.register(ContactPerson)
 class ContactPersonAdmin(admin.ModelAdmin):
     list_display = ('name', 'phone', 'email',)
+
+
+@admin.register(TimeSlot)
+class TimeSlotAdmin(admin.ModelAdmin):
+    select2 = select2_modelform(TimeSlot, attrs={'width': '250px'})
+    form = select2
+
+
+@admin.register(Venue)
+class VenueAdmin(admin.ModelAdmin):
+    select2 = select2_modelform(Venue, attrs={'width': '250px'})
+    form = select2
 
 
 @receiver(post_save, sender=Competition)
