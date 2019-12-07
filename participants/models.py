@@ -23,6 +23,13 @@ class College(models.Model):
         return self.name
 
 
+class Team(models.Model):
+    name = models.CharField(max_length=100)
+    leader = models.ManyToManyField(User, related_name='TeamLeader')
+    members = models.ManyToManyField(User, blank=True, related_name='TeamMembers')
+    college = models.ForeignKey(College, on_delete=models.PROTECT)
+
+
 class Profile(models.Model):
     def get_selfie_path(self, filename):
         ext = filename.split('.')[-1]

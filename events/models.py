@@ -135,6 +135,7 @@ class Competition(models.Model):
     lastEditor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     lastEditTime = models.DateTimeField(null=True, blank=True)
     isRecommended = models.BooleanField(default=False)
+    isTeamEvent = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
