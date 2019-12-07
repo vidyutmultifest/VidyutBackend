@@ -2,6 +2,7 @@ import uuid
 from django.db import models
 from ckeditor.fields import RichTextField
 from django.utils import timezone
+from django.contrib.auth.models import User
 
 to_tz = timezone.get_default_timezone()
 
@@ -55,6 +56,8 @@ class Ticket(models.Model):
     contacts = models.ManyToManyField(ContactPerson, blank=True)
     schedule = models.ManyToManyField(TimeSlot, through='TicketSchedule', blank=True)
     createdAt = models.DateTimeField(auto_now_add=True)
+    lastEditor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    lastEditTime = models.DateTimeField(null=True, blank=True)
     isRecommended = models.BooleanField(default=False)
 
     def __str__(self):
@@ -76,6 +79,8 @@ class Merchandise(models.Model):
     fee = models.PositiveIntegerField(null=True, blank=True)
     contacts = models.ManyToManyField(ContactPerson, blank=True)
     createdAt = models.DateTimeField(auto_now_add=True)
+    lastEditor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    lastEditTime = models.DateTimeField(null=True, blank=True)
     isRecommended = models.BooleanField(default=False)
 
     def __str__(self):
@@ -99,6 +104,8 @@ class Workshop(models.Model):
     contacts = models.ManyToManyField(ContactPerson, blank=True)
     schedule = models.ManyToManyField(TimeSlot, through='WorkshopSchedule', blank=True)
     createdAt = models.DateTimeField(auto_now_add=True)
+    lastEditor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    lastEditTime = models.DateTimeField(null=True, blank=True)
     isRecommended = models.BooleanField(default=False)
 
     def __str__(self):
@@ -125,6 +132,8 @@ class Competition(models.Model):
     contacts = models.ManyToManyField(ContactPerson, blank=True)
     schedule = models.ManyToManyField(TimeSlot, through='CompetitionSchedule', blank=True)
     createdAt = models.DateTimeField(auto_now_add=True)
+    lastEditor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    lastEditTime = models.DateTimeField(null=True, blank=True)
     isRecommended = models.BooleanField(default=False)
 
     def __str__(self):

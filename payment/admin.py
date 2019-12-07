@@ -4,19 +4,13 @@ from easy_select2 import select2_modelform
 from rangefilter.filter import DateTimeRangeFilter
 from import_export import resources
 from import_export.admin import ImportExportModelAdmin
-from import_export.fields import Field
 
 
 class TransactionResource(resources.ModelResource):
-    date = Field()
 
     class Meta:
         model = Transaction
-        fields = ('transactionID', 'isPaid', 'isProcessed', 'isPending', 'amount', 'date', 'user__username', 'issuer__username', 'timestamp', 'issuerLocation', 'issuerDevice', )
-
-    @staticmethod
-    def dehydrate_full_title(transaction):
-        return transaction.timestamp.date
+        fields = ('transactionID', 'isPaid', 'isProcessed', 'isPending', 'amount', 'user__username', 'issuer__username', 'timestamp', 'issuerLocation', 'issuerDevice', )
 
 
 class OPInline(admin.TabularInline):

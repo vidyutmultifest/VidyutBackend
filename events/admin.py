@@ -3,6 +3,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from easy_select2 import select2_modelform
 from products.models import *
+from datetime import datetime
 
 from .models import *
 
@@ -63,11 +64,16 @@ class CompetitionAdmin(admin.ModelAdmin):
             ]
         }),
     ]
-    list_display = ('name', 'dept', 'fee',)
+    list_display = ('name', 'dept', 'fee', 'lastEditor', 'lastEditTime')
     search_fields = ['name']
     select2 = select2_modelform(Competition, attrs={'width': '250px'})
     inlines = (CSInline,)
     form = select2
+
+    def save_model(self, request, obj, form, change):
+        obj.lastEditor = request.user
+        obj.lastEditTime = datetime.now()
+        super().save_model(request, obj, form, change)
 
 
 @admin.register(Workshop)
@@ -98,10 +104,15 @@ class WorkshopAdmin(admin.ModelAdmin):
             ]
         }),
     ]
-    list_display = ('name', 'dept', 'fee',)
+    list_display = ('name', 'dept', 'fee', 'lastEditor', 'lastEditTime')
     select2 = select2_modelform(Workshop, attrs={'width': '250px'})
     form = select2
     inlines = (WSInline,)
+
+    def save_model(self, request, obj, form, change):
+        obj.lastEditor = request.user
+        obj.lastEditTime = datetime.now()
+        super().save_model(request, obj, form, change)
 
 
 @admin.register(Ticket)
@@ -132,15 +143,27 @@ class TicketAdmin(admin.ModelAdmin):
             ]
         }),
     ]
+    list_display = ('name', 'lastEditor', 'lastEditTime')
     select2 = select2_modelform(Ticket, attrs={'width': '250px'})
     form = select2
     inlines = (TSInline,)
 
+    def save_model(self, request, obj, form, change):
+        obj.lastEditor = request.user
+        obj.lastEditTime = datetime.now()
+        super().save_model(request, obj, form, change)
+
 
 @admin.register(Merchandise)
 class MerchandiseAdmin(admin.ModelAdmin):
+    list_display = ('name', 'lastEditor', 'lastEditTime')
     select2 = select2_modelform(Ticket, attrs={'width': '250px'})
     form = select2
+
+    def save_model(self, request, obj, form, change):
+        obj.lastEditor = request.user
+        obj.lastEditTime = datetime.now()
+        super().save_model(request, obj, form, change)
 
 
 @admin.register(ContactPerson)
