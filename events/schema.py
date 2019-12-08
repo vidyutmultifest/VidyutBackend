@@ -25,6 +25,9 @@ class EventObj(graphene.ObjectType):
     details = graphene.String()
     fee = graphene.Int()
     isNew = graphene.Boolean()
+    isTeamEvent = graphene.Boolean()
+    minTeamSize = graphene.Int()
+    maxTeamSize = graphene.Int()
     isRecommended = graphene.Boolean()
     department = graphene.Field(DepartmentObj)
     contacts = graphene.List(ContactPersonObj)
@@ -92,6 +95,7 @@ class Query(object):
     listWorkshops = graphene.List(WorkshopObj)
     listMerchandise = graphene.List(MerchandiseObj)
     listTicketEvents = graphene.List(TicketObj)
+    listTeamCompetitions = graphene.List(CompetitionObj)
 
     @staticmethod
     def resolve_getCompetition(self, info, **kwargs):
@@ -101,6 +105,10 @@ class Query(object):
     @staticmethod
     def resolve_listCompetitions(self, info, **kwargs):
         return Competition.objects.values().all()
+
+    @staticmethod
+    def resolve_listTeamCompetitions(self, info, **kwargs):
+        return Competition.objects.values().filter(isTeamEvent=True)
 
     @staticmethod
     def resolve_getWorkshop(self, info, **kwargs):

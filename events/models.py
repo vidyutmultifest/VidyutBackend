@@ -136,6 +136,8 @@ class Competition(models.Model):
     lastEditTime = models.DateTimeField(null=True, blank=True)
     isRecommended = models.BooleanField(default=False)
     isTeamEvent = models.BooleanField(default=False)
+    minTeamSize = models.PositiveIntegerField(null=True, blank=True)
+    maxTeamSize = models.PositiveIntegerField(null=True, blank=True)
 
     def __str__(self):
         return self.name

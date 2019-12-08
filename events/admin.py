@@ -58,6 +58,13 @@ class CompetitionAdmin(admin.ModelAdmin):
                 'contacts'
             ]
         }),
+        ('For Team Events', {
+            'fields': [
+                'isTeamEvent',
+                'minTeamSize',
+                'maxTeamSize'
+            ]
+        }),
         ('Curation', {
             'fields': [
                 'isRecommended'

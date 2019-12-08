@@ -22,8 +22,47 @@ class AddCollege(graphene.Mutation):
         return CreateCollegeObj(id=obj.id)
 
 
+class CreateTeamObj(graphene.ObjectType):
+    hash = graphene.String()
+
+
+class CreateTeam(graphene.Mutation):
+    class Arguments:
+        name = graphene.String(required=True)
+        productID = graphene.String(required=True)
+
+    Output = CreateTeamObj
+
+    @login_required
+    def mutate(self, info, name, productID):
+        leader = info.context.user
+        product = Product.objects.get(productID=productID)
+        college = Profile.objects.get(user=leader).college
+        obj = Team.objects.create(name=name, leader=leader, product=product, college=college)
+        obj.members.add(leader)
+        obj.save()
+        return CreateTeamObj(hash=obj.hash)
+
+
+class JoinTeam(graphene.Mutation):
+    class Arguments:
+        teamHash = graphene.String(required=True)
+
+    Output = CreateTeamObj
+
+    @login_required
+    def mutate(self, info, teamHash):
+        user = info.context.user
+        obj = Team.objects.get(hash=teamHash)
+        obj.members.add(user)
+        obj.save()
+        return CreateTeamObj(hash=obj.hash)
+
+
 class Mutation(updateProfileMutation, graphene.ObjectType):
     addCollege = AddCollege.Field()
+    createTeam = CreateTeam.Field()
+    joinTeam = JoinTeam.Field()
 
 
 class CollegeObj(graphene.ObjectType):
@@ -61,10 +100,25 @@ class ProfileObj(graphene.ObjectType):
     degreeType = graphene.String()
 
 
+class TeamMemberObj(graphene.ObjectType):
+    name = graphene.String()
+    username = graphene.String()
+
+
+class TeamObj(graphene.ObjectType):
+    name = graphene.String()
+    collegeName = graphene.String()
+    leader = graphene.Field(TeamMemberObj)
+    members = graphene.List(TeamMemberObj)
+    isUserLeader = graphene.Boolean()
+
+
 class Query(rekognitionQueries, object):
     isProfileComplete = graphene.Boolean()
     myProfile = graphene.Field(ProfileObj)
     colleges = graphene.List(CollegeObj)
+    getTeam = graphene.Field(TeamObj, hash=graphene.String(required=True))
+
     # sendOTP = graphene.Boolean(phoneNo=graphene.String(required=True), message=graphene.String(required=True))
 
     @login_required
@@ -128,7 +182,28 @@ class Query(rekognitionQueries, object):
     def resolve_colleges(self, info, **kwargs):
         return College.objects.values().all()
 
-
+    @login_required
+    def resolve_getTeam(self, info, **kwargs):
+        user = info.context.user
+        team = Team.objects.get(hash=kwargs.get('hash'))
+        if user in team.members.all():
+            mlist = []
+            for member in team.members.all():
+                mlist.append({
+                    "name": member.first_name + ' ' + member.last_name,
+                    "username": member.username
+                })
+            return TeamObj(
+                name=team.name,
+                collegeName=team.college.name,
+                leader={
+                    "name": team.leader.first_name + ' ' + team.leader.last_name,
+                    "username": team.leader.username
+                },
+                members=mlist,
+                isUserLeader=user == team.leader
+            )
+        return None
     #
     # @login_required
     # def resolve_sendOTP(self, info, **kwargs):
