@@ -6,28 +6,31 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from django.template.loader import get_template
-
-from framework import settings
-from django.core.mail import send_mail
-from django.utils.html import strip_tags
-
-from_email = settings.EMAIL_HOST_USER
+from products.models import Product
+from payment.models import Order
 
 
 class College(models.Model):
-    name = models.CharField(max_length=100)
-    location = models.CharField(max_length=50, null=True, blank=True)
+    name = models.CharField(max_length=200)
 
     def __str__(self):
         return self.name
 
 
 class Team(models.Model):
+    def get_attachment_path(self, filename):
+        ext = filename.split('.')[-1]
+        filename = "%s.%s" % (uuid.uuid4(), ext)
+        return 'static/uploads/team/attachments/' + filename
+
     name = models.CharField(max_length=100)
     leader = models.ManyToManyField(User, related_name='TeamLeader')
     members = models.ManyToManyField(User, blank=True, related_name='TeamMembers')
     college = models.ForeignKey(College, on_delete=models.PROTECT)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    order = models.ForeignKey(Order, on_delete=models.PROTECT, null=True, blank=True)
+    formData = models.TextField(verbose_name='Form Data', null=True, blank=True)
+    attachment = models.FileField(upload_to=get_attachment_path, null=True, blank=True)
 
 
 class Profile(models.Model):
@@ -51,10 +54,16 @@ class Profile(models.Model):
     college = models.ForeignKey(College, on_delete=models.PROTECT, null=True, blank=True)
     photo = models.ImageField(upload_to=get_selfie_path, null=True, blank=True)
     idPhoto = models.ImageField(upload_to=get_id_path, null=True, blank=True)
-    graduationYear = models.IntegerField(null=True, blank=True)
+    graduationYear = models.PositiveIntegerField(null=True, blank=True)
     rollNo = models.CharField(max_length=50, null=True, blank=True)
     phone = models.CharField(max_length=15, null=True, blank=True)
     location = models.CharField(max_length=50, null=True, blank=True)
+    gender = models.CharField(max_length=1, null=True, blank=True)
+    shirtSize = models.CharField(max_length=5, null=True, blank=True)
+    degreeType = models.CharField(max_length=15, null=True, blank=True)
+    foodPreference = models.CharField(max_length=1, null=True, blank=True)
+    emergencyPhone = models.CharField(max_length=15, null=True, blank=True)
+    emergencyContactName = models.CharField(max_length=100, null=True, blank=True)
 
     def __str__(self):
         return self.user.username

@@ -31,6 +31,11 @@ class CollegeObj(graphene.ObjectType):
     name = graphene.String()
     location = graphene.String()
 
+    # DEPRECIATED
+    @staticmethod
+    def resolve_location(self, info):
+        return None
+
 
 class ProfileObj(graphene.ObjectType):
     vidyutID = graphene.String()
@@ -48,6 +53,12 @@ class ProfileObj(graphene.ObjectType):
     location = graphene.String()
     graduationYear = graphene.String()
     rollNo = graphene.String()
+    gender = graphene.String()
+    emergencyPhone = graphene.String()
+    emergencyContactName = graphene.String()
+    foodPreference = graphene.String()
+    shirtSize = graphene.String()
+    degreeType = graphene.String()
 
 
 class Query(rekognitionQueries, object):
@@ -84,10 +95,10 @@ class Query(rekognitionQueries, object):
         photoUrl = None
         if profile.photo and hasattr(profile.photo, 'url') is not None:
             photoUrl = info.context.build_absolute_uri(profile.photo.url)
-        #
-        # idPhotoUrl = None
-        # if profile.idPhoto and hasattr(profile.idPhoto, 'url') is not None:
-        #     idPhotoUrl = info.context.build_absolute_uri(profile.idPhoto.url)
+
+        idPhotoUrl = None
+        if profile.idPhoto and hasattr(profile.idPhoto, 'url') is not None:
+            idPhotoUrl = info.context.build_absolute_uri(profile.idPhoto.url)
 
         return ProfileObj(
             firstName=user.first_name,
@@ -101,9 +112,16 @@ class Query(rekognitionQueries, object):
             phone=profile.phone,
             college=profile.college,
             photo=photoUrl,
-            idPhoto=None,
+            idPhoto=idPhotoUrl,
             graduationYear=profile.graduationYear,
-            rollNo=profile.rollNo
+            rollNo=profile.rollNo,
+            degreeType=profile.degreeType,
+            gender=profile.gender,
+            emergencyPhone=profile.emergencyPhone,
+            emergencyContactName=profile.emergencyContactName,
+            foodPreference=profile.foodPreference,
+            shirtSize=profile.shirtSize,
+            location=profile.location
         )
 
     @staticmethod

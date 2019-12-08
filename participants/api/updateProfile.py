@@ -13,6 +13,13 @@ class ProfileDetailsObj(graphene.InputObjectType):
     rollNo = graphene.String(required=False)
     phone = graphene.String(required=False)
     location = graphene.String(required=False)
+    gender = graphene.String(required=False)
+    emergencyPhone = graphene.String(required=False)
+    emergencyContactName = graphene.String(required=False)
+    foodPreference = graphene.String(required=False)
+    shirtSize = graphene.String(required=False)
+    degreeType = graphene.String(required=False)
+    graduationYear = graphene.String(required=False)
     collegeID = graphene.Int(required=False)
 
 
@@ -49,6 +56,20 @@ class UpdateProfile(graphene.Mutation):
                 profile.phone = details.phone
             if details.location is not None:
                 profile.location = details.location
+            if details.gender is not None:
+                profile.gender = details.gender
+            if details.emergencyPhone is not None:
+                profile.emergencyPhone = details.emergencyPhone
+            if details.emergencyContactName is not None:
+                profile.emergencyContactName = details.emergencyContactName
+            if details.foodPreference is not None:
+                profile.foodPreference = details.foodPreference
+            if details.shirtSize is not None:
+                profile.shirtSize = details.shirtSize
+            if details.degreeType is not None:
+                profile.degreeType = details.degreeType
+            if details.graduationYear is not None:
+                profile.graduationYear = int(details.graduationYear)
             if details.collegeID is not None:
                 try:
                     college = College.objects.get(id=details.collegeID)
