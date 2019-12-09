@@ -43,40 +43,55 @@ class CreateTeam(graphene.Mutation):
         return CreateTeamObj(hash=obj.hash)
 
 
-class ProfileDetailsObj(graphene.InputObjectType):
+class TeamUpdateStatusObj(graphene.ObjectType):
+    status = graphene.Boolean()
+
+
+class TeamEditDetailsObj(graphene.InputObjectType):
     name = graphene.String(required=False)
+    leader = graphene.String()
     removeMembers = graphene.List(graphene.String)
 
 
-# class EditTeam(graphene.Mutation):
-#     class Arguments:
-#         teamHash = graphene.String(required=True)
-#         details = ProfileDetailsObj(required=True)
-#
-#     Output = graphene.Boolean()
-#
-#     @login_required
-#     def mutate(self, info, teamHash, details):
-#         user = info.context.user
-#         obj = Team.objects.get(hash=teamHash)
-#         if obj.leader == user:
-#             if details.name is not None:
-#                 obj.name = details.name
-#             if details.removeMembers is not None:
-#                 for member in details.removeMembers:
-#                     delusr = User.objects.get(username=member)
-#                     if delusr != user:
-#                         obj.members.reverse(delusr)
-#             obj.save()
-#             return True
-#         return False
+class EditTeam(graphene.Mutation):
+    class Arguments:
+        teamHash = graphene.String(required=True)
+        details = TeamEditDetailsObj(required=True)
+
+    Output = TeamUpdateStatusObj
+
+    @login_required
+    def mutate(self, info, teamHash, details):
+        user = info.context.user
+        obj = Team.objects.get(hash=teamHash)
+        if obj.leader == user:
+            if details.name is not None:
+                obj.name = details.name
+            if details.leader is not None:
+                obj.leader = User.objects.get(username=details.leader)
+            if details.removeMembers is not None:
+                for member in details.removeMembers:
+                    delusr = User.objects.get(username=member)
+                    if delusr != user:
+                        obj.members.remove(delusr)
+            obj.save()
+            return TeamUpdateStatusObj(status=True)
+        else:
+            if details.removeMembers is not None:
+                for member in details.removeMembers:
+                    delusr = User.objects.get(username=member)
+                    if delusr == user:
+                        obj.members.remove(delusr)
+                        obj.save()
+                        return TeamUpdateStatusObj(status=True)
+        return TeamUpdateStatusObj(status=False)
 
 
 class DeleteTeam(graphene.Mutation):
     class Arguments:
         teamHash = graphene.String(required=True)
 
-    Output = graphene.Boolean()
+    Output = TeamUpdateStatusObj
 
     @login_required
     def mutate(self, info, teamHash):
@@ -85,10 +100,10 @@ class DeleteTeam(graphene.Mutation):
         if obj.leader == user:
             rCount = EventRegistration.objects.filter(team=obj).count()
             if rCount > 0:
-                return False
+                return TeamUpdateStatusObj(status=False)
             obj.delete()
-            return True
-        return False
+            return TeamUpdateStatusObj(status=True)
+        return TeamUpdateStatusObj(status=False)
 
 
 class JoinTeam(graphene.Mutation):
@@ -110,7 +125,7 @@ class Mutation(updateProfileMutation, graphene.ObjectType):
     addCollege = AddCollege.Field()
     createTeam = CreateTeam.Field()
     deleteTeam = DeleteTeam.Field()
-    # editTeam = EditTeam.Field()
+    editTeam = EditTeam.Field()
     joinTeam = JoinTeam.Field()
 
 
@@ -158,7 +173,9 @@ class TeamObj(graphene.ObjectType):
     name = graphene.String()
     leader = graphene.Field(TeamMemberObj)
     members = graphene.List(TeamMemberObj)
+    membersCount = graphene.Int()
     isUserLeader = graphene.Boolean()
+    hash = graphene.String()
 
 
 class Query(rekognitionQueries, object):
@@ -236,7 +253,7 @@ class Query(rekognitionQueries, object):
         team = Team.objects.get(hash=kwargs.get('hash'))
         if user in team.members.all():
             mlist = []
-            for member in team.members.all():
+            for member in team.members.order_by('first_name').all():
                 mlist.append({
                     "name": member.first_name + ' ' + member.last_name,
                     "username": member.username
@@ -248,6 +265,8 @@ class Query(rekognitionQueries, object):
                     "username": team.leader.username
                 },
                 members=mlist,
+                membersCount=len(mlist),
+                hash=team.hash,
                 isUserLeader=user == team.leader
             )
         return None
@@ -260,7 +279,7 @@ class Query(rekognitionQueries, object):
         tlist = []
         for team in teams:
             mlist = []
-            for member in team.members.all():
+            for member in team.members.order_by('first_name').all():
                 mlist.append({
                     "name": member.first_name + ' ' + member.last_name,
                     "username": member.username
@@ -272,7 +291,9 @@ class Query(rekognitionQueries, object):
                     "username": team.leader.username
                 },
                 "members": mlist,
-                "isUserLeader": False
+                "membersCount": len(mlist),
+                "hash": team.hash,
+                "isUserLeader": user == team.leader
             })
         return tlist
 

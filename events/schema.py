@@ -1,3 +1,5 @@
+import json
+
 import graphene
 from .models import *
 from pytz import timezone
@@ -14,6 +16,12 @@ class ContactPersonObj(graphene.ObjectType):
     name = graphene.String()
     phone = graphene.String()
     email = graphene.String()
+
+
+class FormFieldObj(graphene.ObjectType):
+    key = graphene.String()
+    label = graphene.String()
+    type = graphene.String()
 
 
 class EventObj(graphene.ObjectType):
@@ -77,6 +85,7 @@ class CompetitionObj(EventObj, graphene.ObjectType):
     firstPrize = graphene.String()
     secondPrize = graphene.String()
     thirdPrize = graphene.String()
+    formFields = graphene.List(FormFieldObj)
 
     def resolve_contacts(self, info):
         contacts = Competition.objects.get(slug=self['slug']).contacts
@@ -85,6 +94,10 @@ class CompetitionObj(EventObj, graphene.ObjectType):
     def resolve_productID(self, info):
         return Product.objects.get(competition_id=self['id']).productID
 
+    def resolve_formFields(self, info):
+        if self['formFields'] is not None:
+            return json.loads(self['formFields'])
+        return None
 
 class Query(object):
     getCompetition = graphene.Field(CompetitionObj, slug=graphene.String(required=True))
