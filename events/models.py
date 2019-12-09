@@ -138,6 +138,7 @@ class Competition(models.Model):
     isTeamEvent = models.BooleanField(default=False)
     minTeamSize = models.PositiveIntegerField(null=True, blank=True)
     maxTeamSize = models.PositiveIntegerField(null=True, blank=True)
+    hasSelectionProcess = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name

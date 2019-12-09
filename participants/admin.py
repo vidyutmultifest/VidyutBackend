@@ -6,7 +6,6 @@ from .models import *
 
 @admin.register(Team)
 class TeamAdmin(admin.ModelAdmin):
-    list_display = ('name', 'college', 'isSubmitted', 'isSelected')
     select2 = select2_modelform(Team, attrs={'width': '250px'})
     form = select2
 

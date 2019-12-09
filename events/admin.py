@@ -43,6 +43,7 @@ class CompetitionAdmin(admin.ModelAdmin):
                 ('name', 'slug'),
                 'cover',
                 ('dept', 'organizer'),
+                'hasSelectionProcess'
             ]
         }),
         ('Competition Details', {
@@ -60,12 +61,10 @@ class CompetitionAdmin(admin.ModelAdmin):
         }),
         ('For Team Events', {
             'fields': [
-                'isTeamEvent',
-                'minTeamSize',
-                'maxTeamSize'
+                ('isTeamEvent', 'minTeamSize', 'maxTeamSize'),
             ]
         }),
-        ('Curation', {
+        ('Curation (For Site Admins)', {
             'fields': [
                 'isRecommended'
             ]
@@ -105,7 +104,7 @@ class WorkshopAdmin(admin.ModelAdmin):
                 'contacts'
             ]
         }),
-        ('Curation', {
+        ('Curation (For Site Admins)', {
             'fields': [
                 'isRecommended'
             ]

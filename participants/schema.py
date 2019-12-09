@@ -29,16 +29,13 @@ class CreateTeamObj(graphene.ObjectType):
 class CreateTeam(graphene.Mutation):
     class Arguments:
         name = graphene.String(required=True)
-        productID = graphene.String(required=True)
 
     Output = CreateTeamObj
 
     @login_required
-    def mutate(self, info, name, productID):
+    def mutate(self, info, name):
         leader = info.context.user
-        product = Product.objects.get(productID=productID)
-        college = Profile.objects.get(user=leader).college
-        obj = Team.objects.create(name=name, leader=leader, product=product, college=college)
+        obj = Team.objects.create(name=name, leader=leader)
         obj.members.add(leader)
         obj.save()
         return CreateTeamObj(hash=obj.hash)
@@ -107,7 +104,6 @@ class TeamMemberObj(graphene.ObjectType):
 
 class TeamObj(graphene.ObjectType):
     name = graphene.String()
-    collegeName = graphene.String()
     leader = graphene.Field(TeamMemberObj)
     members = graphene.List(TeamMemberObj)
     isUserLeader = graphene.Boolean()
@@ -195,7 +191,6 @@ class Query(rekognitionQueries, object):
                 })
             return TeamObj(
                 name=team.name,
-                collegeName=team.college.name,
                 leader={
                     "name": team.leader.first_name + ' ' + team.leader.last_name,
                     "username": team.leader.username

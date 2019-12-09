@@ -1,7 +1,9 @@
 import uuid
 from django.db import models
 from django.contrib.auth.models import User
-from products.models import *
+
+from payment.models import Order
+from products.models import Product
 
 
 class Ticket(models.Model):
@@ -9,7 +11,7 @@ class Ticket(models.Model):
     purchaseTimestamp = models.DateTimeField()
     activationTimestamp = models.DateTimeField(null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.PROTECT, related_name='ticketUser', null=True, blank=True)
-    purchaser = models.ForeignKey(User, on_delete=models.PROTECT, related_name='ticketPurchaser')
+    order = models.ForeignKey(Order, on_delete=models.PROTECT, related_name='ticketOrder')
     product = models.ForeignKey(Product, on_delete=models.PROTECT, related_name='ticketProduct')
     isCounterTicket = models.BooleanField(default=True)
     isActive = models.BooleanField(default=False)

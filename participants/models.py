@@ -18,22 +18,10 @@ class College(models.Model):
 
 
 class Team(models.Model):
-    def get_attachment_path(self, filename):
-        ext = filename.split('.')[-1]
-        filename = "%s.%s" % (uuid.uuid4(), ext)
-        return 'static/uploads/team/attachments/' + filename
-
     name = models.CharField(max_length=100)
     hash = models.UUIDField(unique=True, default=uuid.uuid4)
     leader = models.ForeignKey(User, related_name='TeamLeader', on_delete=models.PROTECT)
     members = models.ManyToManyField(User, blank=True, related_name='TeamMembers')
-    college = models.ForeignKey(College, on_delete=models.PROTECT)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    order = models.ForeignKey(Order, on_delete=models.PROTECT, null=True, blank=True)
-    formData = models.TextField(verbose_name='Form Data', null=True, blank=True)
-    attachment = models.FileField(upload_to=get_attachment_path, null=True, blank=True)
-    isSubmitted = models.BooleanField(default=False)
-    isSelected = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
