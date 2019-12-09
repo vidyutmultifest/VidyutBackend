@@ -107,6 +107,7 @@ class Workshop(models.Model):
     lastEditor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     lastEditTime = models.DateTimeField(null=True, blank=True)
     isRecommended = models.BooleanField(default=False)
+    formFields = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -139,6 +140,7 @@ class Competition(models.Model):
     minTeamSize = models.PositiveIntegerField(null=True, blank=True)
     maxTeamSize = models.PositiveIntegerField(null=True, blank=True)
     hasSelectionProcess = models.BooleanField(default=False)
+    formFields = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return self.name

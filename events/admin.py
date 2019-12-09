@@ -64,6 +64,11 @@ class CompetitionAdmin(admin.ModelAdmin):
                 ('isTeamEvent', 'minTeamSize', 'maxTeamSize'),
             ]
         }),
+        ('Form Fields (Do Not Touch)', {
+            'fields': [
+                'formFields'
+            ]
+        }),
         ('Curation (For Site Admins)', {
             'fields': [
                 'isRecommended'
@@ -102,6 +107,11 @@ class WorkshopAdmin(admin.ModelAdmin):
         ('Contacts', {
             'fields': [
                 'contacts'
+            ]
+        }),
+        ('Form Fields (Do Not Touch)', {
+            'fields': [
+                'formFields'
             ]
         }),
         ('Curation (For Site Admins)', {
