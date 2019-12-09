@@ -1,5 +1,7 @@
 import graphene
 from graphql_jwt.decorators import login_required
+
+from registrations.models import EventRegistration
 from .models import *
 
 from .api.updateProfile import Mutation as updateProfileMutation
@@ -41,6 +43,54 @@ class CreateTeam(graphene.Mutation):
         return CreateTeamObj(hash=obj.hash)
 
 
+class ProfileDetailsObj(graphene.InputObjectType):
+    name = graphene.String(required=False)
+    removeMembers = graphene.List(graphene.String)
+
+
+# class EditTeam(graphene.Mutation):
+#     class Arguments:
+#         teamHash = graphene.String(required=True)
+#         details = ProfileDetailsObj(required=True)
+#
+#     Output = graphene.Boolean()
+#
+#     @login_required
+#     def mutate(self, info, teamHash, details):
+#         user = info.context.user
+#         obj = Team.objects.get(hash=teamHash)
+#         if obj.leader == user:
+#             if details.name is not None:
+#                 obj.name = details.name
+#             if details.removeMembers is not None:
+#                 for member in details.removeMembers:
+#                     delusr = User.objects.get(username=member)
+#                     if delusr != user:
+#                         obj.members.reverse(delusr)
+#             obj.save()
+#             return True
+#         return False
+
+
+class DeleteTeam(graphene.Mutation):
+    class Arguments:
+        teamHash = graphene.String(required=True)
+
+    Output = graphene.Boolean()
+
+    @login_required
+    def mutate(self, info, teamHash):
+        user = info.context.user
+        obj = Team.objects.get(hash=teamHash)
+        if obj.leader == user:
+            rCount = EventRegistration.objects.filter(team=obj).count()
+            if rCount > 0:
+                return False
+            obj.delete()
+            return True
+        return False
+
+
 class JoinTeam(graphene.Mutation):
     class Arguments:
         teamHash = graphene.String(required=True)
@@ -59,6 +109,8 @@ class JoinTeam(graphene.Mutation):
 class Mutation(updateProfileMutation, graphene.ObjectType):
     addCollege = AddCollege.Field()
     createTeam = CreateTeam.Field()
+    deleteTeam = DeleteTeam.Field()
+    # editTeam = EditTeam.Field()
     joinTeam = JoinTeam.Field()
 
 
@@ -114,7 +166,7 @@ class Query(rekognitionQueries, object):
     myProfile = graphene.Field(ProfileObj)
     colleges = graphene.List(CollegeObj)
     getTeam = graphene.Field(TeamObj, hash=graphene.String(required=True))
-
+    myTeams = graphene.List(TeamObj)
     # sendOTP = graphene.Boolean(phoneNo=graphene.String(required=True), message=graphene.String(required=True))
 
     @login_required
@@ -199,6 +251,31 @@ class Query(rekognitionQueries, object):
                 isUserLeader=user == team.leader
             )
         return None
+
+
+    @login_required
+    def resolve_myTeams(self, info, **kwargs):
+        user = info.context.user
+        teams = Team.objects.filter(members=user)
+        tlist = []
+        for team in teams:
+            mlist = []
+            for member in team.members.all():
+                mlist.append({
+                    "name": member.first_name + ' ' + member.last_name,
+                    "username": member.username
+                })
+            tlist.append({
+                "name": team.name,
+                "leader": {
+                    "name": team.leader.first_name + ' ' + team.leader.last_name,
+                    "username": team.leader.username
+                },
+                "members": mlist,
+                "isUserLeader": False
+            })
+        return tlist
+
     #
     # @login_required
     # def resolve_sendOTP(self, info, **kwargs):
