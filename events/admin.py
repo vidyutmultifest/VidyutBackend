@@ -29,6 +29,12 @@ class TSInline(admin.TabularInline):
     form = select2
 
 
+@admin.register(Partners)
+class DepartmentAdmin(admin.ModelAdmin):
+    select2 = select2_modelform(Partners, attrs={'width': '250px'})
+    form = select2
+
+
 @admin.register(Department)
 class DepartmentAdmin(admin.ModelAdmin):
     select2 = select2_modelform(Department, attrs={'width': '250px'})
@@ -42,7 +48,7 @@ class CompetitionAdmin(admin.ModelAdmin):
             'fields': [
                 ('name', 'slug'),
                 'cover',
-                ('dept', 'organizer'),
+                ('dept', 'organiser', 'partners'),
                 'hasSelectionProcess'
             ]
         }),
@@ -94,7 +100,8 @@ class WorkshopAdmin(admin.ModelAdmin):
             'fields': [
                 ('name', 'slug'),
                 'cover',
-                ('dept', 'organizer'),
+                ('dept', 'organiser', 'partners'),
+                'accreditedBy'
             ]
         }),
         ('Competition Details', {
@@ -138,7 +145,7 @@ class TicketAdmin(admin.ModelAdmin):
             'fields': [
                 ('name', 'slug'),
                 'cover',
-                'organizer',
+                'organiser',
             ]
         }),
         ('Competition Details', {

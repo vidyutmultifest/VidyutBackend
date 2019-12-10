@@ -7,6 +7,17 @@ from django.contrib.auth.models import User
 to_tz = timezone.get_default_timezone()
 
 
+class Partners(models.Model):
+    def get_image_path(self, filename):
+        ext = filename.split('.')[-1]
+        filename = 'vidyut_workshop_' + "%s.%s" % (uuid.uuid4(), ext)
+        return 'static/events/partners/' + filename
+
+    name = models.CharField(max_length=200)
+    about = RichTextField(null=True, blank=True)
+    logo = models.ImageField(upload_to=get_image_path, null=True, blank=True)
+
+
 class ContactPerson(models.Model):
     name = models.CharField(max_length=50)
     phone = models.CharField(max_length=30, null=True, blank=True)
@@ -48,7 +59,7 @@ class Ticket(models.Model):
 
     name = models.CharField(max_length=150)
     slug = models.SlugField(unique=True)
-    organizer = models.CharField(max_length=200, null=True, blank=True)
+    organiser = models.ForeignKey(Partners, on_delete=models.PROTECT, related_name='TicketEventOrganizer', null=True, blank=True)
     cover = models.ImageField(upload_to=get_image_path, null=True, blank=True)
     description = models.CharField(max_length=200, null=True, blank=True)
     details = RichTextField(null=True, blank=True)
@@ -72,7 +83,6 @@ class Merchandise(models.Model):
 
     name = models.CharField(max_length=150)
     slug = models.SlugField(unique=True)
-    organizer = models.CharField(max_length=200, null=True, blank=True)
     cover = models.ImageField(upload_to=get_image_path, null=True, blank=True)
     description = models.CharField(max_length=200, null=True, blank=True)
     details = RichTextField(null=True, blank=True)
@@ -95,8 +105,10 @@ class Workshop(models.Model):
 
     name = models.CharField(max_length=150)
     slug = models.SlugField(unique=True)
-    organizer = models.CharField(max_length=200, null=True, blank=True)
     cover = models.ImageField(upload_to=get_image_path, null=True, blank=True)
+    organiser = models.ForeignKey(Partners, on_delete=models.PROTECT, related_name='WokshopOrganizer', null=True, blank=True)
+    partners = models.ManyToManyField(Partners, related_name='WorkshopPartners', blank=True)
+    accreditedBy = models.ForeignKey(Partners, on_delete=models.PROTECT, related_name='WorkshopAccreditior', null=True, blank=True)
     dept = models.ForeignKey(Department, on_delete=models.PROTECT, null=True, blank=True)
     description = models.CharField(max_length=200, null=True, blank=True)
     details = RichTextField(null=True, blank=True)
@@ -123,7 +135,8 @@ class Competition(models.Model):
     slug = models.SlugField(unique=True)
     cover = models.ImageField(upload_to=get_image_path, null=True, blank=True)
     dept = models.ForeignKey(Department, on_delete=models.PROTECT, null=True, blank=True)
-    organizer = models.CharField(max_length=200, null=True, blank=True)
+    organiser = models.ForeignKey(Partners, on_delete=models.PROTECT, related_name='CompetitionOrganizer', null=True, blank=True)
+    partners = models.ManyToManyField(Partners, related_name='CompetitionPartners', blank=True)
     description = models.CharField(max_length=200, null=True, blank=True)
     details = RichTextField(null=True, blank=True)
     fee = models.PositiveIntegerField(null=True, blank=True)

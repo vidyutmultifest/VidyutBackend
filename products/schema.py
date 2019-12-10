@@ -15,6 +15,7 @@ class ProductDetailObj(graphene.ObjectType):
     price = graphene.Int()
     slug = graphene.String()
     type = graphene.String()
+    details = graphene.String()
 
 
 class ProductObj(graphene.ObjectType):
@@ -41,6 +42,7 @@ class ProductObj(graphene.ObjectType):
             "price": product.fee,
             "slug": product.slug,
             "type": productType,
+            "details": product.details
             # "freebies": fids
         }
 
