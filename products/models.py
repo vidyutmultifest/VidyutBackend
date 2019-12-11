@@ -7,16 +7,16 @@ from events.models import Workshop, Competition, Merchandise, Ticket
 
 class Product(models.Model):
     productID = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
-    workshop = models.OneToOneField(Workshop, on_delete=models.PROTECT, null=True, blank=True)
-    competition = models.OneToOneField(Competition, on_delete=models.PROTECT, null=True, blank=True)
-    merchandise = models.OneToOneField(Merchandise, on_delete=models.PROTECT, null=True, blank=True)
-    ticket = models.OneToOneField(Ticket, on_delete=models.PROTECT, null=True, blank=True)
+    name = models.CharField(max_length=100)
+    workshop = models.ForeignKey(Workshop, on_delete=models.PROTECT, null=True, blank=True)
+    competition = models.ForeignKey(Competition, on_delete=models.PROTECT, null=True, blank=True)
+    merchandise = models.ForeignKey(Merchandise, on_delete=models.PROTECT, null=True, blank=True)
+    ticket = models.ForeignKey(Ticket, on_delete=models.PROTECT, null=True, blank=True)
     isAvailable = models.BooleanField(default=True)
-    freebies = models.ManyToManyField('self', blank=True)
     restrictMultiplePurchases = models.BooleanField(default=True)
 
     def __str__(self):
-        return str(self.product)
+        return self.name
 
     @property
     def product(self):

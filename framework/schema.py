@@ -8,6 +8,7 @@ from participants.schema import Query as ParticipantQueries, Mutation as Partici
 from products.schema import Query as ProductQueries
 from payment.schema import Query as PaymentQueries, Mutation as PaymentMutations
 from tickets.schema import Query as TicketQueries, Mutation as TicketMutations
+from registrations.schema import Mutation as RegMutations
 
 from framework.settings import *
 
@@ -77,6 +78,7 @@ class Mutation(
     ParticipantMutation,
     PaymentMutations,
     TicketMutations,
+    RegMutations,
     graphene.ObjectType
 ):
     token_auth = graphql_jwt.ObtainJSONWebToken.Field()

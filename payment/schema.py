@@ -135,7 +135,7 @@ class OrderProductObj(graphene.ObjectType):
     qty = graphene.Int()
 
     def resolve_name(self, info):
-        return Product.objects.get(id=self['product_id']).product.name
+        return Product.objects.get(id=self['product_id']).name
 
     def resolve_photo(self, info):
         cover = Product.objects.get(id=self['product_id']).product.cover

@@ -6,6 +6,8 @@ from pytz import timezone
 from datetime import datetime, timedelta
 from products.models import *
 
+from .api.partners import Query as PartnerQueries
+
 
 class DepartmentObj(graphene.ObjectType):
     name = graphene.String()
@@ -24,6 +26,14 @@ class FormFieldObj(graphene.ObjectType):
     type = graphene.String()
 
 
+class BasicProductDetailsObj(graphene.ObjectType):
+    productID = graphene.String()
+    price = graphene.String()
+
+    def resolve_productID(self, info):
+        return self
+
+
 class EventObj(graphene.ObjectType):
     name = graphene.String()
     slug = graphene.String()
@@ -34,12 +44,14 @@ class EventObj(graphene.ObjectType):
     fee = graphene.Int()
     isNew = graphene.Boolean()
     isTeamEvent = graphene.Boolean()
+    hasSelectionProcess = graphene.Boolean()
     minTeamSize = graphene.Int()
     maxTeamSize = graphene.Int()
     isRecommended = graphene.Boolean()
     department = graphene.Field(DepartmentObj)
     contacts = graphene.List(ContactPersonObj)
     productID = graphene.String()
+    products = graphene.List(BasicProductDetailsObj)
 
     def resolve_cover(self, info):
         url = None
@@ -60,13 +72,23 @@ class EventObj(graphene.ObjectType):
 class TicketObj(EventObj, graphene.ObjectType):
 
     def resolve_productID(self, info):
-        return Product.objects.get(ticket_id=self['id']).productID
+        products = Product.objects.filter(ticket_id=self['id'])
+        if products.count() > 0:
+            return products.first().productID
+
+    def resolve_products(self, info):
+        return Product.objects.values_list('productID', flat=True).filter(ticket_id=self['id'])
 
 
 class MerchandiseObj(EventObj, graphene.ObjectType):
 
     def resolve_productID(self, info):
-        return Product.objects.get(merchandise_id=self['id']).productID
+        products = Product.objects.filter(merchandise_id=self['id'])
+        if products.count() > 0:
+            return products.first().productID
+
+    def resolve_products(self, info):
+        return Product.objects.values_list('productID', flat=True).filter(merchandise_id=self['id'])
 
 
 class WorkshopObj(EventObj, graphene.ObjectType):
@@ -77,7 +99,12 @@ class WorkshopObj(EventObj, graphene.ObjectType):
         return contacts.values()
 
     def resolve_productID(self, info):
-        return Product.objects.get(workshop_id=self['id']).productID
+        products = Product.objects.filter(workshop_id=self['id'])
+        if products.count() > 0:
+            return products.first().productID
+
+    def resolve_products(self, info):
+        return Product.objects.values_list('productID', flat=True).filter(workshop_id=self['id'])
 
 
 class CompetitionObj(EventObj, graphene.ObjectType):
@@ -92,14 +119,20 @@ class CompetitionObj(EventObj, graphene.ObjectType):
         return contacts.values()
 
     def resolve_productID(self, info):
-        return Product.objects.get(competition_id=self['id']).productID
+        products = Product.objects.filter(competition_id=self['id'])
+        if products.count() > 0:
+            return products.first().productID
+
+    def resolve_products(self, info):
+        return Product.objects.values_list('productID', flat=True).filter(competition_id=self['id'])
 
     def resolve_formFields(self, info):
-        if self['formFields'] is not None:
+        if self['formFields'] is not '' and self['formFields'] is not None:
             return json.loads(self['formFields'])
         return None
 
-class Query(object):
+
+class Query(PartnerQueries, object):
     getCompetition = graphene.Field(CompetitionObj, slug=graphene.String(required=True))
     getWorkshop = graphene.Field(WorkshopObj, slug=graphene.String(required=True))
     getTicketEvent = graphene.Field(TicketObj, slug=graphene.String(required=True))

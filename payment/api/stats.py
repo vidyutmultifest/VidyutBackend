@@ -99,7 +99,7 @@ class ProductStatObj(graphene.ObjectType):
     transactions = graphene.List(BasicTransactionObj)
 
     def resolve_name(self, info):
-        return Product.objects.get(productID=self['productID']).product.name
+        return Product.objects.get(productID=self['productID']).name
 
     def resolve_totalAmount(self, info):
         fee = Product.objects.get(productID=self['productID']).product.fee

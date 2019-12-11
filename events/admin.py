@@ -30,7 +30,7 @@ class TSInline(admin.TabularInline):
 
 
 @admin.register(Partners)
-class DepartmentAdmin(admin.ModelAdmin):
+class PartnerAdmin(admin.ModelAdmin):
     select2 = select2_modelform(Partners, attrs={'width': '250px'})
     form = select2
 
@@ -77,11 +77,11 @@ class CompetitionAdmin(admin.ModelAdmin):
         }),
         ('Curation (For Site Admins)', {
             'fields': [
-                ('isRecommended', 'isAvailable', 'isPublished'),
+                ('isRecommended', 'isPublished'),
             ]
         }),
     ]
-    list_display = ('name', 'dept', 'fee', 'isAvailable', 'isPublished', 'lastEditor', 'lastEditTime')
+    list_display = ('name', 'dept', 'fee', 'isPublished', 'lastEditor', 'lastEditTime')
     search_fields = ['name']
     select2 = select2_modelform(Competition, attrs={'width': '250px'})
     inlines = (CSInline,)
@@ -123,11 +123,11 @@ class WorkshopAdmin(admin.ModelAdmin):
         }),
         ('Curation (For Site Admins)', {
             'fields': [
-                ('isRecommended', 'isAvailable', 'isPublished'),
+                ('isRecommended', 'isPublished'),
             ]
         }),
     ]
-    list_display = ('name', 'dept', 'fee', 'isAvailable', 'isPublished', 'lastEditor', 'lastEditTime')
+    list_display = ('name', 'dept', 'fee', 'isPublished', 'lastEditor', 'lastEditTime')
     select2 = select2_modelform(Workshop, attrs={'width': '250px'})
     form = select2
     inlines = (WSInline,)
@@ -162,11 +162,11 @@ class TicketAdmin(admin.ModelAdmin):
         }),
         ('Curation', {
             'fields': [
-                ('isRecommended', 'isAvailable', 'isPublished'),
+                ('isRecommended', 'isPublished'),
             ]
         }),
     ]
-    list_display = ('name', 'isAvailable', 'isPublished', 'lastEditor', 'lastEditTime')
+    list_display = ('name', 'isPublished', 'lastEditor', 'lastEditTime')
     select2 = select2_modelform(Ticket, attrs={'width': '250px'})
     form = select2
     inlines = (TSInline,)
@@ -179,7 +179,7 @@ class TicketAdmin(admin.ModelAdmin):
 
 @admin.register(Merchandise)
 class MerchandiseAdmin(admin.ModelAdmin):
-    list_display = ('name', 'isAvailable', 'isPublished', 'lastEditor', 'lastEditTime')
+    list_display = ('name', 'isPublished', 'lastEditor', 'lastEditTime')
     select2 = select2_modelform(Ticket, attrs={'width': '250px'})
     form = select2
 
@@ -206,29 +206,8 @@ class VenueAdmin(admin.ModelAdmin):
     form = select2
 
 
-@receiver(post_save, sender=Competition)
-def create_Competition(sender, instance, created, **kwargs):
-    count = Product.objects.filter(competition=instance).count()
-    if count == 0:
-        Product.objects.create(competition=instance)
-
-
-@receiver(post_save, sender=Workshop)
-def create_Workshop(sender, instance, created, **kwargs):
-    count = Product.objects.filter(workshop=instance).count()
-    if count == 0:
-        Product.objects.create(workshop=instance)
-
-
-@receiver(post_save, sender=Ticket)
-def create_Ticket(sender, instance, created, **kwargs):
-    count = Product.objects.filter(ticket=instance).count()
-    if count == 0:
-        Product.objects.create(ticket=instance)
-
-
-@receiver(post_save, sender=Merchandise)
-def create_Merchandise(sender, instance, created, **kwargs):
-    count = Product.objects.filter(merchandise=instance).count()
-    if count == 0:
-        Product.objects.create(merchandise=instance)
+# @receiver(post_save, sender=Competition)
+# def create_Competition(sender, instance, created, **kwargs):
+#     count = Product.objects.filter(competition=instance).count()
+#     if count == 0:
+#         Product.objects.create(competition=instance)
