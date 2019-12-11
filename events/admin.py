@@ -77,11 +77,11 @@ class CompetitionAdmin(admin.ModelAdmin):
         }),
         ('Curation (For Site Admins)', {
             'fields': [
-                'isRecommended'
+                ('isRecommended', 'isAvailable', 'isPublished'),
             ]
         }),
     ]
-    list_display = ('name', 'dept', 'fee', 'lastEditor', 'lastEditTime')
+    list_display = ('name', 'dept', 'fee', 'isAvailable', 'isPublished', 'lastEditor', 'lastEditTime')
     search_fields = ['name']
     select2 = select2_modelform(Competition, attrs={'width': '250px'})
     inlines = (CSInline,)
@@ -123,11 +123,11 @@ class WorkshopAdmin(admin.ModelAdmin):
         }),
         ('Curation (For Site Admins)', {
             'fields': [
-                'isRecommended'
+                ('isRecommended', 'isAvailable', 'isPublished'),
             ]
         }),
     ]
-    list_display = ('name', 'dept', 'fee', 'lastEditor', 'lastEditTime')
+    list_display = ('name', 'dept', 'fee', 'isAvailable', 'isPublished', 'lastEditor', 'lastEditTime')
     select2 = select2_modelform(Workshop, attrs={'width': '250px'})
     form = select2
     inlines = (WSInline,)
@@ -162,11 +162,11 @@ class TicketAdmin(admin.ModelAdmin):
         }),
         ('Curation', {
             'fields': [
-                'isRecommended'
+                ('isRecommended', 'isAvailable', 'isPublished'),
             ]
         }),
     ]
-    list_display = ('name', 'lastEditor', 'lastEditTime')
+    list_display = ('name', 'isAvailable', 'isPublished', 'lastEditor', 'lastEditTime')
     select2 = select2_modelform(Ticket, attrs={'width': '250px'})
     form = select2
     inlines = (TSInline,)
@@ -179,7 +179,7 @@ class TicketAdmin(admin.ModelAdmin):
 
 @admin.register(Merchandise)
 class MerchandiseAdmin(admin.ModelAdmin):
-    list_display = ('name', 'lastEditor', 'lastEditTime')
+    list_display = ('name', 'isAvailable', 'isPublished', 'lastEditor', 'lastEditTime')
     select2 = select2_modelform(Ticket, attrs={'width': '250px'})
     form = select2
 
