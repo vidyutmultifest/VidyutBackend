@@ -35,7 +35,7 @@ class TransactionAdmin(ImportExportModelAdmin, admin.ModelAdmin):
         'amount',
     )
     date_hierarchy = 'timestamp'
-    search_fields = ['user__username', 'issuer__username', 'isPaid', 'amount']
+    search_fields = ['transactionID', 'user__username', 'issuer__username', 'isPaid', 'amount']
     select2 = select2_modelform(Transaction, attrs={'width': '250px'})
     form = select2
     resource_class = TransactionResource
@@ -45,6 +45,7 @@ class TransactionAdmin(ImportExportModelAdmin, admin.ModelAdmin):
 class OrderAdmin(admin.ModelAdmin):
     list_display = ('orderID', 'user', 'timestamp')
     list_filter = (('timestamp', DateTimeRangeFilter),)
+    search_fields = ['orderID', 'user__username']
     autocomplete_fields = ['transaction']
     date_hierarchy = 'timestamp'
     inlines = (OPInline,)

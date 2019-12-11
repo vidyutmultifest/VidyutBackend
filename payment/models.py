@@ -35,7 +35,7 @@ class Order(models.Model):
     orderID = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
     timestamp = models.DateTimeField()
     user = models.ForeignKey(User, on_delete=models.PROTECT)
-    transaction = models.ForeignKey(Transaction, on_delete=models.PROTECT)
+    transaction = models.OneToOneField(Transaction, on_delete=models.PROTECT)
     promoCode = models.ForeignKey(PromoCode, on_delete=models.PROTECT, null=True, blank=True)
     products = models.ManyToManyField(Product, through='OrderProduct')
 

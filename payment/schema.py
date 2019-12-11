@@ -11,6 +11,8 @@ from participants.models import Profile
 from .models import Transaction, OrderProduct, Order
 from products.models import Product, PromoCode
 
+from .api.stats import Query as StatsQuery
+
 to_tz = timezone.get_default_timezone()
 
 
@@ -262,7 +264,7 @@ class TransactionListObj(graphene.ObjectType):
         return User.objects.get(user__id=self['user_id'])
 
 
-class Query(object):
+class Query(StatsQuery, object):
     myOrders = graphene.List(OrderObj)
     getTransactionDetail = graphene.Field(TransactionDetailObj, transactionID=graphene.String())
     getTransactionsApproved = graphene.List(TransactionDetailObj)
