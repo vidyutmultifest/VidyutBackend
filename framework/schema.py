@@ -8,7 +8,7 @@ from participants.schema import Query as ParticipantQueries, Mutation as Partici
 from products.schema import Query as ProductQueries
 from payment.schema import Query as PaymentQueries, Mutation as PaymentMutations
 from tickets.schema import Query as TicketQueries, Mutation as TicketMutations
-from registrations.schema import Mutation as RegMutations
+from registrations.schema import Mutation as RegMutations, Query as RegQueries
 
 from framework.settings import *
 
@@ -34,6 +34,7 @@ class Query(
     ProductQueries,
     PaymentQueries,
     TicketQueries,
+    RegQueries,
     graphene.ObjectType
 ):
     status = graphene.Field(StatusObj)

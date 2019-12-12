@@ -44,6 +44,7 @@ class EventObj(graphene.ObjectType):
     fee = graphene.Int()
     isNew = graphene.Boolean()
     isTeamEvent = graphene.Boolean()
+    isPublished = graphene.Boolean()
     hasSelectionProcess = graphene.Boolean()
     minTeamSize = graphene.Int()
     maxTeamSize = graphene.Int()
@@ -150,7 +151,7 @@ class Query(PartnerQueries, object):
 
     @staticmethod
     def resolve_listCompetitions(self, info, **kwargs):
-        return Competition.objects.values().all()
+        return Competition.objects.values().filter(isPublished=True)
 
     @staticmethod
     def resolve_listTeamCompetitions(self, info, **kwargs):
@@ -163,7 +164,7 @@ class Query(PartnerQueries, object):
 
     @staticmethod
     def resolve_listWorkshops(self, info, **kwargs):
-        return Workshop.objects.values().all()
+        return Workshop.objects.values().filter(isPublished=True)
 
     @staticmethod
     def resolve_getMerchandise(self, info, **kwargs):
@@ -172,7 +173,7 @@ class Query(PartnerQueries, object):
 
     @staticmethod
     def resolve_listMerchandise(self, info, **kwargs):
-        return Merchandise.objects.values().all()
+        return Merchandise.objects.values().filter(isPublished=True)
 
     @staticmethod
     def resolve_getTicketEvent(self, info, **kwargs):
@@ -181,4 +182,4 @@ class Query(PartnerQueries, object):
 
     @staticmethod
     def resolve_listTicketEvents(self, info, **kwargs):
-        return Ticket.objects.values().all()
+        return Ticket.objects.values().filter(isPublished=True)

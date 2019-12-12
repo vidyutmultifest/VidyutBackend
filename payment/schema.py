@@ -265,7 +265,7 @@ class TransactionListObj(graphene.ObjectType):
 
 
 class Query(StatsQuery, object):
-    myOrders = graphene.List(OrderObj)
+    myOrders = graphene.List(OrderObj, limit=graphene.Int(required=False))
     getTransactionDetail = graphene.Field(TransactionDetailObj, transactionID=graphene.String())
     getTransactionsApproved = graphene.List(TransactionDetailObj)
     getAmountCollected = graphene.Int()
@@ -277,7 +277,12 @@ class Query(StatsQuery, object):
     @login_required
     def resolve_myOrders(self, info, **kwargs):
         user = info.context.user
-        return Order.objects.values().filter(user=user).order_by("-timestamp")
+        limit = kwargs.get('limit')
+        objs = Order.objects.values().filter(user=user).order_by("-timestamp")
+        if limit is not None:
+            return objs[:limit]
+        else:
+            return objs
 
     @login_required
     def resolve_getTransactionDetail(self, info, **kwargs):
