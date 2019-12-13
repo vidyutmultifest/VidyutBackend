@@ -35,6 +35,12 @@ class PartnerAdmin(admin.ModelAdmin):
     form = select2
 
 
+@admin.register(Trainer)
+class TrainerAdmin(admin.ModelAdmin):
+    select2 = select2_modelform(Trainer, attrs={'width': '250px'})
+    form = select2
+
+
 @admin.register(Department)
 class DepartmentAdmin(admin.ModelAdmin):
     select2 = select2_modelform(Department, attrs={'width': '250px'})
