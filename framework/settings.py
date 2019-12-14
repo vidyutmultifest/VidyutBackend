@@ -90,6 +90,7 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'social_core.backends.google.GoogleOAuth2',
     'social_core.backends.microsoft.MicrosoftOAuth2',
+    'social_core.backends.facebook.FacebookAppOAuth2'
 ]
 
 LANGUAGE_CODE = 'en-us'

@@ -19,6 +19,7 @@ class StatusObj(graphene.ObjectType):
     promocodes = graphene.Boolean()
     referrals = graphene.Boolean()
     googleSignIn = graphene.Boolean()
+    facebookSignIn = graphene.Boolean()
     updatePhoto = graphene.Boolean()
     enableTicketing = graphene.Boolean()
     enableWorkshopRegistration = graphene.Boolean()
@@ -47,6 +48,7 @@ class Query(
             promocodes=PROMOCODES_STATUS,
             referrals=REFERRAL_STATUS,
             googleSignIn=GOOGLE_SIGNIN_STATUS,
+            facebookSignIn=FACEBOOK_SIGNIN_STATUS,
             updatePhoto=UPDATE_PHOTO_STATUS,
             enableTicketing=ENABLE_TICKETING,
             enableWorkshopRegistration=ENABLE_WORKSHOP_REGISTRATION,
