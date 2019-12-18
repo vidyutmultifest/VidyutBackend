@@ -17,7 +17,7 @@ class EventDetailObj(EventObj, graphene.ObjectType):
 
     def resolve_formFields(self, info):
         formFields = None
-        if self['formFields'] is not None and self['formFields'] is not '':
+        if 'formFields' in self and self['formFields'] is not None and self['formFields'] is not '':
             formFields = json.loads(self['formFields'])
         return formFields
 
@@ -32,7 +32,16 @@ class ProductInfoObj(graphene.ObjectType):
 
 
 class ProductObj(graphene.ObjectType):
-    isAvailable = graphene.String()
+    name = graphene.String()
+    requireRegistration = graphene.Boolean()
+    requireAdvancePayment = graphene.Boolean()
+    restrictMultiplePurchases = graphene.Boolean()
+    isAmritapurianOnly = graphene.Boolean()
+    isSchoolOnly = graphene.Boolean()
+    isFacultyOnly = graphene.Boolean()
+    slots = graphene.Int()
+    price = graphene.Int()
+    isAvailable = graphene.Boolean()
     productID = graphene.String()
     product = graphene.Field(ProductInfoObj)
 

@@ -43,11 +43,11 @@ class InitiateOrder(graphene.Mutation):
 
     @login_required
     def mutate(self, info, products, promocode=None):
-        fee = 0
+        cost = 0
         customer = info.context.user
         for product in products.products:
             p = Product.objects.get(productID=product.productID)
-            fee = fee + p.product.fee
+            cost = cost + p.price * product.qty
             if p.restrictMultiplePurchases is False or Order.objects.filter(
                     products=p,
                     user=customer,
@@ -59,7 +59,7 @@ class InitiateOrder(graphene.Mutation):
                 return InitiateOrderObj(transactionID=None, orderID=None)
 
         timestamp = datetime.now().astimezone(to_tz)
-        tObj = Transaction.objects.create(amount=fee, user=customer, timestamp=timestamp)
+        tObj = Transaction.objects.create(amount=cost, user=customer, timestamp=timestamp)
         oObj = Order.objects.create(user=customer, transaction=tObj, timestamp=timestamp)
 
         if promocode is not None:

@@ -12,8 +12,18 @@ class Product(models.Model):
     competition = models.ForeignKey(Competition, on_delete=models.PROTECT, null=True, blank=True)
     merchandise = models.ForeignKey(Merchandise, on_delete=models.PROTECT, null=True, blank=True)
     ticket = models.ForeignKey(Ticket, on_delete=models.PROTECT, null=True, blank=True)
+
+    price = models.PositiveIntegerField(null=True, blank=True)
     isAvailable = models.BooleanField(default=True)
+    slots = models.PositiveIntegerField(null=True, blank=True)
+
+    requireRegistration = models.BooleanField(default=False)
+    requireAdvancePayment = models.BooleanField(default=False)
     restrictMultiplePurchases = models.BooleanField(default=True)
+
+    isAmritapurianOnly = models.BooleanField(default=False)
+    isFacultyOnly = models.BooleanField(default=False)
+    isSchoolOnly = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name

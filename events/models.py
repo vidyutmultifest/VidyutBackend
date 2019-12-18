@@ -61,8 +61,14 @@ class TimeSlot(models.Model):
 
 
 class Department(models.Model):
+    def get_image_path(self, filename):
+        ext = filename.split('.')[-1]
+        filename = 'vidyut_department_' + "%s.%s" % (uuid.uuid4(), ext)
+        return 'static/events/departments/' + filename
+
     name = models.CharField(max_length=50)
     slug = models.SlugField(unique=True)
+    icon = models.ImageField(upload_to=get_image_path, null=True, blank=True)
 
     def __str__(self):
         return self.name

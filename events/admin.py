@@ -107,7 +107,7 @@ class WorkshopAdmin(admin.ModelAdmin):
                 ('name', 'slug'),
                 'cover',
                 ('dept', 'organiser', 'partners'),
-                'accreditedBy'
+                ('trainers', 'accreditedBy')
             ]
         }),
         ('Competition Details', {

@@ -12,6 +12,13 @@ from .api.partners import Query as PartnerQueries
 class DepartmentObj(graphene.ObjectType):
     name = graphene.String()
     slug = graphene.String()
+    icon = graphene.String()
+
+    def resolve_icon(self, info):
+        icon = None
+        if self['icon']:
+            icon = info.context.build_absolute_uri(self['icon'].url)
+        return icon
 
 
 class ContactPersonObj(graphene.ObjectType):
@@ -28,10 +35,44 @@ class FormFieldObj(graphene.ObjectType):
 
 class BasicProductDetailsObj(graphene.ObjectType):
     productID = graphene.String()
-    price = graphene.String()
+    name = graphene.String()
+    price = graphene.Int()
+    slots = graphene.Int()
+    requireRegistration = graphene.Boolean()
+    requireAdvancePayment = graphene.Boolean()
+    isAmritapurianOnly = graphene.Boolean()
+    isFacultyOnly = graphene.Boolean()
+    isSchoolOnly = graphene.Boolean()
 
     def resolve_productID(self, info):
         return self
+
+    def resolve_name(self, info):
+        return Product.objects.get(productID=self).name
+
+    def resolve_price(self, info):
+        return Product.objects.get(productID=self).price
+
+    def resolve_slots(self, info):
+        return Product.objects.get(productID=self).slots
+
+    def resolve_requireRegistration(self, info):
+        return Product.objects.get(productID=self).requireRegistration
+
+    def resolve_requireAdvancePayment(self, info):
+        return Product.objects.get(productID=self).requireAdvancePayment
+
+    def resolve_isAmritapurianOnly(self, info):
+        return Product.objects.get(productID=self).isAmritapurianOnly
+
+    def resolve_isAmritianOnly(self, info):
+        return Product.objects.get(productID=self).isAmritianOnly
+
+    def resolve_isFacultyOnly(self, info):
+        return Product.objects.get(productID=self).isFacultyOnly
+
+    def resolve_isSchoolOnly(self, info):
+        return Product.objects.get(productID=self).isSchoolOnly
 
 
 class EventObj(graphene.ObjectType):
@@ -61,7 +102,10 @@ class EventObj(graphene.ObjectType):
         return url
 
     def resolve_department(self, info):
-        return Department.objects.values().get(id=self['dept_id'])
+        try:
+            return Department.objects.values().get(id=self['dept_id'])
+        except Department.DoesNotExist:
+            return None
 
     def resolve_isNew(self, info):
         limit = datetime.now() - timedelta(days=3)
@@ -138,11 +182,16 @@ class Query(PartnerQueries, object):
     getWorkshop = graphene.Field(WorkshopObj, slug=graphene.String(required=True))
     getTicketEvent = graphene.Field(TicketObj, slug=graphene.String(required=True))
     getMerchandise = graphene.Field(MerchandiseObj, slug=graphene.String(required=True))
+    listDepartments = graphene.List(DepartmentObj)
     listCompetitions = graphene.List(CompetitionObj)
     listWorkshops = graphene.List(WorkshopObj)
     listMerchandise = graphene.List(MerchandiseObj)
     listTicketEvents = graphene.List(TicketObj)
     listTeamCompetitions = graphene.List(CompetitionObj)
+
+    @staticmethod
+    def resolve_listDepartments(self, info, **kwargs):
+        return Department.objects.values().all().order_by('name')
 
     @staticmethod
     def resolve_getCompetition(self, info, **kwargs):
