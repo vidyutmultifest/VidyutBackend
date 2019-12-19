@@ -7,6 +7,7 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 from access.models import UserAccess
 from participants.models import Profile
+from registrations.models import EventRegistration
 
 from .models import Transaction, OrderProduct, Order
 from products.models import Product, PromoCode
@@ -38,11 +39,12 @@ class InitiateOrder(graphene.Mutation):
     class Arguments:
         products = ProductsInput(required=True)
         promocode = graphene.String(required=False)
+        regID = graphene.String(required=False)
 
     Output = InitiateOrderObj
 
     @login_required
-    def mutate(self, info, products, promocode=None):
+    def mutate(self, info, products, promocode=None, regID=False):
         cost = 0
         customer = info.context.user
         for product in products.products:
@@ -69,7 +71,14 @@ class InitiateOrder(graphene.Mutation):
         for product in products.products:
             p = Product.objects.get(productID=product.productID)
             OrderProduct.objects.create(product=p, qty=product.qty, order=oObj)
-
+        if regID is not None:
+            try:
+                reg = EventRegistration.objects.get(regID=regID)
+                if reg.event in oObj.products.all():
+                    reg.order = oObj
+                    reg.save()
+            except EventRegistration.DoesNotExist:
+                pass
         return InitiateOrderObj(transactionID=tObj.transactionID, orderID=oObj.orderID)
 
 
