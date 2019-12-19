@@ -102,7 +102,7 @@ class ProductStatObj(graphene.ObjectType):
         return Product.objects.get(productID=self['productID']).name
 
     def resolve_totalAmount(self, info):
-        fee = Product.objects.get(productID=self['productID']).product.fee
+        fee = Product.objects.get(productID=self['productID']).price
         qty = self['transactions'].filter(isPaid=True).count()
         return fee * qty
 
@@ -132,7 +132,11 @@ class DailyTransactionStatObject(graphene.ObjectType):
         return self
 
     def resolve_totalAmount(self, info):
-        return Transaction.objects.filter(timestamp__date=self, isPaid=True, isProcessed=True).aggregate(Sum('amount'))['amount__sum']
+        trans = Transaction.objects.filter(timestamp__date=self, isPaid=True, isProcessed=True)
+        if trans.count() > 0:
+            return trans.aggregate(Sum('amount'))['amount__sum']
+        else:
+            return 0
 
     def resolve_totalTransactions(self, info):
         return Transaction.objects.filter(timestamp__date=self).count()
@@ -149,28 +153,30 @@ class DailyTransactionStatObject(graphene.ObjectType):
         products = Transaction.objects.filter(timestamp__date=self, isPaid=True).order_by().values_list('order__products__productID', flat=True).distinct()
         if productQueried is None:
             for productID in products:
-                product = Product.objects.get(productID=productID)
-                trans = Transaction.objects.filter(timestamp__date=self, isPaid=True, order__products=product)
-                qty = 0
-                for tran in trans:
-                    order = Order.objects.get(transaction=tran)
-                    qty = qty + OrderProduct.objects.get(order=order).qty
+                trans = Transaction.objects.filter(timestamp__date=self, isPaid=True, order__products__productID=productID)
+                orders = Order.objects.filter(
+                    products__productID=productID,
+                    transaction__isPaid=True,
+                    transaction__timestamp__date=self
+                )
+                qty = OrderProduct.objects.get(order__in=orders).aggregate(Sum('qty'))['qty__sum']
                 plist.append({
                     "qtySold": qty,
                     "transactions": trans,
                     "productID": productID
                 })
         else:
-            product = Product.objects.get(productID=productQueried)
-            trans = Transaction.objects.filter(timestamp__date=self, isPaid=True, order__products=product)
-            qty = 0
-            for tran in trans:
-                order = Order.objects.get(transaction=tran)
-                qty = qty + OrderProduct.objects.get(order=order).qty
+            trans = Transaction.objects.filter(timestamp__date=self, isPaid=True, order__products__productID=productQueried)
+            orders = Order.objects.filter(
+                products__productID=productQueried,
+                transaction__isPaid=True,
+                transaction__timestamp__date=self
+            )
+            qty = OrderProduct.objects.get(order__in=orders).aggregate(Sum('qty'))['qty__sum']
             plist.append({
                 "qtySold": qty,
                 "transactions": trans,
-                "productID": product.productID
+                "productID": productQueried
             })
         return plist
 
@@ -189,6 +195,12 @@ class DailyTransactionStatObject(graphene.ObjectType):
 
 class TransactionStatObject(graphene.ObjectType):
     totalAmount = graphene.Int()
+    totalTransactions = graphene.Int()
+    totalPendingTransactions = graphene.Int()
+    totalSuccessfulTransactions = graphene.Int()
+    totalCustomers = graphene.Int()
+    totalIssuers = graphene.Int()
+    totalProductsSold = graphene.Int()
     productStats = graphene.List(ProductStatObj, productID=graphene.String())
     issuerStats = graphene.List(IssuerStatObj)
     dailyStats = graphene.List(
@@ -199,31 +211,47 @@ class TransactionStatObject(graphene.ObjectType):
     )
 
     def resolve_totalAmount(self, info):
-        return Transaction.objects.filter(isPaid=True, isProcessed=True).aggregate(Sum('amount'))['amount__sum']
+        return Transaction.objects.filter(isPaid=True).aggregate(Sum('amount'))['amount__sum']
+
+    def resolve_totalPendingTransactions(self, info):
+        return Transaction.objects.filter(isPending=True).count()
+
+    def resolve_totalTransactions(self, info):
+        return Transaction.objects.all().count()
+
+    def resolve_totalCustomers(self, info):
+        return Transaction.objects.filter(isPaid=True).order_by().values_list('user', flat=True).distinct().count()
+
+    def resolve_totalIssuers(self, info):
+        return Transaction.objects.filter(isPaid=True).order_by().values_list('issuer', flat=True).distinct().count()
+
+    def resolve_totalProductsSold(self, info):
+        return Order.objects.filter(transaction__isPaid=True).order_by().values_list('products', flat=True).distinct().count()
+
+    def resolve_totalSuccessfulTransactions(self, info):
+        return Transaction.objects.filter(isPaid=True).count()
 
     def resolve_productStats(self, info, **kwargs):
         plist = []
         productQueried = kwargs.get('productID')
-        products = Transaction.objects.filter(isPaid=True).order_by().values_list('order__products__productID', flat=True).distinct()
         if productQueried is None:
+            products = Transaction.objects.filter(isPaid=True).order_by().values_list('order__products__productID',
+                                                                                      flat=True).distinct()
             for product in products:
-                trans = Transaction.objects.filter(isPaid=True, order__products=product)
-                qty = 0
-                for tran in trans:
-                    order = Order.objects.get(transaction=tran)
-                    qty = qty + OrderProduct.objects.get(order=order).qty
+                trans = Transaction.objects.filter(isPaid=True, order__products__productID=product)
+                orders = Order.objects.filter(products__productID=product, transaction__isPaid=True)
+                qty = OrderProduct.objects.filter(order__in=orders).aggregate(Sum('qty'))['qty__sum']
                 plist.append({
                     "qtySold": qty,
                     "transactions": trans,
                     "productID": product
                 })
+            print(plist)
         else:
             product = Product.objects.get(productID=productQueried)
             trans = Transaction.objects.filter(isPaid=True, order__products=product)
-            qty = 0
-            for tran in trans:
-                order = Order.objects.get(transaction=tran)
-                qty = qty + OrderProduct.objects.get(order=order).qty
+            orders = Order.objects.filter(products=product, transaction__isPaid=True)
+            qty = OrderProduct.objects.filter(order__in=orders).aggregate(Sum('qty'))['qty__sum']
             plist.append({
                 "qtySold": qty,
                 "transactions": trans,
@@ -241,12 +269,12 @@ class TransactionStatObject(graphene.ObjectType):
             for i in range(delta.days + 1):
                 day = startDate + timedelta(days=i)
                 dates.append(day)
-            dates.reverse()
         elif date is None:
             dates.append(datetime.now())
         elif date is not None:
             dates.append(date)
         return dates
+
 
     def resolve_issuerStats(self, info):
         ilist = []
