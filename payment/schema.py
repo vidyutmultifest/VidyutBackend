@@ -1,6 +1,9 @@
+import json
+
 import graphene
 from datetime import datetime
 
+import requests
 from graphql_jwt.decorators import login_required
 from django.db.models import Sum
 from django.utils import timezone
@@ -15,6 +18,9 @@ from products.models import Product, PromoCode
 from .api.stats import Query as StatsQuery
 
 to_tz = timezone.get_default_timezone()
+
+from .acrd.helper import getTransactionPayload, decryptPayload
+from framework.settings import ACRD_ENDPOINT
 
 
 class InitiateOrderObj(graphene.ObjectType):
@@ -121,6 +127,12 @@ class CollectPayment(graphene.Mutation):
 class Mutation(object):
     initiateOrder = InitiateOrder.Field()
     collectPayment = CollectPayment.Field()
+
+
+class PaymentLinkObj(graphene.ObjectType):
+    url = graphene.String()
+    data = graphene.String()
+    code = graphene.String()
 
 
 class BuyerObj(graphene.ObjectType):
@@ -273,6 +285,11 @@ class TransactionListObj(graphene.ObjectType):
         return User.objects.get(user__id=self['user_id'])
 
 
+class PaymentStatusObj(graphene.ObjectType):
+    status = graphene.Boolean()
+    data = graphene.String()
+
+
 class Query(StatsQuery, object):
     myOrders = graphene.List(OrderObj, limit=graphene.Int(required=False))
     getTransactionDetail = graphene.Field(TransactionDetailObj, transactionID=graphene.String())
@@ -282,6 +299,8 @@ class Query(StatsQuery, object):
     getTransactionStatus = graphene.Field(TransactionStatusObj, transactionID=graphene.String())
     getTransactionsPendingCount = graphene.Int()
     getTransactionList = graphene.List(TransactionListObj)
+    getPaymentGatewayData = graphene.Field(PaymentLinkObj, transactionID=graphene.String())
+    getOnlinePaymentStatus = graphene.Field(PaymentStatusObj, transactionID=graphene.String())
 
     @login_required
     def resolve_myOrders(self, info, **kwargs):
@@ -344,3 +363,29 @@ class Query(StatsQuery, object):
         if UserAccess.objects.get(user=user).viewAllTransactions:
             return Transaction.objects.values().all()
 
+    @login_required
+    def resolve_getPaymentGatewayData(self, info, **kwargs):
+        transactionID = kwargs.get('transactionID')
+        try:
+            tobj = Transaction.objects.get(transactionID=transactionID)
+            payload = getTransactionPayload(tobj.amount, transactionID)
+            return PaymentLinkObj(data=payload, code=payload['code'], url=ACRD_ENDPOINT + '/makethirdpartypayment')
+        except Transaction.DoesNotExist:
+            return None
+
+    @login_required
+    def resolve_getOnlinePaymentStatus(self, info, **kwargs):
+        transactionID = kwargs.get('transactionID')
+        try:
+            tobj = Transaction.objects.get(transactionID=transactionID)
+            payload = getTransactionPayload(tobj.amount, transactionID)
+            print(payload)
+            try:
+                f = requests.post(ACRD_ENDPOINT + '/doubleverifythirdparty', data=payload)
+            except Exception as e:
+                return PaymentStatusObj(status=False, data='Failed')
+            j = f.text
+            k = json.loads(j)
+            return PaymentStatusObj(status=True, data=decryptPayload(k["data"]))
+        except Transaction.DoesNotExist:
+            return None
