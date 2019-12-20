@@ -129,12 +129,6 @@ class Mutation(object):
     collectPayment = CollectPayment.Field()
 
 
-class PaymentLinkObj(graphene.ObjectType):
-    url = graphene.String()
-    data = graphene.String()
-    code = graphene.String()
-
-
 class BuyerObj(graphene.ObjectType):
     firstName = graphene.String()
     lastName = graphene.String()
@@ -285,9 +279,15 @@ class TransactionListObj(graphene.ObjectType):
         return User.objects.get(user__id=self['user_id'])
 
 
+class PaymentLinkObj(graphene.ObjectType):
+    url = graphene.String()
+    data = graphene.String()
+    code = graphene.String()
+
+
 class PaymentStatusObj(graphene.ObjectType):
     status = graphene.Boolean()
-    data = graphene.String()
+    data = graphene.JSONString()
 
 
 class Query(StatsQuery, object):
@@ -369,7 +369,7 @@ class Query(StatsQuery, object):
         try:
             tobj = Transaction.objects.get(transactionID=transactionID)
             payload = getTransactionPayload(tobj.amount, transactionID)
-            return PaymentLinkObj(data=payload, code=payload['code'], url=ACRD_ENDPOINT + '/makethirdpartypayment')
+            return PaymentLinkObj(data=payload['encdata'], code=payload['code'], url=ACRD_ENDPOINT + '/makethirdpartypayment')
         except Transaction.DoesNotExist:
             return None
 
@@ -379,13 +379,22 @@ class Query(StatsQuery, object):
         try:
             tobj = Transaction.objects.get(transactionID=transactionID)
             payload = getTransactionPayload(tobj.amount, transactionID)
-            print(payload)
             try:
                 f = requests.post(ACRD_ENDPOINT + '/doubleverifythirdparty', data=payload)
             except Exception as e:
                 return PaymentStatusObj(status=False, data='Failed')
             j = f.text
             k = json.loads(j)
-            return PaymentStatusObj(status=True, data=decryptPayload(k["data"]))
+            data = decryptPayload(k["data"])
+            data = data.replace('=', '" : "')
+            data = data.replace('|', '", "')
+            data = '{ "' + data + '"}'
+            if k["response"]:
+                tobj.isPaid = True
+                tobj.isProcessed = True
+                tobj.manualIssue = False
+                tobj.transactionData = data
+                tobj.save()
+            return PaymentStatusObj(status=k["response"], data=data)
         except Transaction.DoesNotExist:
             return None

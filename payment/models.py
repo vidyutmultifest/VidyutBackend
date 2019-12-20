@@ -26,6 +26,7 @@ class Transaction(models.Model):
     issuer = models.ForeignKey(User, on_delete=models.PROTECT, related_name='transactionIssuer', null=True, blank=True)
     issuerLocation = models.CharField(max_length=50, null=True, blank=True)
     issuerDevice = models.CharField(max_length=100, null=True, blank=True)
+    transactionData = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return str(self.transactionID)
