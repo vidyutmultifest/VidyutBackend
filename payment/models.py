@@ -4,11 +4,6 @@ from django.db import models
 from products.models import *
 from django.contrib.auth.models import User
 
-from django.db.models.signals import post_save
-from django.core.mail import send_mail
-from django.template.loader import get_template
-from django.utils.html import strip_tags
-from django.dispatch import receiver
 from framework import settings
 
 from_email = settings.EMAIL_HOST_USER
@@ -19,6 +14,7 @@ class Transaction(models.Model):
     timestamp = models.DateTimeField()
     amount = models.PositiveIntegerField()
     manualIssue = models.BooleanField(default=False)
+    isOnline = models.BooleanField(default=False)
     isProcessed = models.BooleanField(default=False)
     isPending = models.BooleanField(default=False)
     isPaid = models.BooleanField(default=False)
@@ -36,7 +32,7 @@ class Order(models.Model):
     orderID = models.UUIDField(unique=True, default=uuid.uuid4, editable=False)
     timestamp = models.DateTimeField()
     user = models.ForeignKey(User, on_delete=models.PROTECT)
-    transaction = models.OneToOneField(Transaction, on_delete=models.PROTECT)
+    transaction = models.OneToOneField(Transaction, on_delete=models.PROTECT, null=True, blank=True)
     promoCode = models.ForeignKey(PromoCode, on_delete=models.PROTECT, null=True, blank=True)
     products = models.ManyToManyField(Product, through='OrderProduct')
 
@@ -47,6 +43,7 @@ class Order(models.Model):
 class OrderProduct(models.Model):
     product = models.ForeignKey(Product, on_delete=models.PROTECT)
     qty = models.PositiveIntegerField()
+    price = models.PositiveIntegerField()
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
 
     class Meta:

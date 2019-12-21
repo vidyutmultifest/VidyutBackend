@@ -1,91 +1,26 @@
-import json
-
 import graphene
 from datetime import datetime
 
-import requests
 from graphql_jwt.decorators import login_required
 from django.db.models import Sum
 from django.utils import timezone
 from django.contrib.auth.models import User
 from access.models import UserAccess
 from participants.models import Profile
-from registrations.models import EventRegistration
 
 from .models import Transaction, OrderProduct, Order
-from products.models import Product, PromoCode
+from products.models import Product
 
 from .api.stats import Query as StatsQuery
+from .api.order import Mutation as OrderMutations
+from .api.transaction import Mutation as TransactionMutations
+from .api.acrd import Query as ACRDQueries
 
 to_tz = timezone.get_default_timezone()
-
-from .acrd.helper import getTransactionPayload, decryptPayload
-from framework.settings import ACRD_ENDPOINT
-
-
-class InitiateOrderObj(graphene.ObjectType):
-    transactionID = graphene.String()
-    orderID = graphene.String()
 
 
 class OrderStatusObj(graphene.ObjectType):
     status = graphene.Boolean()
-
-
-class ProductInput(graphene.InputObjectType):
-    productID = graphene.String()
-    qty = graphene.Int()
-
-
-class ProductsInput(graphene.InputObjectType):
-    products = graphene.List(ProductInput)
-
-
-class InitiateOrder(graphene.Mutation):
-    class Arguments:
-        products = ProductsInput(required=True)
-        promocode = graphene.String(required=False)
-        regID = graphene.String(required=False)
-
-    Output = InitiateOrderObj
-
-    @login_required
-    def mutate(self, info, products, promocode=None, regID=False):
-        cost = 0
-        customer = info.context.user
-        for product in products.products:
-            p = Product.objects.get(productID=product.productID)
-            cost = cost + p.price * product.qty
-            if p.restrictMultiplePurchases is False or Order.objects.filter(
-                    products=p,
-                    user=customer,
-                    transaction__isPaid=True,
-                    transaction__isProcessed=True
-            ).count() < 1:
-                pass
-            else:
-                return InitiateOrderObj(transactionID=None, orderID=None)
-
-        timestamp = datetime.now().astimezone(to_tz)
-        tObj = Transaction.objects.create(amount=cost, user=customer, timestamp=timestamp)
-        oObj = Order.objects.create(user=customer, transaction=tObj, timestamp=timestamp)
-
-        if promocode is not None:
-            pobj = PromoCode.objects.get(code=promocode)
-            if (pobj.users is None | customer in pobj.users) & pobj.isActive:
-                oObj.promoCode = pobj
-        for product in products.products:
-            p = Product.objects.get(productID=product.productID)
-            OrderProduct.objects.create(product=p, qty=product.qty, order=oObj)
-        if regID is not None:
-            try:
-                reg = EventRegistration.objects.get(regID=regID)
-                if reg.event in oObj.products.all():
-                    reg.order = oObj
-                    reg.save()
-            except EventRegistration.DoesNotExist:
-                pass
-        return InitiateOrderObj(transactionID=tObj.transactionID, orderID=oObj.orderID)
 
 
 class CollectPayment(graphene.Mutation):
@@ -124,8 +59,7 @@ class CollectPayment(graphene.Mutation):
         return {"status": False}
 
 
-class Mutation(object):
-    initiateOrder = InitiateOrder.Field()
+class Mutation(OrderMutations, TransactionMutations, object):
     collectPayment = CollectPayment.Field()
 
 
@@ -279,18 +213,7 @@ class TransactionListObj(graphene.ObjectType):
         return User.objects.get(user__id=self['user_id'])
 
 
-class PaymentLinkObj(graphene.ObjectType):
-    url = graphene.String()
-    data = graphene.String()
-    code = graphene.String()
-
-
-class PaymentStatusObj(graphene.ObjectType):
-    status = graphene.Boolean()
-    data = graphene.JSONString()
-
-
-class Query(StatsQuery, object):
+class Query(ACRDQueries, StatsQuery, object):
     myOrders = graphene.List(OrderObj, limit=graphene.Int(required=False))
     getTransactionDetail = graphene.Field(TransactionDetailObj, transactionID=graphene.String())
     getTransactionsApproved = graphene.List(TransactionDetailObj)
@@ -299,8 +222,6 @@ class Query(StatsQuery, object):
     getTransactionStatus = graphene.Field(TransactionStatusObj, transactionID=graphene.String())
     getTransactionsPendingCount = graphene.Int()
     getTransactionList = graphene.List(TransactionListObj)
-    getPaymentGatewayData = graphene.Field(PaymentLinkObj, transactionID=graphene.String())
-    getOnlinePaymentStatus = graphene.Field(PaymentStatusObj, transactionID=graphene.String())
 
     @login_required
     def resolve_myOrders(self, info, **kwargs):
@@ -362,39 +283,3 @@ class Query(StatsQuery, object):
         user = info.context.user
         if UserAccess.objects.get(user=user).viewAllTransactions:
             return Transaction.objects.values().all()
-
-    @login_required
-    def resolve_getPaymentGatewayData(self, info, **kwargs):
-        transactionID = kwargs.get('transactionID')
-        try:
-            tobj = Transaction.objects.get(transactionID=transactionID)
-            payload = getTransactionPayload(tobj.amount, transactionID)
-            return PaymentLinkObj(data=payload['encdata'], code=payload['code'], url=ACRD_ENDPOINT + '/makethirdpartypayment')
-        except Transaction.DoesNotExist:
-            return None
-
-    @login_required
-    def resolve_getOnlinePaymentStatus(self, info, **kwargs):
-        transactionID = kwargs.get('transactionID')
-        try:
-            tobj = Transaction.objects.get(transactionID=transactionID)
-            payload = getTransactionPayload(tobj.amount, transactionID)
-            try:
-                f = requests.post(ACRD_ENDPOINT + '/doubleverifythirdparty', data=payload)
-            except Exception as e:
-                return PaymentStatusObj(status=False, data='Failed')
-            j = f.text
-            k = json.loads(j)
-            data = decryptPayload(k["data"])
-            data = data.replace('=', '" : "')
-            data = data.replace('|', '", "')
-            data = '{ "' + data + '"}'
-            if k["response"]:
-                tobj.isPaid = True
-                tobj.isProcessed = True
-                tobj.manualIssue = False
-                tobj.transactionData = data
-                tobj.save()
-            return PaymentStatusObj(status=k["response"], data=data)
-        except Transaction.DoesNotExist:
-            return None

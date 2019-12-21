@@ -83,13 +83,16 @@ class OrderAdmin(admin.ModelAdmin):
     form = select2
 
     def transactionStatus(self, obj):
-        if obj.transaction.isPaid:
-            return "Paid"
-        elif obj.transaction.isPending:
-            return "Pending"
-        elif obj.transaction.isProcessed:
-            return "Rejected"
+        if obj.transaction:
+            if obj.transaction.isPaid:
+                return "Paid"
+            elif obj.transaction.isPending:
+                return "Pending"
+            elif obj.transaction.isProcessed:
+                return "Rejected"
+            else:
+                return "Not Processed"
         else:
-            return "Not Processed"
+            return "No Trans"
 
     transactionStatus.short_description = 'Transaction Status'

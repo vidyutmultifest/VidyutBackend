@@ -33,5 +33,10 @@ def getTransactionPayload(amount, transactionID):
         'code': ACRD_PAYCODE
     }
 
+
 def decryptPayload(data):
-    return decrypt(data)
+    data = decrypt(data)
+    # Parse decrypted transaction data from ACRD to JSON
+    data = data.replace('=', '" : "')
+    data = data.replace('|', '", "')
+    return '{ "' + data + '"}'
