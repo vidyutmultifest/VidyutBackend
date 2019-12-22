@@ -148,8 +148,24 @@ class MerchandiseObj(EventObj, graphene.ObjectType):
         return Product.objects.values_list('productID', flat=True).filter(merchandise_id=self['id'])
 
 
+class TrainerProfileObj(graphene.ObjectType):
+    name = graphene.String()
+    about = graphene.String()
+    photo = graphene.String()
+
+    def resolve_photo(self, info):
+        url = None
+        if self['photo'] is not '':
+            url = info.context.build_absolute_uri(self['photo'])
+        return url
+
+
 class WorkshopObj(EventObj, graphene.ObjectType):
     duration = graphene.String()
+    trainers = graphene.List(TrainerProfileObj)
+
+    def resolve_trainers(self, info):
+        return Workshop.objects.get(slug=self['slug']).trainers.values().all()
 
     def resolve_contacts(self, info):
         contacts = Workshop.objects.get(slug=self['slug']).contacts
