@@ -74,6 +74,7 @@ class CompetitionAdmin(admin.ModelAdmin):
         ('For Team Events', {
             'fields': [
                 ('isTeamEvent', 'minTeamSize', 'maxTeamSize'),
+                'isTotalRate'
             ]
         }),
         ('Form Fields (Do Not Touch)', {

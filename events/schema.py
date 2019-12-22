@@ -38,11 +38,13 @@ class BasicProductDetailsObj(graphene.ObjectType):
     name = graphene.String()
     price = graphene.Int()
     slots = graphene.Int()
+    isAvailable = graphene.Boolean()
     requireRegistration = graphene.Boolean()
     requireAdvancePayment = graphene.Boolean()
     isAmritapurianOnly = graphene.Boolean()
     isFacultyOnly = graphene.Boolean()
     isSchoolOnly = graphene.Boolean()
+    isOutsideOnly = graphene.Boolean()
 
     def resolve_productID(self, info):
         return self
@@ -55,6 +57,9 @@ class BasicProductDetailsObj(graphene.ObjectType):
 
     def resolve_slots(self, info):
         return Product.objects.get(productID=self).slots
+
+    def resolve_isFacultyOnly(self, info):
+        return Product.objects.get(productID=self).isFacultyOnly
 
     def resolve_requireRegistration(self, info):
         return Product.objects.get(productID=self).requireRegistration
@@ -74,6 +79,12 @@ class BasicProductDetailsObj(graphene.ObjectType):
     def resolve_isSchoolOnly(self, info):
         return Product.objects.get(productID=self).isSchoolOnly
 
+    def resolve_isAvailable(self, info):
+        return Product.objects.get(productID=self).isAvailable
+
+    def resolve_isOutsideOnly(self, info):
+        return Product.objects.get(productID=self).isOutsideOnly
+
 
 class EventObj(graphene.ObjectType):
     name = graphene.String()
@@ -89,6 +100,7 @@ class EventObj(graphene.ObjectType):
     hasSelectionProcess = graphene.Boolean()
     minTeamSize = graphene.Int()
     maxTeamSize = graphene.Int()
+    isTotalRate = graphene.Boolean()
     isRecommended = graphene.Boolean()
     department = graphene.Field(DepartmentObj)
     contacts = graphene.List(ContactPersonObj)

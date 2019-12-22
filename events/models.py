@@ -178,6 +178,7 @@ class Competition(models.Model):
     isRecommended = models.BooleanField(default=False)
     isPublished = models.BooleanField(default=False)
     isTeamEvent = models.BooleanField(default=False)
+    isTotalRate = models.BooleanField(default=True)
     minTeamSize = models.PositiveIntegerField(null=True, blank=True)
     maxTeamSize = models.PositiveIntegerField(null=True, blank=True)
     hasSelectionProcess = models.BooleanField(default=False)

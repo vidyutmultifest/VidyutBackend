@@ -37,6 +37,7 @@ class ProductObj(graphene.ObjectType):
     requireAdvancePayment = graphene.Boolean()
     restrictMultiplePurchases = graphene.Boolean()
     isAmritapurianOnly = graphene.Boolean()
+    isOutsideOnly = graphene.Boolean()
     isSchoolOnly = graphene.Boolean()
     isFacultyOnly = graphene.Boolean()
     slots = graphene.Int()

@@ -45,6 +45,8 @@ class Profile(models.Model):
         related_name='Profile',
         verbose_name='User',
     )
+    isSchoolStudent = models.BooleanField(default=False)
+    isFaculty = models.BooleanField(default=False)
     college = models.ForeignKey(College, on_delete=models.PROTECT, null=True, blank=True)
     photo = models.ImageField(upload_to=get_selfie_path, null=True, blank=True)
     idPhoto = models.ImageField(upload_to=get_id_path, null=True, blank=True)

@@ -150,6 +150,8 @@ class ProfileObj(graphene.ObjectType):
     phone = graphene.String()
     isAmritian = graphene.Boolean()
     isAmritapurian = graphene.Boolean()
+    isFaculty = graphene.Boolean()
+    isSchoolStudent = graphene.Boolean()
     college = graphene.Field(CollegeObj)
     photo = graphene.String()
     idPhoto = graphene.String()
@@ -225,6 +227,8 @@ class Query(rekognitionQueries, object):
             email=user.email,
             isAmritian=isAmritian,
             isAmritapurian=isAmritapurian,
+            isFaculty=profile.isFaculty,
+            isSchoolStudent=profile.isSchoolStudent,
             username=user.username,
             vidyutID=profile.vidyutID,
             vidyutHash=profile.vidyutHash,

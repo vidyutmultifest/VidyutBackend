@@ -22,6 +22,7 @@ class Product(models.Model):
     restrictMultiplePurchases = models.BooleanField(default=True)
 
     isAmritapurianOnly = models.BooleanField(default=False)
+    isOutsideOnly = models.BooleanField(default=False)
     isFacultyOnly = models.BooleanField(default=False)
     isSchoolOnly = models.BooleanField(default=False)
 
