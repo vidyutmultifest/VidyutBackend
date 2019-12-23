@@ -103,6 +103,7 @@ class BasicProductDetailsObj(graphene.ObjectType):
 
 class OrganizerObj(graphene.ObjectType):
     name = graphene.String()
+    id = graphene.Int()
     logo = graphene.String()
 
     def resolve_logo(self, info):
@@ -117,7 +118,6 @@ class EventObj(graphene.ObjectType):
     slug = graphene.String()
     cover = graphene.String()
     description = graphene.String()
-    organizer = graphene.Field(OrganizerObj)
     details = graphene.String()
     fee = graphene.Int()
     isNew = graphene.Boolean()
@@ -129,6 +129,7 @@ class EventObj(graphene.ObjectType):
     isTotalRate = graphene.Boolean()
     isRecommended = graphene.Boolean()
     department = graphene.Field(DepartmentObj)
+    organizer = graphene.Field(OrganizerObj)
     contacts = graphene.List(ContactPersonObj)
     productID = graphene.String()
     products = graphene.List(BasicProductDetailsObj)
@@ -272,11 +273,20 @@ class Query(PartnerQueries, object):
     getTicketEvent = graphene.Field(TicketObj, slug=graphene.String(required=True))
     getMerchandise = graphene.Field(MerchandiseObj, slug=graphene.String(required=True))
     listDepartments = graphene.List(DepartmentObj)
+    listOrganizers = graphene.List(OrganizerObj)
     listCompetitions = graphene.List(CompetitionObj)
     listWorkshops = graphene.List(WorkshopObj)
     listMerchandise = graphene.List(MerchandiseObj)
     listTicketEvents = graphene.List(TicketObj)
     listTeamCompetitions = graphene.List(CompetitionObj)
+
+    @staticmethod
+    def resolve_listDepartments(self, info, **kwargs):
+        return Department.objects.values().all().order_by('name')
+
+    @staticmethod
+    def resolve_listOrganizers(self, info, **kwargs):
+        return Partners.objects.values().all().order_by('name')
 
     @staticmethod
     def resolve_listDepartments(self, info, **kwargs):
@@ -289,11 +299,11 @@ class Query(PartnerQueries, object):
 
     @staticmethod
     def resolve_listCompetitions(self, info, **kwargs):
-        return Competition.objects.values().filter(isPublished=True)
+        return Competition.objects.values().filter(isPublished=True).order_by('name')
 
     @staticmethod
     def resolve_listTeamCompetitions(self, info, **kwargs):
-        return Competition.objects.values().filter(isTeamEvent=True)
+        return Competition.objects.values().filter(isTeamEvent=True, isPublished=True).order_by('name')
 
     @staticmethod
     def resolve_getWorkshop(self, info, **kwargs):
@@ -302,7 +312,7 @@ class Query(PartnerQueries, object):
 
     @staticmethod
     def resolve_listWorkshops(self, info, **kwargs):
-        return Workshop.objects.values().filter(isPublished=True)
+        return Workshop.objects.values().filter(isPublished=True).order_by('name')
 
     @staticmethod
     def resolve_getMerchandise(self, info, **kwargs):
@@ -311,7 +321,7 @@ class Query(PartnerQueries, object):
 
     @staticmethod
     def resolve_listMerchandise(self, info, **kwargs):
-        return Merchandise.objects.values().filter(isPublished=True)
+        return Merchandise.objects.values().filter(isPublished=True).order_by('name')
 
     @staticmethod
     def resolve_getTicketEvent(self, info, **kwargs):
@@ -320,4 +330,4 @@ class Query(PartnerQueries, object):
 
     @staticmethod
     def resolve_listTicketEvents(self, info, **kwargs):
-        return Ticket.objects.values().filter(isPublished=True)
+        return Ticket.objects.values().filter(isPublished=True).order_by('name')
