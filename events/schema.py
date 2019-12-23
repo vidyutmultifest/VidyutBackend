@@ -45,6 +45,8 @@ class BasicProductDetailsObj(graphene.ObjectType):
     isFacultyOnly = graphene.Boolean()
     isSchoolOnly = graphene.Boolean()
     isOutsideOnly = graphene.Boolean()
+    requireEventRegistration = graphene.Boolean()
+    type = graphene.String()
 
     def resolve_productID(self, info):
         return self
@@ -84,6 +86,9 @@ class BasicProductDetailsObj(graphene.ObjectType):
 
     def resolve_isOutsideOnly(self, info):
         return Product.objects.get(productID=self).isOutsideOnly
+
+    def resolve_requireEventRegistration(self, info):
+        return Product.objects.get(productID=self).requireEventRegistration
 
 
 class EventObj(graphene.ObjectType):

@@ -18,6 +18,7 @@ class Product(models.Model):
     slots = models.PositiveIntegerField(null=True, blank=True)
 
     requireRegistration = models.BooleanField(default=False)
+    requireEventRegistration = models.BooleanField(default=False)
     requireAdvancePayment = models.BooleanField(default=False)
     restrictMultiplePurchases = models.BooleanField(default=True)
 

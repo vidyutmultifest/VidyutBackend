@@ -1,4 +1,5 @@
 import graphene
+from django.db.models import Q
 from graphql_jwt.decorators import login_required
 
 from registrations.models import EventRegistration
@@ -164,6 +165,13 @@ class ProfileObj(graphene.ObjectType):
     foodPreference = graphene.String()
     shirtSize = graphene.String()
     degreeType = graphene.String()
+    hasEventsRegistered = graphene.Boolean()
+
+    def resolve_hasEventsRegistered(self, info):
+        user = info.context.user
+        count = EventRegistration.objects.filter((Q(user=user) | Q(team__members=user)) & (
+                    Q(order__transaction__isPaid=True) | Q(event__requireAdvancePayment=False))).count()
+        return count > 0
 
 
 class TeamMemberObj(graphene.ObjectType):
@@ -186,6 +194,7 @@ class Query(rekognitionQueries, object):
     colleges = graphene.List(CollegeObj)
     getTeam = graphene.Field(TeamObj, hash=graphene.String(required=True))
     myTeams = graphene.List(TeamObj)
+
     # sendOTP = graphene.Boolean(phoneNo=graphene.String(required=True), message=graphene.String(required=True))
 
     @login_required
@@ -274,7 +283,6 @@ class Query(rekognitionQueries, object):
                 isUserLeader=user == team.leader
             )
         return None
-
 
     @login_required
     def resolve_myTeams(self, info, **kwargs):

@@ -36,6 +36,7 @@ class ProductObj(graphene.ObjectType):
     requireRegistration = graphene.Boolean()
     requireAdvancePayment = graphene.Boolean()
     restrictMultiplePurchases = graphene.Boolean()
+    requireEventRegistration = graphene.Boolean()
     isAmritapurianOnly = graphene.Boolean()
     isOutsideOnly = graphene.Boolean()
     isSchoolOnly = graphene.Boolean()

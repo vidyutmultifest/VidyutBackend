@@ -191,16 +191,16 @@ class Competition(models.Model):
 class CompetitionSchedule(models.Model):
     slot = models.ForeignKey(TimeSlot, on_delete=models.PROTECT)
     venue = models.ForeignKey(Venue, on_delete=models.SET_NULL, blank=True, null=True)
-    competition = models.ForeignKey(Competition, on_delete=models.PROTECT)
+    event = models.ForeignKey(Competition, on_delete=models.PROTECT)
 
 
 class WorkshopSchedule(models.Model):
     slot = models.ForeignKey(TimeSlot, on_delete=models.PROTECT)
     venue = models.ForeignKey(Venue, on_delete=models.SET_NULL, blank=True, null=True)
-    competition = models.ForeignKey(Workshop, on_delete=models.PROTECT)
+    event = models.ForeignKey(Workshop, on_delete=models.PROTECT)
 
 
 class TicketSchedule(models.Model):
     slot = models.ForeignKey(TimeSlot, on_delete=models.PROTECT)
     venue = models.ForeignKey(Venue, on_delete=models.SET_NULL, blank=True, null=True)
-    competition = models.ForeignKey(Ticket, on_delete=models.PROTECT)
+    event = models.ForeignKey(Ticket, on_delete=models.PROTECT)
