@@ -101,12 +101,23 @@ class BasicProductDetailsObj(graphene.ObjectType):
         return Product.objects.get(productID=self).requireEventRegistration
 
 
+class OrganizerObj(graphene.ObjectType):
+    name = graphene.String()
+    logo = graphene.String()
+
+    def resolve_logo(self, info):
+        url = None
+        if self['logo'] is not '':
+            url = info.context.build_absolute_uri(self['logo'])
+        return url
+
+
 class EventObj(graphene.ObjectType):
     name = graphene.String()
     slug = graphene.String()
     cover = graphene.String()
     description = graphene.String()
-    organizer = graphene.String()
+    organizer = graphene.Field(OrganizerObj)
     details = graphene.String()
     fee = graphene.Int()
     isNew = graphene.Boolean()
@@ -127,6 +138,12 @@ class EventObj(graphene.ObjectType):
         if self['cover'] is not '':
             url = info.context.build_absolute_uri(self['cover'])
         return url
+
+    def resolve_organizer(self, info):
+        try:
+            return Partners.objects.values().get(id=self['organiser_id'])
+        except Partners.DoesNotExist:
+            return None
 
     def resolve_department(self, info):
         try:
