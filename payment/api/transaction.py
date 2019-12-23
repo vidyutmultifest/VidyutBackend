@@ -31,12 +31,11 @@ class InitiateTransaction(graphene.Mutation):
         cost = 0
         for product in OrderProduct.objects.filter(order=order):
             cost = cost + product.price * product.qty
+            # Add GST Amount
+            if isOnline and not product.product.isGSTAccounted:
+                cost = cost + 0.18 * cost
 
         # TODO : subtract promocode value from amount
-
-        # Add GST Amount
-        if isOnline:
-            cost = cost + 0.18 * cost
 
         # Create a transaction with current timestamp
         timestamp = datetime.now().astimezone(to_tz)

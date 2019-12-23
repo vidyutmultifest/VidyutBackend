@@ -36,7 +36,7 @@ class FormFieldObj(graphene.ObjectType):
 class BasicProductDetailsObj(graphene.ObjectType):
     productID = graphene.String()
     name = graphene.String()
-    price = graphene.Int()
+    price = graphene.String()
     slots = graphene.Int()
     isAvailable = graphene.Boolean()
     requireRegistration = graphene.Boolean()
@@ -46,6 +46,7 @@ class BasicProductDetailsObj(graphene.ObjectType):
     isSchoolOnly = graphene.Boolean()
     isOutsideOnly = graphene.Boolean()
     requireEventRegistration = graphene.Boolean()
+    isGSTAccounted = graphene.Boolean()
     type = graphene.String()
 
     def resolve_productID(self, info):
@@ -54,8 +55,17 @@ class BasicProductDetailsObj(graphene.ObjectType):
     def resolve_name(self, info):
         return Product.objects.get(productID=self).name
 
+    def resolve_isGSTAccounted(self, info):
+        return Product.objects.get(productID=self).isGSTAccounted
+
     def resolve_price(self, info):
-        return Product.objects.get(productID=self).price
+        product = Product.objects.get(productID=self)
+        # GST Amount = Original Cost – (Original Cost * (100 / (100 + GST% ) ) )
+        if product.isGSTAccounted:
+            price = product.price - (product.price - (product.price * (100 / (100 + 18))))
+        else:
+            price = product.price
+        return price
 
     def resolve_slots(self, info):
         return Product.objects.get(productID=self).slots
@@ -165,12 +175,41 @@ class TrainerProfileObj(graphene.ObjectType):
         return url
 
 
+class VenueObj(graphene.ObjectType):
+    name = graphene.String()
+    address = graphene.String()
+
+
+class SlotObj(graphene.ObjectType):
+    startTime = graphene.String()
+    endTime = graphene.String()
+    id = graphene.Int()
+
+
+class DailyScheduleObj(graphene.ObjectType):
+    slot = graphene.Field(SlotObj)
+    venue = graphene.Field(VenueObj)
+
+    def resolve_slot(self, info):
+        return TimeSlot.objects.values().get(id=self['slot_id'])
+
+    def resolve_venue(self, info):
+        if self['venue_id'] is not None:
+            return Venue.objects.values().get(id=self['venue_id'])
+        else:
+            return None
+
+
 class WorkshopObj(EventObj, graphene.ObjectType):
     duration = graphene.String()
     trainers = graphene.List(TrainerProfileObj)
+    schedule = graphene.List(DailyScheduleObj)
 
     def resolve_trainers(self, info):
         return Workshop.objects.get(slug=self['slug']).trainers.values().all()
+
+    def resolve_schedule(self, info):
+        return WorkshopSchedule.objects.values().filter(event__slug=self['slug'])
 
     def resolve_contacts(self, info):
         contacts = Workshop.objects.get(slug=self['slug']).contacts

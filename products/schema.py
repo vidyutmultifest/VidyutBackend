@@ -40,12 +40,21 @@ class ProductObj(graphene.ObjectType):
     isAmritapurianOnly = graphene.Boolean()
     isOutsideOnly = graphene.Boolean()
     isSchoolOnly = graphene.Boolean()
+    isGSTAccounted = graphene.Boolean()
     isFacultyOnly = graphene.Boolean()
     slots = graphene.Int()
-    price = graphene.Int()
+    price = graphene.String()
     isAvailable = graphene.Boolean()
     productID = graphene.String()
     product = graphene.Field(ProductInfoObj)
+
+    def resolve_price(self, info):
+        if self['isGSTAccounted']:
+            # GST Amount = Original Cost – (Original Cost * (100 / (100 + GST% ) ) )
+            price = self['price'] - (self['price'] - (self['price'] * (100 / (100 + 18))))
+        else:
+            price = self['price']
+        return price
 
     def resolve_product(self, info):
         product = Product.objects.get(productID=self['productID']).product
