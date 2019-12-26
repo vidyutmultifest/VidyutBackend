@@ -108,6 +108,8 @@ class TransactionObj(graphene.ObjectType):
     isPending = graphene.Boolean()
     isProcessed = graphene.Boolean()
     issuer = graphene.Field(IssuerObj)
+    isOnline = graphene.Boolean()
+    transactionData = graphene.String()
 
     def resolve_timestamp(self, info):
         return self['timestamp'].astimezone(to_tz)
