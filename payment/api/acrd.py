@@ -53,17 +53,16 @@ class Query(object):
         payload = getTransactionPayload(tobj.amount, transactionID)
         try:
             f = requests.post(ACRD_ENDPOINT + '/doubleverifythirdparty', data=payload)
+            k = f.json()
         except Exception as e:
             return PaymentStatusObj(status=False, data='Failed')
-        j = f.text
-        k = json.loads(j)
 
         # Decrypt Response Data from ACRD, receives a JSON
         data = decryptPayload(k["data"])
 
         if k["response"]:
-            jsonData = json.load(data)
-            tobj.isPaid = jsonData.status == "SUCCESS"
+            jsonData = json.loads(data)
+            tobj.isPaid = jsonData['status'] == "SUCCESS"
             tobj.isProcessed = True
             tobj.manualIssue = False
             tobj.transactionData = data
