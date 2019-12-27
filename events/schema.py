@@ -117,6 +117,7 @@ class EventObj(graphene.ObjectType):
     name = graphene.String()
     slug = graphene.String()
     cover = graphene.String()
+    poster = graphene.String()
     description = graphene.String()
     details = graphene.String()
     fee = graphene.Int()
@@ -138,6 +139,12 @@ class EventObj(graphene.ObjectType):
         url = None
         if self['cover'] is not '':
             url = info.context.build_absolute_uri(self['cover'])
+        return url
+
+    def resolve_poster(self, info):
+        url = None
+        if self['poster'] is not '':
+            url = info.context.build_absolute_uri(self['poster'])
         return url
 
     def resolve_organizer(self, info):
@@ -299,7 +306,7 @@ class Query(PartnerQueries, object):
 
     @staticmethod
     def resolve_listCompetitions(self, info, **kwargs):
-        return Competition.objects.values().filter(isPublished=True).order_by('name')
+        return Competition.objects.values().filter(isPublished=True).order_by('dept__name')
 
     @staticmethod
     def resolve_listTeamCompetitions(self, info, **kwargs):

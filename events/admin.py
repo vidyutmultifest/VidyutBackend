@@ -53,7 +53,7 @@ class CompetitionAdmin(admin.ModelAdmin):
         ('Basic Details', {
             'fields': [
                 ('name', 'slug'),
-                'cover',
+                ('cover', 'poster'),
                 ('dept', 'organiser', 'partners'),
                 'hasSelectionProcess'
             ]
@@ -106,7 +106,7 @@ class WorkshopAdmin(admin.ModelAdmin):
         ('Basic Details', {
             'fields': [
                 ('name', 'slug'),
-                'cover',
+                ('cover', 'poster'),
                 ('dept', 'organiser', 'partners'),
                 ('trainers', 'accreditedBy')
             ]
@@ -151,7 +151,7 @@ class TicketAdmin(admin.ModelAdmin):
         ('Basic Details', {
             'fields': [
                 ('name', 'slug'),
-                'cover',
+                ('cover', 'poster'),
                 'organiser',
             ]
         }),

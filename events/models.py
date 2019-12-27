@@ -80,10 +80,16 @@ class Ticket(models.Model):
         filename = 'vidyut_ticket_' + "%s.%s" % (uuid.uuid4(), ext)
         return 'static/events/covers/' + filename
 
+    def get_poster_path(self, filename):
+        ext = filename.split('.')[-1]
+        filename = 'vidyut_workshop_' + "%s.%s" % (uuid.uuid4(), ext)
+        return 'static/events/posters/' + filename
+
     name = models.CharField(max_length=150)
     slug = models.SlugField(unique=True)
     organiser = models.ForeignKey(Partners, on_delete=models.PROTECT, related_name='TicketEventOrganizer', null=True, blank=True)
     cover = models.ImageField(upload_to=get_image_path, null=True, blank=True)
+    poster = models.ImageField(upload_to=get_poster_path, null=True, blank=True)
     description = models.CharField(max_length=350, null=True, blank=True)
     details = RichTextField(null=True, blank=True)
     fee = models.PositiveIntegerField(null=True, blank=True)
@@ -105,9 +111,15 @@ class Merchandise(models.Model):
         filename = 'vidyut_merchandise_' + "%s.%s" % (uuid.uuid4(), ext)
         return 'static/events/covers/' + filename
 
+    def get_poster_path(self, filename):
+        ext = filename.split('.')[-1]
+        filename = 'vidyut_workshop_' + "%s.%s" % (uuid.uuid4(), ext)
+        return 'static/events/posters/' + filename
+
     name = models.CharField(max_length=150)
     slug = models.SlugField(unique=True)
     cover = models.ImageField(upload_to=get_image_path, null=True, blank=True)
+    poster = models.ImageField(upload_to=get_poster_path, null=True, blank=True)
     description = models.CharField(max_length=350, null=True, blank=True)
     details = RichTextField(null=True, blank=True)
     fee = models.PositiveIntegerField(null=True, blank=True)
@@ -128,9 +140,15 @@ class Workshop(models.Model):
         filename = 'vidyut_workshop_' + "%s.%s" % (uuid.uuid4(), ext)
         return 'static/events/covers/' + filename
 
+    def get_poster_path(self, filename):
+        ext = filename.split('.')[-1]
+        filename = 'vidyut_workshop_' + "%s.%s" % (uuid.uuid4(), ext)
+        return 'static/events/posters/' + filename
+
     name = models.CharField(max_length=150)
     slug = models.SlugField(unique=True)
     cover = models.ImageField(upload_to=get_image_path, null=True, blank=True)
+    poster = models.ImageField(upload_to=get_poster_path, null=True, blank=True)
     organiser = models.ForeignKey(Partners, on_delete=models.PROTECT, related_name='WokshopOrganizer', null=True, blank=True)
     partners = models.ManyToManyField(Partners, related_name='WorkshopPartners', blank=True)
     trainers = models.ManyToManyField(Trainer, related_name='WorkshopTrainers', blank=True)
@@ -158,9 +176,15 @@ class Competition(models.Model):
         filename = 'vidyut_competition_' + "%s.%s" % (uuid.uuid4(), ext)
         return 'static/events/covers/' + filename
 
+    def get_poster_path(self, filename):
+        ext = filename.split('.')[-1]
+        filename = 'vidyut_competition_' + "%s.%s" % (uuid.uuid4(), ext)
+        return 'static/events/posters/' + filename
+
     name = models.CharField(max_length=150)
     slug = models.SlugField(unique=True)
     cover = models.ImageField(upload_to=get_image_path, null=True, blank=True)
+    poster = models.ImageField(upload_to=get_poster_path, null=True, blank=True)
     dept = models.ForeignKey(Department, on_delete=models.PROTECT, null=True, blank=True)
     organiser = models.ForeignKey(Partners, on_delete=models.PROTECT, related_name='CompetitionOrganizer', null=True, blank=True)
     partners = models.ManyToManyField(Partners, related_name='CompetitionPartners', blank=True)
