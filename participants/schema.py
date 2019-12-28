@@ -203,8 +203,8 @@ class Query(rekognitionQueries, object):
         profile = Profile.objects.get(user=user)
         if profile.photo is None:
             return False
-        if profile.idPhoto is None:
-            return False
+        # if profile.idPhoto is None:
+        #     return False
         if profile.college is None and profile.rollNo is None:
             return False
         return True
