@@ -225,10 +225,32 @@ class DailyScheduleObj(graphene.ObjectType):
             return None
 
 
+class PartnerObj(graphene.ObjectType):
+    name = graphene.String()
+    logo = graphene.String()
+
+
 class WorkshopObj(EventObj, graphene.ObjectType):
     duration = graphene.String()
     trainers = graphene.List(TrainerProfileObj)
     schedule = graphene.List(DailyScheduleObj)
+    accreditedBy = graphene.Field(PartnerObj)
+    partners = graphene.List(PartnerObj)
+
+    def resolve_accreditedBy(self, info):
+        if Workshop.objects.get(slug=self['slug']).accreditedBy is not None:
+            acc = Workshop.objects.get(slug=self['slug']).accreditedBy
+            return {
+                'name': acc.name,
+                'logo': info.context.build_absolute_uri(acc.logo.url)
+            }
+        return None
+
+    def resolve_partners(self, info):
+        if Workshop.objects.get(slug=self['slug']).partners is not None:
+            partners = Workshop.objects.get(slug=self['slug']).partners.all()
+            return Partners.objects.values().filter(id__in=partners).order_by('name')
+        return None
 
     def resolve_trainers(self, info):
         return Workshop.objects.get(slug=self['slug']).trainers.values().all()
