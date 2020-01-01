@@ -12,6 +12,8 @@ class RekognitionObj(graphene.ObjectType):
 class Query(object):
     detectFace = graphene.Field(RekognitionObj)
     detectText = graphene.Field(RekognitionObj)
+    sendEmail = graphene.Field(RekognitionObj, email=graphene.String(), message=graphene.String())
+    # sendOTP = graphene.Boolean(phoneNo=graphene.String(required=True), message=graphene.String(required=True))
 
     @login_required
     def resolve_detectFace(self, info, **kwargs):
@@ -43,3 +45,31 @@ class Query(object):
                 "Bytes": photo.read()
             }
         )))
+
+    @login_required
+    def resolve_sendEmail(self, info, **kwargs):
+        email = kwargs.get('email')
+        message = kwargs.get('message')
+        client = boto3.client(
+            'ses',
+            region_name='us-east-1',
+            aws_access_key_id=AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=AWS_SECRET_ACCESS_KEY
+        )
+
+    #
+    # @login_required
+    # def resolve_sendOTP(self, info, **kwargs):
+    #     phoneNo = kwargs.get('phoneNo')
+    #     message = kwargs.get('message')
+    #     client = boto3.client(
+    #         "sns",
+    #         'us-east-1',
+    #         aws_access_key_id=AWS_ACCESS_KEY_ID,
+    #         aws_secret_access_key=AWS_SECRET_ACCESS_KEY
+    #     )
+    #     client.publish(
+    #         PhoneNumber=phoneNo,
+    #         Message=message
+    #     )
+    #     return True

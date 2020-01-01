@@ -5,7 +5,7 @@ from django.db.models import Q
 from graphql_jwt.decorators import login_required
 
 from participants.models import Team
-from participants.schema import TeamObj
+from participants.api.objects import TeamObj
 from products.models import Product
 from payment.models import Order
 from products.schema import ProductObj

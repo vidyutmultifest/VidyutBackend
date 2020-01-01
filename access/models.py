@@ -8,6 +8,7 @@ class UserAccess(models.Model):
     canAcceptPayment = models.BooleanField(default=False)
     viewAllTransactions = models.BooleanField(default=False)
     canIssueTickets = models.BooleanField(default=False)
+    canViewProfiles = models.BooleanField(default=False)
 
     def __str__(self):
         return self.user.username

@@ -1,6 +1,8 @@
 import graphene
-from participants.models import Profile, College
 from graphql_jwt.decorators import login_required
+
+from framework.api.helper import APIException
+from participants.models import Profile, College
 
 
 class UpdateProfileObj(graphene.ObjectType):
@@ -81,7 +83,7 @@ class UpdateProfile(graphene.Mutation):
                     college = College.objects.get(id=details.collegeID)
                     profile.college = college
                 except College.DoesNotExist:
-                    pass
+                    raise APIException('College does not exist or has been removed.')
         profile.save()
 
         return UpdateProfileObj(status=True)
