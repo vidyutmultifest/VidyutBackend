@@ -104,5 +104,8 @@ class Query(object):
     def resolve_isAlreadyRegistered(self, info, **kwargs):
         user = info.context.user
         productID = kwargs.get('productID')
-        count = EventRegistration.objects.values().filter(Q(event__productID=productID) & (Q(user=user) | Q(team__members=user))).count()
-        return count < 1
+        count = EventRegistration.objects.filter(
+            Q(event__productID=productID) &
+            (Q(user=user) | Q(team__members=user))
+        ).count()
+        return count != 0
