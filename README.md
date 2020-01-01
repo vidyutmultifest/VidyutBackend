@@ -1,2 +1,2 @@
-# django-graphql
-Starter kit for making awesome Graph APIs from Django
+# Vidyut Backend
+Django-based GraphQL API/Backend Server for Vidyut 2020.

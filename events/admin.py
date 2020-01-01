@@ -88,8 +88,9 @@ class CompetitionAdmin(admin.ModelAdmin):
             ]
         }),
     ]
-    list_display = ('name', 'dept', 'fee', 'isPublished', 'lastEditor', 'lastEditTime')
-    search_fields = ['name']
+    list_display = ('name', 'dept', 'fee', 'isTeamEvent', 'isPublished', 'lastEditor', 'lastEditTime')
+    list_filter = ('dept', 'isPublished', 'isTeamEvent')
+    search_fields = ['name', 'dept']
     select2 = select2_modelform(Competition, attrs={'width': '250px'})
     inlines = (CSInline,)
     form = select2
@@ -135,6 +136,7 @@ class WorkshopAdmin(admin.ModelAdmin):
         }),
     ]
     list_display = ('name', 'dept', 'fee', 'isPublished', 'lastEditor', 'lastEditTime')
+    list_filter = ('name', 'dept', 'isPublished')
     select2 = select2_modelform(Workshop, attrs={'width': '250px'})
     form = select2
     inlines = (WSInline,)

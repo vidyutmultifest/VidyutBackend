@@ -21,6 +21,8 @@ class ProfileDetailsObj(graphene.InputObjectType):
     degreeType = graphene.String(required=False)
     graduationYear = graphene.String(required=False)
     collegeID = graphene.Int(required=False)
+    isFaculty = graphene.Boolean(required=False)
+    isSchoolStudent = graphene.Boolean(required=False)
 
 
 class UpdateProfile(graphene.Mutation):
@@ -70,6 +72,10 @@ class UpdateProfile(graphene.Mutation):
                 profile.degreeType = details.degreeType
             if details.graduationYear is not None:
                 profile.graduationYear = int(details.graduationYear)
+            if details.isFaculty is not None:
+                profile.isFaculty = details.isFaculty
+            if details.isSchoolStudent is not None:
+                profile.isSchoolStudent = details.isSchoolStudent
             if details.collegeID is not None:
                 try:
                     college = College.objects.get(id=details.collegeID)

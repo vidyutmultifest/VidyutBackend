@@ -88,6 +88,7 @@ class EventRegistrationObj(graphene.ObjectType):
 
 class Query(object):
     myRegistrations = graphene.List(EventRegistrationObj, limit=graphene.Int())
+    isAlreadyRegistered = graphene.Boolean(productID=graphene.String(required=True))
 
     @login_required
     def resolve_myRegistrations(self, info, **kwargs):
@@ -98,3 +99,10 @@ class Query(object):
             return events[:limit]
         else:
             return events
+
+    @login_required
+    def resolve_isAlreadyRegistered(self, info, **kwargs):
+        user = info.context.user
+        productID = kwargs.get('productID')
+        count = EventRegistration.objects.values().filter(Q(event__productID=productID) & (Q(user=user) | Q(team__members=user))).count()
+        return count < 1
