@@ -9,7 +9,9 @@ from participants.api.objects import TeamObj
 from products.models import Product
 from payment.models import Order
 from products.schema import ProductObj
-from payment.schema import OrderObj
+from payment.api.objects import OrderObj
+
+
 from .models import EventRegistration
 
 
@@ -81,7 +83,7 @@ class EventRegistrationObj(graphene.ObjectType):
 
     def resolve_order(self, info, **kwargs):
         try:
-            return Order.objects.values().get(id=self['order_id'])
+            return Order.objects.get(id=self['order_id'])
         except Order.DoesNotExist:
             return None
 

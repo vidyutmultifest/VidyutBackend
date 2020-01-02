@@ -229,6 +229,11 @@ class PartnerObj(graphene.ObjectType):
     name = graphene.String()
     logo = graphene.String()
 
+    def resolve_logo(self, info):
+        url = None
+        if self['logo'] is not '':
+            url = info.context.build_absolute_uri(self['logo'])
+        return url
 
 class WorkshopObj(EventObj, graphene.ObjectType):
     duration = graphene.String()

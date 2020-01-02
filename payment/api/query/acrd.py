@@ -4,6 +4,7 @@ import json
 
 from graphql_jwt.decorators import login_required
 
+from framework.api.helper import APIException
 from payment.acrd.helper import getTransactionPayload, decryptPayload
 from framework.settings import ACRD_ENDPOINT
 
@@ -31,7 +32,7 @@ class Query(object):
         try:
             tobj = Transaction.objects.get(transactionID=transactionID)
         except Transaction.DoesNotExist:
-            return None
+            raise APIException("Transaction not found in the database.")
         payload = getTransactionPayload(tobj.amount, transactionID)
         return PaymentLinkObj(
             data=payload['encdata'],
@@ -43,17 +44,16 @@ class Query(object):
     @login_required
     def resolve_getOnlinePaymentStatus(self, info, **kwargs):
         transactionID = kwargs.get('transactionID')
-
-        # TODO better error handling
         try:
             tobj = Transaction.objects.get(transactionID=transactionID)
         except Transaction.DoesNotExist:
-            return None
+            raise APIException("Transaction not found in the database.")
 
         payload = getTransactionPayload(tobj.amount, transactionID)
         try:
             f = requests.post(ACRD_ENDPOINT + '/doubleverifythirdparty', data=payload)
             k = f.json()
+        #TODO : Do better error handling
         except Exception as e:
             return PaymentStatusObj(status=False, data='Failed')
 
