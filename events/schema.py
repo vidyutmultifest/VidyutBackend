@@ -1,6 +1,7 @@
 import json
-
 import graphene
+
+from participants.models import Profile
 from .models import *
 from pytz import timezone
 from datetime import datetime, timedelta
@@ -235,6 +236,7 @@ class PartnerObj(graphene.ObjectType):
             url = info.context.build_absolute_uri(self['logo'])
         return url
 
+
 class WorkshopObj(EventObj, graphene.ObjectType):
     duration = graphene.String()
     trainers = graphene.List(TrainerProfileObj)
@@ -333,7 +335,26 @@ class Query(PartnerQueries, object):
 
     @staticmethod
     def resolve_listCompetitions(self, info, **kwargs):
-        return Competition.objects.values().filter(isPublished=True).order_by('dept__name')
+        user = info.context.user
+        if user.id:
+            profile = Profile.objects.get(user=user)
+            if profile.isSchoolStudent:
+                return Competition.objects.values().filter(
+                    isPublished=True,
+                    product__isSchoolOnly=True
+                ).distinct().order_by('-isRecommended', 'dept__name', 'name')
+            elif profile.isFaculty:
+                return Competition.objects.values().filter(
+                    isPublished=True,
+                    product__isFacultyOnly=True
+                ).distinct().order_by('-isRecommended', 'dept__name', 'name')
+            return Competition.objects.values().filter(
+                isPublished=True,
+                product__isSchoolOnly=False,
+                product__isFacultyOnly=False
+            ).distinct().order_by('-isRecommended', 'dept__name', 'name')
+        else:
+            return Competition.objects.values().filter(isPublished=True).order_by('-isRecommended', 'dept__name', 'name')
 
     @staticmethod
     def resolve_listTeamCompetitions(self, info, **kwargs):
@@ -346,7 +367,26 @@ class Query(PartnerQueries, object):
 
     @staticmethod
     def resolve_listWorkshops(self, info, **kwargs):
-        return Workshop.objects.values().filter(isPublished=True).order_by('name')
+        user = info.context.user
+        if user.id:
+            profile = Profile.objects.get(user=user)
+            if profile.isSchoolStudent:
+                return Workshop.objects.values().filter(
+                    isPublished=True,
+                    product__isSchoolOnly=True
+                ).distinct().order_by('-isRecommended', 'dept__name', 'name')
+            elif profile.isFaculty:
+                return Workshop.objects.values().filter(
+                    isPublished=True,
+                    product__isFacultyOnly=True
+                ).distinct().order_by('-isRecommended', 'dept__name', 'name')
+            return Workshop.objects.values().filter(
+                isPublished=True,
+                product__isSchoolOnly=False,
+                product__isFacultyOnly=False
+            ).distinct().order_by('-isRecommended', 'dept__name', 'name')
+        else:
+            return Workshop.objects.values().filter(isPublished=True).order_by('-isRecommended', 'dept__name', 'name')
 
     @staticmethod
     def resolve_getMerchandise(self, info, **kwargs):
