@@ -247,6 +247,7 @@ class PartnerObj(graphene.ObjectType):
         return url
 
 
+
 class WorkshopObj(EventObj, graphene.ObjectType):
     syllabus = graphene.String()
     eligibility = graphene.String()
@@ -304,7 +305,7 @@ class CompetitionObj(EventObj, graphene.ObjectType):
     rules = graphene.String()
     formFields = graphene.List(FormFieldObj)
     schedule = graphene.List(DailyScheduleObj)
-    
+
     def resolve_schedule(self, info):
         return CompetitionSchedule.objects.values().filter(event__slug=self['slug'])
 
@@ -326,12 +327,24 @@ class CompetitionObj(EventObj, graphene.ObjectType):
         return None
 
 
+class DepartmentListObj(graphene.ObjectType):
+    name = graphene.String()
+    slug = graphene.String()
+    icon = graphene.String()
+
+    def resolve_icon(self, info):
+        url = None
+        if self['icon']:
+            url = info.context.build_absolute_uri(self['icon'])
+        return url
+
+
 class Query(PartnerQueries, object):
     getCompetition = graphene.Field(CompetitionObj, slug=graphene.String(required=True))
     getWorkshop = graphene.Field(WorkshopObj, slug=graphene.String(required=True))
     getTicketEvent = graphene.Field(TicketObj, slug=graphene.String(required=True))
     getMerchandise = graphene.Field(MerchandiseObj, slug=graphene.String(required=True))
-    listDepartments = graphene.List(DepartmentObj)
+    listDepartments = graphene.List(DepartmentListObj)
     listOrganizers = graphene.List(OrganizerObj)
     listCompetitions = graphene.List(CompetitionObj)
     listWorkshops = graphene.List(WorkshopObj)
@@ -341,7 +354,7 @@ class Query(PartnerQueries, object):
 
     @staticmethod
     def resolve_listDepartments(self, info, **kwargs):
-        return Department.objects.values().all().order_by('name')
+        return Department.objects.all().order_by('name')
 
     @staticmethod
     def resolve_listOrganizers(self, info, **kwargs):
