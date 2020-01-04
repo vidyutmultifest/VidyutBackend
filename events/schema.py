@@ -28,10 +28,20 @@ class ContactPersonObj(graphene.ObjectType):
     email = graphene.String()
 
 
-class FormFieldObj(graphene.ObjectType):
+class KeyLabelObj(graphene.ObjectType):
     key = graphene.String()
     label = graphene.String()
+
+
+class FormFieldObj(KeyLabelObj, graphene.ObjectType):
     type = graphene.String()
+    options = graphene.List(KeyLabelObj)
+
+    def resolve_options(self, info):
+        options = None
+        if 'options' in self and self['options'] is not None and self['options'] is not '':
+            options = self['options']
+        return options
 
 
 class BasicProductDetailsObj(graphene.ObjectType):

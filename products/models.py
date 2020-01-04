@@ -23,6 +23,8 @@ class Product(models.Model):
     requireAdvancePayment = models.BooleanField(default=False)
     restrictMultiplePurchases = models.BooleanField(default=True)
 
+    showAgreementPage = models.BooleanField(default=False)
+
     isAmritapurianOnly = models.BooleanField(default=False)
     isOutsideOnly = models.BooleanField(default=False)
     isFacultyOnly = models.BooleanField(default=False)

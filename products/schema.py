@@ -45,6 +45,7 @@ class ProductObj(graphene.ObjectType):
     slots = graphene.Int()
     price = graphene.String()
     isAvailable = graphene.Boolean()
+    showAgreementPage = graphene.Boolean()
     productID = graphene.String()
     product = graphene.Field(ProductInfoObj)
 
