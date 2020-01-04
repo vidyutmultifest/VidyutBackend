@@ -149,21 +149,32 @@ class Workshop(models.Model):
     slug = models.SlugField(unique=True)
     cover = models.ImageField(upload_to=get_image_path, null=True, blank=True)
     poster = models.ImageField(upload_to=get_poster_path, null=True, blank=True)
+
     organiser = models.ForeignKey(Partners, on_delete=models.PROTECT, related_name='WokshopOrganizer', null=True, blank=True)
     partners = models.ManyToManyField(Partners, related_name='WorkshopPartners', blank=True)
     trainers = models.ManyToManyField(Trainer, related_name='WorkshopTrainers', blank=True)
     accreditedBy = models.ForeignKey(Partners, on_delete=models.PROTECT, related_name='WorkshopAccreditior', null=True, blank=True)
     dept = models.ForeignKey(Department, on_delete=models.PROTECT, null=True, blank=True)
+
     description = models.CharField(max_length=350, null=True, blank=True)
+    certificate = models.CharField(max_length=500, null=True, blank=True)
+    mediumOfInstruction = models.CharField(max_length=150, null=True, blank=True)
+    eligibility = RichTextField(null=True, blank=True)
+    syllabus = RichTextField(null=True, blank=True)
     details = RichTextField(null=True, blank=True)
+
     fee = models.PositiveIntegerField(null=True, blank=True)
+
     contacts = models.ManyToManyField(ContactPerson, blank=True)
     schedule = models.ManyToManyField(TimeSlot, through='WorkshopSchedule', blank=True)
+
     createdAt = models.DateTimeField(auto_now_add=True)
     lastEditor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     lastEditTime = models.DateTimeField(null=True, blank=True)
+
     isRecommended = models.BooleanField(default=False)
     isPublished = models.BooleanField(default=False)
+
     formFields = models.TextField(null=True, blank=True)
 
     def __str__(self):
@@ -185,27 +196,39 @@ class Competition(models.Model):
     slug = models.SlugField(unique=True)
     cover = models.ImageField(upload_to=get_image_path, null=True, blank=True)
     poster = models.ImageField(upload_to=get_poster_path, null=True, blank=True)
+
     dept = models.ForeignKey(Department, on_delete=models.PROTECT, null=True, blank=True)
     organiser = models.ForeignKey(Partners, on_delete=models.PROTECT, related_name='CompetitionOrganizer', null=True, blank=True)
     partners = models.ManyToManyField(Partners, related_name='CompetitionPartners', blank=True)
+
     description = models.CharField(max_length=350, null=True, blank=True)
     details = RichTextField(null=True, blank=True)
+    judgingCriteria = RichTextField(null=True, blank=True)
+    rules = RichTextField(null=True, blank=True)
+
     fee = models.PositiveIntegerField(null=True, blank=True)
     firstPrize = models.CharField(max_length=150, null=True, blank=True)
     secondPrize = models.CharField(max_length=150, null=True, blank=True)
     thirdPrize = models.CharField(max_length=150, null=True, blank=True)
+    otherPrizes = models.CharField(max_length=250, null=True, blank=True)
+
     contacts = models.ManyToManyField(ContactPerson, blank=True)
+
     schedule = models.ManyToManyField(TimeSlot, through='CompetitionSchedule', blank=True)
+
     createdAt = models.DateTimeField(auto_now_add=True)
     lastEditor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     lastEditTime = models.DateTimeField(null=True, blank=True)
+
     isRecommended = models.BooleanField(default=False)
     isPublished = models.BooleanField(default=False)
+
     isTeamEvent = models.BooleanField(default=False)
     isTotalRate = models.BooleanField(default=True)
     minTeamSize = models.PositiveIntegerField(null=True, blank=True)
     maxTeamSize = models.PositiveIntegerField(null=True, blank=True)
     hasSelectionProcess = models.BooleanField(default=False)
+
     formFields = models.TextField(null=True, blank=True)
 
     def __str__(self):

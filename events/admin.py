@@ -62,8 +62,11 @@ class CompetitionAdmin(admin.ModelAdmin):
             'fields': [
                 'description',
                 'details',
+                'judgingCriteria',
+                'rules',
                 'fee',
-                ('firstPrize', 'secondPrize', 'thirdPrize')
+                ('firstPrize', 'secondPrize', 'thirdPrize'),
+                'otherPrizes'
             ]
         }),
         ('Contacts', {
@@ -112,10 +115,13 @@ class WorkshopAdmin(admin.ModelAdmin):
                 ('trainers', 'accreditedBy')
             ]
         }),
-        ('Competition Details', {
+        ('Workshop Details', {
             'fields': [
                 'description',
                 'details',
+                ('certificate', 'mediumOfInstruction'),
+                'eligibility',
+                'syllabus',
                 'fee',
             ]
         }),
@@ -136,7 +142,7 @@ class WorkshopAdmin(admin.ModelAdmin):
         }),
     ]
     list_display = ('name', 'dept', 'fee', 'isPublished', 'lastEditor', 'lastEditTime')
-    list_filter = ('name', 'dept', 'isPublished')
+    list_filter = ('dept', 'isPublished')
     select2 = select2_modelform(Workshop, attrs={'width': '250px'})
     form = select2
     inlines = (WSInline,)
@@ -157,7 +163,7 @@ class TicketAdmin(admin.ModelAdmin):
                 'organiser',
             ]
         }),
-        ('Competition Details', {
+        ('Ticket Event Details', {
             'fields': [
                 'description',
                 'details',

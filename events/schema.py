@@ -248,7 +248,10 @@ class PartnerObj(graphene.ObjectType):
 
 
 class WorkshopObj(EventObj, graphene.ObjectType):
-    duration = graphene.String()
+    syllabus = graphene.String()
+    eligibility = graphene.String()
+    mediumOfInstruction = graphene.String()
+    certificate = graphene.String()
     trainers = graphene.List(TrainerProfileObj)
     schedule = graphene.List(DailyScheduleObj)
     accreditedBy = graphene.Field(PartnerObj)
@@ -296,6 +299,9 @@ class CompetitionObj(EventObj, graphene.ObjectType):
     firstPrize = graphene.String()
     secondPrize = graphene.String()
     thirdPrize = graphene.String()
+    otherPrizes = graphene.String()
+    judgingCriteria = graphene.String()
+    rules = graphene.String()
     formFields = graphene.List(FormFieldObj)
 
     def resolve_contacts(self, info):
