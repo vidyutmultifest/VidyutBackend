@@ -303,6 +303,10 @@ class CompetitionObj(EventObj, graphene.ObjectType):
     judgingCriteria = graphene.String()
     rules = graphene.String()
     formFields = graphene.List(FormFieldObj)
+    schedule = graphene.List(DailyScheduleObj)
+    
+    def resolve_schedule(self, info):
+        return CompetitionSchedule.objects.values().filter(event__slug=self['slug'])
 
     def resolve_contacts(self, info):
         contacts = Competition.objects.get(slug=self['slug']).contacts
