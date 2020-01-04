@@ -345,7 +345,7 @@ class Query(PartnerQueries, object):
     getTicketEvent = graphene.Field(TicketObj, slug=graphene.String(required=True))
     getMerchandise = graphene.Field(MerchandiseObj, slug=graphene.String(required=True))
     listDepartments = graphene.List(DepartmentListObj)
-    listOrganizers = graphene.List(OrganizerObj)
+    listOrganizers = graphene.List(OrganizerObj, hasWorkshop=graphene.Boolean(required=False))
     listCompetitions = graphene.List(CompetitionObj)
     listWorkshops = graphene.List(WorkshopObj)
     listMerchandise = graphene.List(MerchandiseObj)
@@ -354,15 +354,16 @@ class Query(PartnerQueries, object):
 
     @staticmethod
     def resolve_listDepartments(self, info, **kwargs):
-        return Department.objects.all().order_by('name')
+        return Department.objects.values().all().order_by('name')
 
     @staticmethod
     def resolve_listOrganizers(self, info, **kwargs):
-        return Partners.objects.values().all().order_by('name')
-
-    @staticmethod
-    def resolve_listDepartments(self, info, **kwargs):
-        return Department.objects.values().all().order_by('name')
+        hasWorkshop = kwargs.get('hasWorkshop')
+        if hasWorkshop is None:
+            return Partners.objects.values().all().order_by('name')
+        else:
+            list = Workshop.objects.all().values_list('organiser', flat=True)
+            return Partners.objects.values().filter(id__in=list).order_by('name')
 
     @staticmethod
     def resolve_getCompetition(self, info, **kwargs):
