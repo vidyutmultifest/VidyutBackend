@@ -242,7 +242,7 @@ class PartnerObj(graphene.ObjectType):
 
     def resolve_logo(self, info):
         url = None
-        if self['logo'] is not '':
+        if self['logo'] and self['logo'] is not '':
             url = info.context.build_absolute_uri(self['logo'])
         return url
 
@@ -257,9 +257,12 @@ class WorkshopObj(EventObj, graphene.ObjectType):
     def resolve_accreditedBy(self, info):
         if Workshop.objects.get(slug=self['slug']).accreditedBy is not None:
             acc = Workshop.objects.get(slug=self['slug']).accreditedBy
+            logo = None
+            if acc.logo and hasattr(acc.logo, 'url'):
+                logo = info.context.build_absolute_uri(acc.logo.url)
             return {
                 'name': acc.name,
-                'logo': info.context.build_absolute_uri(acc.logo.url)
+                'logo': logo
             }
         return None
 
