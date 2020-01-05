@@ -160,10 +160,11 @@ class Query(object):
             return False
         return True
 
-    @login_required
     def resolve_myProfile(self, info, **kwargs):
         user = info.context.user
-        return Profile.objects.get(user=user)
+        if user.id:
+            return Profile.objects.get(user=user)
+        return None
 
     @login_required
     def resolve_getProfile(self, info, **kwargs):
