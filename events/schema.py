@@ -192,7 +192,7 @@ class TicketObj(EventObj, graphene.ObjectType):
             return products.first().productID
 
     def resolve_products(self, info):
-        return Product.objects.values_list('productID', flat=True).filter(ticket_id=self['id'])
+        return Product.objects.values_list('productID', flat=True).filter(ticket_id=self['id']).order_by('name')
 
 
 class MerchandiseObj(EventObj, graphene.ObjectType):
@@ -203,7 +203,7 @@ class MerchandiseObj(EventObj, graphene.ObjectType):
             return products.first().productID
 
     def resolve_products(self, info):
-        return Product.objects.values_list('productID', flat=True).filter(merchandise_id=self['id'])
+        return Product.objects.values_list('productID', flat=True).filter(merchandise_id=self['id']).order_by('name')
 
 
 class TrainerProfileObj(graphene.ObjectType):
@@ -254,7 +254,6 @@ class PartnerObj(graphene.ObjectType):
         return url
 
 
-
 class WorkshopObj(EventObj, graphene.ObjectType):
     syllabus = graphene.String()
     eligibility = graphene.String()
@@ -299,7 +298,7 @@ class WorkshopObj(EventObj, graphene.ObjectType):
             return products.first().productID
 
     def resolve_products(self, info):
-        return Product.objects.values_list('productID', flat=True).filter(workshop_id=self['id'])
+        return Product.objects.values_list('productID', flat=True).filter(workshop_id=self['id']).order_by('name')
 
 
 class CompetitionObj(EventObj, graphene.ObjectType):
@@ -326,7 +325,7 @@ class CompetitionObj(EventObj, graphene.ObjectType):
             return products.first().productID
 
     def resolve_products(self, info):
-        return Product.objects.values_list('productID', flat=True).filter(competition_id=self['id'])
+        return Product.objects.values_list('productID', flat=True).filter(competition_id=self['id']).order_by('name')
 
     def resolve_formFields(self, info):
         if self['formFields'] is not '' and self['formFields'] is not None:
