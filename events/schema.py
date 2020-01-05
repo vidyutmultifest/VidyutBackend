@@ -36,12 +36,19 @@ class KeyLabelObj(graphene.ObjectType):
 class FormFieldObj(KeyLabelObj, graphene.ObjectType):
     type = graphene.String()
     options = graphene.List(KeyLabelObj)
+    required = graphene.Boolean()
 
     def resolve_options(self, info):
         options = None
         if 'options' in self and self['options'] is not None and self['options'] is not '':
             options = self['options']
         return options
+
+    def resolve_required(self, info):
+        required = False
+        if 'required' in self and self['required'] is not None and self['required'] is not '':
+            required = self['required']
+        return required
 
 
 class BasicProductDetailsObj(graphene.ObjectType):
