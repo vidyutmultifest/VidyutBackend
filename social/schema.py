@@ -5,6 +5,8 @@ from .models import Story, Feed
 class StoryObj(graphene.ObjectType):
     created = graphene.String()
     image = graphene.String()
+    id = graphene.String()
+    link = graphene.String()
 
     def resolve_image(self, info):
         url = None
@@ -26,4 +28,5 @@ class Query(object):
 
     @staticmethod
     def resolve_viewStories(self, info):
-        return Feed.objects.values().all()
+        feeds = Story.objects.all().values_list('feed', flat=True)
+        return Feed.objects.values().filter(id__in=feeds)
