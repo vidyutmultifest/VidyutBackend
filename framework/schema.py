@@ -10,6 +10,7 @@ from payment.schema import Query as PaymentQueries, Mutation as PaymentMutations
 from tickets.schema import Query as TicketQueries, Mutation as TicketMutations
 from registrations.schema import Mutation as RegMutations, Query as RegQueries
 from social.schema import Query as SocialQueries
+from forum.schema import Query as ForumQueries
 
 from framework.settings import *
 
@@ -38,6 +39,7 @@ class Query(
     TicketQueries,
     RegQueries,
     SocialQueries,
+    ForumQueries,
     graphene.ObjectType
 ):
     status = graphene.Field(StatusObj)

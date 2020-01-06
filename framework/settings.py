@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'import_export',
     'access',
     'events',
+    'forum',
     'participants',
     'products',
     'payment',

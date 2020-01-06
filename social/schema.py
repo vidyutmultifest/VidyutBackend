@@ -5,7 +5,7 @@ from .models import Story, Feed
 class StoryObj(graphene.ObjectType):
     created = graphene.String()
     image = graphene.String()
-    id = graphene.String()
+    id = graphene.Int()
     link = graphene.String()
 
     def resolve_image(self, info):
