@@ -28,6 +28,7 @@ class ProductInfoObj(graphene.ObjectType):
     price = graphene.Int()
     slug = graphene.String()
     type = graphene.String()
+    isTotalRate = graphene.Boolean()
     details = graphene.Field(EventDetailObj)
 
 
@@ -68,6 +69,7 @@ class ProductObj(graphene.ObjectType):
             "name": product.name,
             "photo": photo,
             "price": product.fee,
+            "isTotalRate": product.isTotalRate,
             "slug": product.slug,
             "type": productType,
             "details": type(product).objects.values().get(id=product.id)
