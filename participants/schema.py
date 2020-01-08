@@ -7,6 +7,7 @@ from participants.api.mutations.college import Mutation as CollegeMutations
 from participants.api.query.profile import Query as ProfileQueries
 from participants.api.query.rekognition import Query as RekognitionQueries
 from participants.api.query.team import Query as TeamQueries
+from participants.api.query.college import Query as CollegeQueries
 
 
 class Mutation(
@@ -22,6 +23,7 @@ class Query(
     RekognitionQueries,
     ProfileQueries,
     TeamQueries,
+    CollegeQueries,
     graphene.ObjectType
 ):
     pass
