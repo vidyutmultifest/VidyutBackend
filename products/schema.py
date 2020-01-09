@@ -62,6 +62,10 @@ class ProductObj(graphene.ObjectType):
         product = Product.objects.get(productID=self['productID']).product
         productType = type(product).__name__
 
+        isTotalRate = True
+        if product and hasattr(product, 'isTotalRate'):
+            isTotalRate = product.isTotalRate
+
         photo = None
         if product.cover:
             photo = info.context.build_absolute_uri(product.cover.url)
@@ -69,7 +73,7 @@ class ProductObj(graphene.ObjectType):
             "name": product.name,
             "photo": photo,
             "price": product.fee,
-            "isTotalRate": product.isTotalRate,
+            "isTotalRate": isTotalRate,
             "slug": product.slug,
             "type": productType,
             "details": type(product).objects.values().get(id=product.id)
