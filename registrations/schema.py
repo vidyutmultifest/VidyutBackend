@@ -1,16 +1,19 @@
 import graphene
 from datetime import datetime
+
+from django.contrib.auth.models import User
 from django.db.models import Q
 
 from graphql_jwt.decorators import login_required
 
-from participants.models import Team
+from framework.api.helper import APIException
+from participants.api.query.profile import SingleProfileObj
+from participants.models import Team, Profile
 from participants.api.objects import TeamObj
 from products.models import Product
 from payment.models import Order
 from products.schema import ProductObj
-from payment.api.objects import OrderObj
-
+from payment.api.objects import OrderObj, TransactionObj
 
 from .models import EventRegistration
 
@@ -88,9 +91,96 @@ class EventRegistrationObj(graphene.ObjectType):
             return None
 
 
-class Query(object):
+class RegCountObj(graphene.ObjectType):
+    total = graphene.Int()
+    paid = graphene.Int()
+    paymentPending = graphene.Int()
+
+
+class RegTeamObj(graphene.ObjectType):
+    name = graphene.String()
+    leader = graphene.Field(SingleProfileObj)
+    members = graphene.List(SingleProfileObj)
+
+    def resolve_leader(self, info):
+        if self.leader is not None:
+            try:
+                return Profile.objects.get(user=self.leader)
+            except Profile.DoesNotExist:
+                return APIException('Leader profile does not exist in db')
+
+    def resolve_members(self, info):
+        return Profile.objects.filter(user__in=self.members.all())
+
+
+class RegDetailsObj(graphene.ObjectType):
+    regID = graphene.String()
+    userProfile = graphene.Field(SingleProfileObj)
+    teamProfile = graphene.Field(RegTeamObj)
+    transaction = graphene.Field(TransactionObj)
+    registrationTimestamp = graphene.DateTime()
+    formData = graphene.String()
+
+    def resolve_userProfile(self, info):
+        if self.user is not None:
+            try:
+                return Profile.objects.get(user=self.user)
+            except Profile.DoesNotExist:
+                raise APIException("Profile Does not exist")
+        return None
+
+    def resolve_teamProfile(self, info):
+        if self.team is not None:
+            return Team.objects.get(id=self.team.id)
+        return None
+
+    def resolve_transaction(self, info):
+        if self.order is not None:
+            if self.order.transaction is not None:
+                return self.order.transaction
+        return None
+
+
+class RegStatObj(graphene.ObjectType):
+    name = graphene.String()
+    count = graphene.Field(RegCountObj)
+    registrations = graphene.List(RegDetailsObj, isPaid=graphene.Boolean())
+
+    def resolve_name(self, info):
+        return self.name
+
+    def resolve_count(self, info):
+        regs = EventRegistration.objects.filter(event__id=self.id)
+        return {
+            "total": regs.count(),
+            "paid": regs.filter(order__transaction__isPaid=True).count(),
+            "paymentPending": regs.count() - regs.filter(order__transaction__isPaid=True).count()
+        }
+
+    def resolve_registrations(self, info, **kwargs):
+        isPaid = kwargs.get('isPaid')
+        if isPaid is not None:
+            return EventRegistration.objects.filter(event__id=self.id, order__transaction__isPaid=isPaid)
+        return EventRegistration.objects.filter(event_id=self.id)
+
+
+class Query(graphene.ObjectType):
     myRegistrations = graphene.List(EventRegistrationObj, limit=graphene.Int())
     isAlreadyRegistered = graphene.Boolean(productID=graphene.String(required=True))
+    listRegistrations = graphene.List(RegStatObj, eventType=graphene.String())
+
+    @login_required
+    def resolve_listRegistrations(self, info, **kwargs):
+        events = EventRegistration.objects.filter(order__transaction__isPaid=True).values_list('event__productID', flat=True)
+        products = Product.objects.filter(requireRegistration=True, productID__in=events)
+        eventType = kwargs.get('eventType')
+        if eventType == 'competition':
+            return products.filter(competition__isnull=False)
+        elif eventType == 'workshop':
+            return products.filter(workshop__isnull=False)
+        elif eventType == 'ticket':
+            return products.filter(ticket__isnull=False)
+        return products
 
     @login_required
     def resolve_myRegistrations(self, info, **kwargs):
@@ -99,8 +189,7 @@ class Query(object):
         events = EventRegistration.objects.values().filter(Q(user=user) | Q(team__members=user)).order_by("-registrationTimestamp")
         if limit is not None:
             return events[:limit]
-        else:
-            return events
+        return events
 
     @login_required
     def resolve_isAlreadyRegistered(self, info, **kwargs):
