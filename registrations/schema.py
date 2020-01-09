@@ -95,6 +95,7 @@ class RegCountObj(graphene.ObjectType):
     total = graphene.Int()
     paid = graphene.Int()
     paymentPending = graphene.Int()
+    amritapurianPaid = graphene.Int()
 
 
 class RegTeamObj(graphene.ObjectType):
@@ -154,7 +155,11 @@ class RegStatObj(graphene.ObjectType):
         return {
             "total": regs.count(),
             "paid": regs.filter(order__transaction__isPaid=True).count(),
-            "paymentPending": regs.count() - regs.filter(order__transaction__isPaid=True).count()
+            "paymentPending": regs.count() - regs.filter(order__transaction__isPaid=True).count(),
+            "amritapurianPaid": regs.filter(
+                order__transaction__isPaid=True,
+                order__user__email__contains='am.students.amrita.edu'
+            ).count()
         }
 
     def resolve_registrations(self, info, **kwargs):
@@ -167,19 +172,28 @@ class RegStatObj(graphene.ObjectType):
 class Query(graphene.ObjectType):
     myRegistrations = graphene.List(EventRegistrationObj, limit=graphene.Int())
     isAlreadyRegistered = graphene.Boolean(productID=graphene.String(required=True))
-    listRegistrations = graphene.List(RegStatObj, eventType=graphene.String())
+    listRegistrations = graphene.List(RegStatObj, eventType=graphene.String(), eventID=graphene.Int())
 
     @login_required
     def resolve_listRegistrations(self, info, **kwargs):
-        events = EventRegistration.objects.filter(order__transaction__isPaid=True).values_list('event__productID', flat=True)
+        events = EventRegistration.objects.filter(
+            Q(order__transaction__isPaid=True) | Q(event__requireAdvancePayment=False)
+        ).values_list('event__productID', flat=True)
         products = Product.objects.filter(requireRegistration=True, productID__in=events)
+
         eventType = kwargs.get('eventType')
-        if eventType == 'competition':
-            return products.filter(competition__isnull=False)
-        elif eventType == 'workshop':
-            return products.filter(workshop__isnull=False)
-        elif eventType == 'ticket':
-            return products.filter(ticket__isnull=False)
+        if eventType is not None:
+            if eventType == 'competition':
+                return products.filter(competition__isnull=False)
+            elif eventType == 'workshop':
+                return products.filter(workshop__isnull=False)
+            elif eventType == 'ticket': #unused case
+                return products.filter(ticket__isnull=False)
+            return products
+
+        eventID = kwargs.get('eventType')
+        if eventID is not None:
+            return products.filter(id=eventID)
         return products
 
     @login_required
