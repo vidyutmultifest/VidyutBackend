@@ -41,6 +41,12 @@ class TrainerAdmin(admin.ModelAdmin):
     form = select2
 
 
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    select2 = select2_modelform(Category, attrs={'width': '250px'})
+    form = select2
+
+
 @admin.register(Department)
 class DepartmentAdmin(admin.ModelAdmin):
     select2 = select2_modelform(Department, attrs={'width': '250px'})
@@ -54,6 +60,7 @@ class CompetitionAdmin(admin.ModelAdmin):
             'fields': [
                 ('name', 'slug'),
                 ('cover', 'poster'),
+                'category',
                 ('dept', 'organiser', 'partners'),
                 'hasSelectionProcess'
             ]
@@ -91,8 +98,8 @@ class CompetitionAdmin(admin.ModelAdmin):
             ]
         }),
     ]
-    list_display = ('name', 'dept', 'fee', 'isTeamEvent', 'isPublished', 'lastEditor', 'lastEditTime')
-    list_filter = ('dept', 'isPublished', 'isTeamEvent')
+    list_display = ('name', 'category', 'dept', 'fee', 'isTeamEvent', 'isPublished', 'lastEditor', 'lastEditTime')
+    list_filter = ('category', 'dept', 'isPublished', 'isTeamEvent')
     search_fields = ['name', 'dept']
     select2 = select2_modelform(Competition, attrs={'width': '250px'})
     inlines = (CSInline,)
@@ -159,6 +166,7 @@ class TicketAdmin(admin.ModelAdmin):
         ('Basic Details', {
             'fields': [
                 ('name', 'slug'),
+                'category',
                 ('cover', 'poster'),
                 'organiser',
             ]
@@ -181,7 +189,7 @@ class TicketAdmin(admin.ModelAdmin):
             ]
         }),
     ]
-    list_display = ('name', 'isPublished', 'lastEditor', 'lastEditTime')
+    list_display = ('name', 'category', 'isPublished', 'lastEditor', 'lastEditTime')
     select2 = select2_modelform(Ticket, attrs={'width': '250px'})
     form = select2
     inlines = (TSInline,)

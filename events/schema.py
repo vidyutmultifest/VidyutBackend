@@ -185,6 +185,7 @@ class EventObj(graphene.ObjectType):
 
 
 class TicketObj(EventObj, graphene.ObjectType):
+    category = graphene.Field(DepartmentObj)
 
     def resolve_productID(self, info):
         products = Product.objects.filter(ticket_id=self['id'])
@@ -194,6 +195,11 @@ class TicketObj(EventObj, graphene.ObjectType):
     def resolve_products(self, info):
         return Product.objects.values_list('productID', flat=True).filter(ticket_id=self['id']).order_by('name')
 
+    def resolve_category(self, info):
+        try:
+            return Category.objects.values().get(id=self['category_id'])
+        except Category.DoesNotExist:
+            return None
 
 class MerchandiseObj(EventObj, graphene.ObjectType):
 
@@ -311,6 +317,7 @@ class CompetitionObj(EventObj, graphene.ObjectType):
     rules = graphene.String()
     formFields = graphene.List(FormFieldObj)
     schedule = graphene.List(DailyScheduleObj)
+    category = graphene.Field(DepartmentObj)
 
     def resolve_schedule(self, info):
         return CompetitionSchedule.objects.values().filter(event__slug=self['slug'])
@@ -332,6 +339,12 @@ class CompetitionObj(EventObj, graphene.ObjectType):
             return json.loads(self['formFields'])
         return None
 
+    def resolve_category(self, info):
+        try:
+            return Category.objects.values().get(id=self['category_id'])
+        except Category.DoesNotExist:
+            return None
+
 
 class DepartmentListObj(graphene.ObjectType):
     name = graphene.String()
@@ -343,6 +356,14 @@ class DepartmentListObj(graphene.ObjectType):
         if self['icon']:
             url = info.context.build_absolute_uri(self['icon'])
         return url
+
+
+class CategoryObj(graphene.ObjectType):
+    name = graphene.String()
+    competitions = graphene.List(CompetitionObj)
+
+    def resolve_competitions(self, info):
+        return Competition.objects.values().filter(category=self).distinct().order_by('-isRecommended', 'dept__name', 'name')
 
 
 class Query(PartnerQueries, object):
@@ -357,6 +378,11 @@ class Query(PartnerQueries, object):
     listMerchandise = graphene.List(MerchandiseObj)
     listTicketEvents = graphene.List(TicketObj)
     listTeamCompetitions = graphene.List(CompetitionObj)
+    listByCategory = graphene.List(CategoryObj)
+
+    @staticmethod
+    def resolve_listByCategory(self, info, **kwargs):
+        return Category.objects.all()
 
     @staticmethod
     def resolve_listDepartments(self, info, **kwargs):

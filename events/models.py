@@ -7,6 +7,19 @@ from django.contrib.auth.models import User
 to_tz = timezone.get_default_timezone()
 
 
+class Category(models.Model):
+    def get_image_path(self, filename):
+        ext = filename.split('.')[-1]
+        filename = 'vidyut_event_cat_' + "%s.%s" % (uuid.uuid4(), ext)
+        return 'static/events/categories/' + filename
+    name = models.CharField(max_length=50)
+    slug = models.SlugField(unique=True)
+    icon = models.ImageField(upload_to=get_image_path, null=True, blank=True)
+
+    def __str__(self):
+        return self.name
+
+
 class Partners(models.Model):
     def get_image_path(self, filename):
         ext = filename.split('.')[-1]
@@ -87,6 +100,7 @@ class Ticket(models.Model):
 
     name = models.CharField(max_length=150)
     slug = models.SlugField(unique=True)
+    category = models.ForeignKey(Category, on_delete=models.PROTECT, null=True, blank=True)
     organiser = models.ForeignKey(Partners, on_delete=models.PROTECT, related_name='TicketEventOrganizer', null=True, blank=True)
     cover = models.ImageField(upload_to=get_image_path, null=True, blank=True)
     poster = models.ImageField(upload_to=get_poster_path, null=True, blank=True)
@@ -198,6 +212,7 @@ class Competition(models.Model):
     poster = models.ImageField(upload_to=get_poster_path, null=True, blank=True)
 
     dept = models.ForeignKey(Department, on_delete=models.PROTECT, null=True, blank=True)
+    category = models.ForeignKey(Category, on_delete=models.PROTECT, null=True, blank=True)
     organiser = models.ForeignKey(Partners, on_delete=models.PROTECT, related_name='CompetitionOrganizer', null=True, blank=True)
     partners = models.ManyToManyField(Partners, related_name='CompetitionPartners', blank=True)
 
