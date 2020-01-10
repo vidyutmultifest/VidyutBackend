@@ -6,6 +6,7 @@ from django.db.models import Q
 
 from graphql_jwt.decorators import login_required
 
+from access.models import UserAccess
 from framework.api.helper import APIException
 from participants.api.query.profile import SingleProfileObj
 from participants.models import Team, Profile
@@ -176,25 +177,34 @@ class Query(graphene.ObjectType):
 
     @login_required
     def resolve_listRegistrations(self, info, **kwargs):
-        events = EventRegistration.objects.filter(
-            Q(order__transaction__isPaid=True) | Q(event__requireAdvancePayment=False)
-        ).values_list('event__productID', flat=True)
-        products = Product.objects.filter(requireRegistration=True, productID__in=events)
+        user = info.context.user
+        access = UserAccess.objects.get(user=user)
+        if access.adminAccess and access.canViewRegistrations:
+            events = EventRegistration.objects.filter(
+                Q(order__transaction__isPaid=True) | Q(event__requireAdvancePayment=False)
+            ).values_list('event__productID', flat=True)
 
-        eventType = kwargs.get('eventType')
-        if eventType is not None:
-            if eventType == 'competition':
-                return products.filter(competition__isnull=False)
-            elif eventType == 'workshop':
-                return products.filter(workshop__isnull=False)
-            elif eventType == 'ticket': #unused case
-                return products.filter(ticket__isnull=False)
+            if access.productsManaged.count() > 0:
+                events = events.filter(event__in=access.productsManaged.all())
+
+            products = Product.objects.filter(requireRegistration=True, productID__in=events)
+
+            eventType = kwargs.get('eventType')
+            if eventType is not None:
+                if eventType == 'competition':
+                    return products.filter(competition__isnull=False)
+                elif eventType == 'workshop':
+                    return products.filter(workshop__isnull=False)
+                elif eventType == 'ticket': #unused case
+                    return products.filter(ticket__isnull=False)
+                return products
+
+            eventID = kwargs.get('eventType')
+            if eventID is not None:
+                return products.filter(id=eventID)
             return products
-
-        eventID = kwargs.get('eventType')
-        if eventID is not None:
-            return products.filter(id=eventID)
-        return products
+        else:
+            raise APIException('Permission Denied')
 
     @login_required
     def resolve_myRegistrations(self, info, **kwargs):

@@ -147,6 +147,18 @@ class Query(object):
     getProfile = graphene.Field(SingleProfileObj, key=graphene.String(required=True))
     listIncompleteProfiles = graphene.List(SingleProfileObj)
     getProfileStats = graphene.Field(ProfileStatObj)
+    # listEmails = graphene.String()
+    #
+    # @login_required
+    # def resolve_listEmails(self, info, **kwargs):
+    #     a = []
+    #     list = Profile.objects.filter(
+    #         user__email__contains='am.students.amrita.edu',
+    #         user__transactionUser__isPaid=True
+    #     ).values_list('user__email', flat=True)
+    #     for l in list:
+    #         a.append(l)
+    #     return a
 
     @login_required
     def resolve_isProfileComplete(self, info, **kwargs):
