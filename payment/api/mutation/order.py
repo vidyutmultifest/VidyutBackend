@@ -51,14 +51,40 @@ class InitiateOrder(graphene.Mutation):
                 # TODO: throw error as already purchased before
                 return InitiateOrderObj(orderID=None)
 
-        # Create Order with current timestamp
-        timestamp = datetime.now().astimezone(to_tz)
-        obj = Order.objects.create(user=customer, timestamp=timestamp)
+        order = None
 
-        # Create Product - Order Mapping, along with Qty & Price data
-        for product in products.products:
-            p = Product.objects.get(productID=product.productID)
-            OrderProduct.objects.create(product=p, order=obj, qty=product.qty, price=p.price)
+        # CHECKING PAST ORDER FOR EVENT REGISTRATION
+        if regID is not None:
+            try:
+                reg = EventRegistration.objects.get(regID=regID)
+                order = reg.order
+            except EventRegistration.DoesNotExist:
+                pass
+                # TODO: throw error as event reg doesnt exist
+
+        if order is None:
+            timestamp = datetime.now().astimezone(to_tz)
+            # Create Order with current timestamp
+            obj = Order.objects.create(user=customer, timestamp=timestamp)
+
+            # Create Product - Order Mapping, along with Qty & Price data
+            for product in products.products:
+                p = Product.objects.get(productID=product.productID)
+                OrderProduct.objects.create(product=p, order=obj, qty=product.qty, price=p.price)
+
+            # LINKING EVENT REGISTRATION
+            if regID is not None:
+                try:
+                    reg = EventRegistration.objects.get(regID=regID)
+                    if reg.event in obj.products.all():
+                        reg.order = obj
+                        reg.save()
+                except EventRegistration.DoesNotExist:
+                    pass
+                    # TODO: throw error as event reg doesnt exist
+        else:
+            # Use existing order
+            obj = order
 
         # APPLYING PROMOCODE
         if promocode is not None:
@@ -74,17 +100,6 @@ class InitiateOrder(graphene.Mutation):
             except PromoCode.DoesNotExist:
                 pass
                 # TODO: throw error as it promocode doesnt exist
-
-        # LINKING EVENT REGISTRATION
-        if regID is not None:
-            try:
-                reg = EventRegistration.objects.get(regID=regID)
-                if reg.event in obj.products.all():
-                    reg.order = obj
-                    reg.save()
-            except EventRegistration.DoesNotExist:
-                pass
-                # TODO: throw error as event reg doesnt exist
 
         return InitiateOrderObj(orderID=obj.orderID)
 
