@@ -360,6 +360,7 @@ class DepartmentListObj(graphene.ObjectType):
 
 class CategoryObj(graphene.ObjectType):
     name = graphene.String()
+    slug = graphene.String()
     competitions = graphene.List(CompetitionObj)
 
     def resolve_competitions(self, info):
@@ -387,7 +388,7 @@ class Query(PartnerQueries, object):
 
     @staticmethod
     def resolve_listByCategory(self, info, **kwargs):
-        return Category.objects.all()
+        return Category.objects.all().order_by('listingWeight')
 
     @staticmethod
     def resolve_listDepartments(self, info, **kwargs):

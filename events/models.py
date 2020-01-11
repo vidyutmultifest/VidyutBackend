@@ -15,6 +15,7 @@ class Category(models.Model):
     name = models.CharField(max_length=50)
     slug = models.SlugField(unique=True)
     icon = models.ImageField(upload_to=get_image_path, null=True, blank=True)
+    listingWeight = models.SmallIntegerField(null=True, blank=True)
 
     def __str__(self):
         return self.name
