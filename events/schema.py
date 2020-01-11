@@ -360,7 +360,7 @@ class DepartmentListObj(graphene.ObjectType):
 
 class CategoryObj(graphene.ObjectType):
     name = graphene.String()
-    slug = graphene.String()
+    slug = graphene.String() #slug
     competitions = graphene.List(CompetitionObj)
 
     def resolve_competitions(self, info):
