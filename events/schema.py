@@ -379,6 +379,11 @@ class Query(PartnerQueries, object):
     listTicketEvents = graphene.List(TicketObj)
     listTeamCompetitions = graphene.List(CompetitionObj)
     listByCategory = graphene.List(CategoryObj)
+    listRecommendedCompetitions = graphene.List(CompetitionObj)
+
+    @staticmethod
+    def resolve_listRecommendedCompetitions(self, info, **kwargs):
+        return Competition.objects.values().filter(isRecommended=True).distinct().order_by('dept__name', 'name')
 
     @staticmethod
     def resolve_listByCategory(self, info, **kwargs):
