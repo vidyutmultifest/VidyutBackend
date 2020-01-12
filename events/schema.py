@@ -362,9 +362,13 @@ class CategoryObj(graphene.ObjectType):
     name = graphene.String()
     slug = graphene.String() #slug
     competitions = graphene.List(CompetitionObj)
+    ticketEvents = graphene.List(TicketObj)
 
     def resolve_competitions(self, info):
-        return Competition.objects.values().filter(category=self).distinct().order_by('-isRecommended', 'dept__name', 'name')
+        return Competition.objects.values().filter(category=self).distinct().order_by('-isRecommended', '-new', 'dept__name', 'name')
+
+    def resolve_ticketEvents(self, info):
+        return Ticket.objects.values().filter(category=self).distinct().order_by('-isRecommended', '-new', 'dept__name', 'name')
 
 
 class Query(PartnerQueries, object):
