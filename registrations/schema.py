@@ -165,15 +165,86 @@ class RegStatObj(graphene.ObjectType):
 
     def resolve_registrations(self, info, **kwargs):
         isPaid = kwargs.get('isPaid')
+        product = Product.objects.get(id=self.id)
+        if product.competition is not None and product.competition.hasSelectionProcess is True:
+            return EventRegistration.objects.filter(event_id=self.id)
+        if product.price == 0:
+            return EventRegistration.objects.filter(event_id=self.id)
         if isPaid is not None:
             return EventRegistration.objects.filter(event__id=self.id, order__transaction__isPaid=isPaid)
         return EventRegistration.objects.filter(event_id=self.id)
+
+
+class RegistrationCountObj(graphene.ObjectType):
+    total = graphene.Int()
+    paid = graphene.Int()
+    workshop = graphene.Int()
+    workshopPaid = graphene.Int()
+    competition = graphene.Int()
+    competitionPaid = graphene.Int()
+    insider = graphene.Int()
+    outsider = graphene.Int()
+    insiderPaid = graphene.Int()
+    outsiderPaid = graphene.Int()
+
+    def resolve_total(self, info):
+        return self.all().count()
+
+    def resolve_paid(self, info):
+        return self.filter(order__transaction__isPaid=True).count()
+
+    def resolve_workshop(self, info):
+        return self.filter(event__workshop__isnull=False).count()
+
+    def resolve_workshopPaid(self, info):
+        return self.filter(event__workshop__isnull=False, order__transaction__isPaid=True).count()
+
+    def resolve_competition(self, info):
+        return self.filter(event__competition__isnull=False).count()
+
+    def resolve_competitionPaid(self, info):
+        return self.filter(event__competition__isnull=False, order__transaction__isPaid=True).count()
+
+    def resolve_insider(self, info):
+        return self.filter(
+            (Q(user__email__contains='am.students.amrita.edu') | Q(team__leader__email__contains='am.students.amrita.edu'))
+        ).count()
+
+    def resolve_insiderPaid(self, info):
+        return self.filter(
+            (Q(user__email__contains='am.students.amrita.edu') | Q(team__leader__email__contains='am.students.amrita.edu'))
+            & Q(order__transaction__isPaid=True)
+        ).count()
+
+    def resolve_outsider(self, info):
+        return self.count() - self.filter(
+            (Q(user__email__contains='am.students.amrita.edu') | Q(team__leader__email__contains='am.students.amrita.edu'))
+        ).count()
+
+    def resolve_outsiderPaid(self, info):
+        return self.filter(order__transaction__isPaid=True).count() - self.filter(
+            (Q(user__email__contains='am.students.amrita.edu') | Q(team__leader__email__contains='am.students.amrita.edu'))
+            & Q(order__transaction__isPaid=True)
+        ).count()
 
 
 class Query(graphene.ObjectType):
     myRegistrations = graphene.List(EventRegistrationObj, limit=graphene.Int())
     isAlreadyRegistered = graphene.Boolean(productID=graphene.String(required=True))
     listRegistrations = graphene.List(RegStatObj, eventType=graphene.String(), eventID=graphene.Int())
+    registrationCount = graphene.Field(RegistrationCountObj)
+
+    @login_required
+    def resolve_registrationCount(self, info, **kwargs):
+        user = info.context.user
+        access = UserAccess.objects.get(user=user)
+        if access.adminAccess and access.canViewRegistrations:
+            if access.productsManaged.count() > 0:
+                return EventRegistration.objects.filter(event__in=access.productsManaged.all())
+            else:
+                return EventRegistration.objects.all()
+        else:
+            raise APIException('Forbidden')
 
     @login_required
     def resolve_listRegistrations(self, info, **kwargs):
@@ -181,7 +252,8 @@ class Query(graphene.ObjectType):
         access = UserAccess.objects.get(user=user)
         if access.adminAccess and access.canViewRegistrations:
             events = EventRegistration.objects.filter(
-                Q(order__transaction__isPaid=True) | Q(event__requireAdvancePayment=False)
+                Q(order__transaction__isPaid=True) | Q(event__competition__hasSelectionProcess=True)
+                | Q(event__requireAdvancePayment=False)
             ).values_list('event__productID', flat=True)
 
             if access.productsManaged.count() > 0:

@@ -365,10 +365,10 @@ class CategoryObj(graphene.ObjectType):
     ticketEvents = graphene.List(TicketObj)
 
     def resolve_competitions(self, info):
-        return Competition.objects.values().filter(category=self).distinct().order_by('-isRecommended', '-new', 'dept__name', 'name')
+        return Competition.objects.values().filter(category=self).distinct().order_by('-isRecommended', 'dept__name', 'name')
 
     def resolve_ticketEvents(self, info):
-        return Ticket.objects.values().filter(category=self).distinct().order_by('-isRecommended', '-new', 'dept__name', 'name')
+        return Ticket.objects.values().filter(category=self).distinct().order_by('-isRecommended', 'dept__name', 'name')
 
 
 class Query(PartnerQueries, object):
