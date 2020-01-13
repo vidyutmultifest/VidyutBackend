@@ -32,7 +32,7 @@ class InitiateTransaction(graphene.Mutation):
         for product in OrderProduct.objects.filter(order=order):
             cost = cost + product.price * product.qty
             # Add GST Amount
-            if isOnline and not product.product.isGSTAccounted:
+            if not product.product.isGSTAccounted:
                 cost = cost + 0.18 * cost
 
         # TODO : subtract promocode value from amount
