@@ -22,8 +22,8 @@ def is_valid_uuid(val):
 
 class SingleProfileObj(ProfileObj, graphene.ObjectType):
     def resolve_hasEventsRegistered(self, info):
-        count = EventRegistration.objects.filter((Q(user=self.user) | Q(team__members=self.user)) & (
-                Q(order__transaction__isPaid=True) | Q(event__requireAdvancePayment=False))).count()
+        count = EventRegistration.objects.filter((Q(user=self.user) | Q(team__members=self.user)) &
+                Q(order__transaction__isPaid=True)).count()
         return count > 0
 
     def resolve_photo(self, info):
