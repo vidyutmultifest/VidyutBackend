@@ -25,6 +25,32 @@ class PaymentStatusObj(graphene.ObjectType):
 class Query(object):
     getPaymentGatewayData = graphene.Field(PaymentLinkObj, transactionID=graphene.String())
     getOnlinePaymentStatus = graphene.Field(PaymentStatusObj, transactionID=graphene.String())
+    refetchPendingStatus = graphene.Boolean()
+
+    @login_required
+    def resolve_refetchPendingStatus(self, info, **kwargs):
+        pt = Transaction.objects.filter(isOnline=True, isPaid=False)
+        print(pt.count())
+        for t in pt:
+            payload = getTransactionPayload(t.amount, t.transactionID)
+            try:
+                f = requests.post(ACRD_ENDPOINT + '/doubleverifythirdparty', data=payload)
+                k = f.json()
+                # Decrypt Response Data from ACRD, receives a JSON
+                data = decryptPayload(k["data"])
+
+                if k["response"]:
+                    jsonData = json.loads(data)
+                    t.isPaid = jsonData['status'] == "SUCCESS"
+                    t.isProcessed = True
+                    t.manualIssue = False
+                    t.transactionData = data
+                    t.save()
+            # TODO : Do better error handling
+            except Exception as e:
+                pass
+
+        return True
 
     @login_required
     def resolve_getPaymentGatewayData(self, info, **kwargs):
@@ -40,7 +66,6 @@ class Query(object):
             url=ACRD_ENDPOINT + '/makethirdpartypayment'
         )
 
-
     @login_required
     def resolve_getOnlinePaymentStatus(self, info, **kwargs):
         transactionID = kwargs.get('transactionID')
@@ -53,7 +78,7 @@ class Query(object):
         try:
             f = requests.post(ACRD_ENDPOINT + '/doubleverifythirdparty', data=payload)
             k = f.json()
-        #TODO : Do better error handling
+        # TODO : Do better error handling
         except Exception as e:
             return PaymentStatusObj(status=False, data='Failed')
 
@@ -68,4 +93,3 @@ class Query(object):
             tobj.transactionData = data
             tobj.save()
         return PaymentStatusObj(status=k["response"], data=data)
-
