@@ -29,26 +29,40 @@ class Query(object):
 
     @login_required
     def resolve_refetchPendingStatus(self, info, **kwargs):
-        pt = Transaction.objects.filter(isOnline=True, isPaid=False)
+        pt = Transaction.objects.filter(isOnline=True, isProcessed=False)
         print(pt.count())
         for t in pt:
+            print(t)
             payload = getTransactionPayload(t.amount, t.transactionID)
+            print(payload)
+            f = requests.post(ACRD_ENDPOINT + '/doubleverifythirdparty', data=payload)
             try:
-                f = requests.post(ACRD_ENDPOINT + '/doubleverifythirdparty', data=payload)
                 k = f.json()
                 # Decrypt Response Data from ACRD, receives a JSON
                 data = decryptPayload(k["data"])
 
                 if k["response"]:
-                    jsonData = json.loads(data)
-                    t.isPaid = jsonData['status'] == "SUCCESS"
-                    t.isProcessed = True
-                    t.manualIssue = False
-                    t.transactionData = data
-                    t.save()
-            # TODO : Do better error handling
+                    try:
+                        jsonData = json.loads(data)
+                        t.isPaid = jsonData['status'] == "SUCCESS"
+                        t.isProcessed = True
+                        t.manualIssue = False
+                        t.transactionData = data
+                        t.save()
+                    except Exception as e:
+                        t.isPaid = False
+                        t.isProcessed = True
+                        t.manualIssue = False
+                        t.transactionData = data
+                        t.save()
             except Exception as e:
-                pass
+                print('hello')
+                print(f.text)
+                t.isPaid = False
+                t.isProcessed = True
+                t.manualIssue = False
+                t.transactionData = f.text
+                t.save()
 
         return True
 

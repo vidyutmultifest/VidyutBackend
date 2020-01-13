@@ -1,8 +1,8 @@
 import graphene
 from datetime import datetime
 
-from django.contrib.auth.models import User
 from django.db.models import Q
+from django.utils.html import strip_tags
 
 from graphql_jwt.decorators import login_required
 
@@ -17,6 +17,10 @@ from products.schema import ProductObj
 from payment.api.objects import OrderObj, TransactionObj
 
 from .models import EventRegistration
+
+from django.core.mail import send_mail
+from django.template.loader import get_template
+from framework.settings import EMAIL_HOST_USER
 
 
 class RegisterObj(graphene.ObjectType):
@@ -233,6 +237,50 @@ class Query(graphene.ObjectType):
     isAlreadyRegistered = graphene.Boolean(productID=graphene.String(required=True))
     listRegistrations = graphene.List(RegStatObj, eventType=graphene.String(), eventID=graphene.Int())
     registrationCount = graphene.Field(RegistrationCountObj)
+    sendPaymentConfirmationEmails = graphene.Boolean()
+
+    @login_required
+    def resolve_sendPaymentConfirmationEmails(self, info, **kwargs):
+        regs = EventRegistration.objects.filter(
+            order__transaction__isPaid=True,
+            emailSend=False
+        )
+        for reg in regs:
+            username = ''
+            email = ''
+            if reg.user:
+                username = reg.user.first_name + ' ' + reg.user.last_name
+                email = reg.user.email
+            else:
+                username = reg.team.leader.first_name + ' ' + reg.team.leader.last_name
+                email = reg.team.leader.email
+            mode = 'Offline'
+            if reg.order.transaction.isOnline:
+                mode = 'Online'
+            data = {
+                "amount": reg.order.transaction.amount,
+                "eventName": reg.event.name,
+                "username": username,
+                "email": email,
+                "transactionID": reg.order.transaction.transactionID,
+                "registrationID": reg.regID,
+                "paymentMode": mode,
+                "timestamp": reg.order.transaction.timestamp
+            }
+            htmly = get_template('./emails/registration-confirmation.html')
+
+            html_content = htmly.render(data)
+            send_mail(
+                'Thank you for Registering for ' + reg.event.name + ' at Vidyut 2020',
+                strip_tags(html_content),
+                EMAIL_HOST_USER,
+                [email],
+                html_message=html_content,
+                fail_silently=False,
+            )
+            reg.emailSend = True
+            reg.save()
+        return True
 
     @login_required
     def resolve_registrationCount(self, info, **kwargs):

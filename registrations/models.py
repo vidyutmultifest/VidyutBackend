@@ -15,6 +15,7 @@ class EventRegistration(models.Model):
     event = models.ForeignKey(Product, on_delete=models.PROTECT, related_name='registeredEvent', null=True, blank=True)
     order = models.ForeignKey(Order, on_delete=models.PROTECT, related_name='registeredEvent', null=True, blank=True)
     formData = models.TextField(null=True, blank=True)
+    emailSend = models.BooleanField(default=False)
     registrationTimestamp = models.DateTimeField()
     isSelected = models.BooleanField(default=True)
 

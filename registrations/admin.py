@@ -37,7 +37,7 @@ class TransactionStatusFilter(admin.SimpleListFilter):
 @admin.register(EventRegistration)
 class EventRegAdmin(admin.ModelAdmin):
     search_fields = ('regID', 'user', 'transactionStatus')
-    list_display = ('event', 'user', 'team', 'registrationTimestamp', 'transactionStatus')
+    list_display = ('event', 'user', 'team', 'registrationTimestamp', 'transactionStatus', 'emailSend')
     list_filter = (('registrationTimestamp', DateTimeRangeFilter), 'event', TransactionStatusFilter)
     select2 = select2_modelform(EventRegistration, attrs={'width': '250px'})
     form = select2
