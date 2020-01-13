@@ -368,7 +368,7 @@ class CategoryObj(graphene.ObjectType):
         return Competition.objects.values().filter(category=self).distinct().order_by('-isRecommended', 'dept__name', 'name')
 
     def resolve_ticketEvents(self, info):
-        return Ticket.objects.values().filter(category=self).distinct().order_by('-isRecommended', 'dept__name', 'name')
+        return Ticket.objects.values().filter(category=self).distinct().order_by('-isRecommended', 'name')
 
 
 class Query(PartnerQueries, object):

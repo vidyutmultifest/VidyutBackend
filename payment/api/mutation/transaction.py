@@ -26,7 +26,7 @@ class InitiateTransaction(graphene.Mutation):
             order = Order.objects.get(orderID=orderID)
         except Order.DoesNotExist:
             return None
-            # TODO : throw error as order doresnt exist
+            # TODO : throw error as order doesnt exist
 
         cost = 0
         for product in OrderProduct.objects.filter(order=order):
