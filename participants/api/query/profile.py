@@ -1,9 +1,13 @@
 import uuid
 import graphene
+from django.core.mail import send_mail
+from django.template.loader import get_template
+from django.utils.html import strip_tags
 from graphql_jwt.decorators import login_required
 from django.db.models import Q, Count
 
 from access.models import UserAccess
+from framework.server_settings import EMAIL_HOST_USER
 from participants.api.objects import ProfileObj
 from participants.models import Profile, College
 from payment.models import Transaction
@@ -23,7 +27,7 @@ def is_valid_uuid(val):
 class SingleProfileObj(ProfileObj, graphene.ObjectType):
     def resolve_hasEventsRegistered(self, info):
         count = EventRegistration.objects.filter((Q(user=self.user) | Q(team__members=self.user)) &
-                Q(order__transaction__isPaid=True)).count()
+                                                 Q(order__transaction__isPaid=True)).count()
         return count > 0
 
     def resolve_photo(self, info):
@@ -133,7 +137,8 @@ class ProfileStatObj(graphene.ObjectType):
         ).count()
 
     def resolve_colleges(self, info):
-        colleges = Profile.objects.filter(college__isnull=False).order_by('college').values_list('college').annotate(rcount=Count('college')).distinct()
+        colleges = Profile.objects.filter(college__isnull=False).order_by('college').values_list('college').annotate(
+            rcount=Count('college')).distinct()
         return colleges
 
     def resolve_tshirtSize(self, info):
@@ -147,6 +152,8 @@ class Query(object):
     getProfile = graphene.Field(SingleProfileObj, key=graphene.String(required=True))
     listIncompleteProfiles = graphene.List(SingleProfileObj)
     getProfileStats = graphene.Field(ProfileStatObj)
+    emailIncompleteInsiders = graphene.Boolean()
+
     # listEmails = graphene.String()
     #
     # @login_required
@@ -159,6 +166,33 @@ class Query(object):
     #     for l in list:
     #         a.append(l)
     #     return a
+
+    @login_required
+    def resolve_emailIncompleteInsiders(self, info, **kwargs):
+        users = Profile.objects.filter(
+            Q(user__email__contains='am.students.amrita.edu') &
+            (Q(rollNo__isnull=True) | Q(college__isnull=True) | Q(shirtSize__isnull=True) |
+             Q(phone__isnull=True)) & Q(user__transactionUser__isPaid=True)
+        )
+        i = 231
+        for u in users[231:]:
+            data = {
+                "username": u.user.first_name + ' ' + u.user.last_name,
+                "vidyutID": u.vidyutID
+            }
+            htmly = get_template('./emails/complete-profile.html')
+            html_content = htmly.render(data)
+            send_mail(
+                'Please complete your Vidyut Profile',
+                strip_tags(html_content),
+                EMAIL_HOST_USER,
+                [u.user.email],
+                html_message=html_content,
+                fail_silently=False,
+            )
+            print(i)
+            i = i + 1
+        return True
 
     @login_required
     def resolve_isProfileComplete(self, info, **kwargs):

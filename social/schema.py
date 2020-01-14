@@ -1,5 +1,5 @@
 import graphene
-from .models import Story, Feed
+from .models import Story, Feed, Slide
 
 
 class StoryObj(graphene.ObjectType):
@@ -15,7 +15,7 @@ class StoryObj(graphene.ObjectType):
         return url
 
 
-class FeedObj(graphene.ObjectType):
+class StoryFeedObj(graphene.ObjectType):
     name = graphene.String()
     stories = graphene.List(StoryObj)
 
@@ -23,10 +23,28 @@ class FeedObj(graphene.ObjectType):
         return Story.objects.values().filter(feed=self['id']).order_by('-created')
 
 
+class SlideFeedObj(graphene.ObjectType):
+    name = graphene.String()
+    slides = graphene.List(StoryObj)
+
+    def resolve_stories(self, info):
+        return Slide.objects.values().filter(feed=self['id']).order_by('-created')
+
+
 class Query(object):
-    viewStories = graphene.List(FeedObj)
+    viewStories = graphene.List(StoryFeedObj)
+    viewSlides = graphene.List(SlideFeedObj)
 
     @staticmethod
     def resolve_viewStories(self, info):
         feeds = Story.objects.all().values_list('feed', flat=True)
         return Feed.objects.values().filter(id__in=feeds)
+
+    @staticmethod
+    def resolve_viewSlides(self, info, **kwargs):
+        id = kwargs.get('feedID')
+        if id is None:
+            feeds = Slide.objects.all().values_list('feed', flat=True)
+            return Feed.objects.values().filter(id__in=feeds)
+        else:
+            return Feed.objects.values().filter(id=id)

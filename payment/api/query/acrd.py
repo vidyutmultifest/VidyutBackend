@@ -30,11 +30,8 @@ class Query(object):
     @login_required
     def resolve_refetchPendingStatus(self, info, **kwargs):
         pt = Transaction.objects.filter(isOnline=True, isProcessed=False)
-        print(pt.count())
         for t in pt:
-            print(t)
             payload = getTransactionPayload(t.amount, t.transactionID)
-            print(payload)
             f = requests.post(ACRD_ENDPOINT + '/doubleverifythirdparty', data=payload)
             try:
                 k = f.json()

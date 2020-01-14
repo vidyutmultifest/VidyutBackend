@@ -238,6 +238,60 @@ class Query(graphene.ObjectType):
     listRegistrations = graphene.List(RegStatObj, eventType=graphene.String(), eventID=graphene.Int())
     registrationCount = graphene.Field(RegistrationCountObj)
     sendPaymentConfirmationEmails = graphene.Boolean()
+    sendEmailsToFailedPayments = graphene.Boolean()
+
+    @login_required
+    def resolve_sendEmailsToFailedPayments(self, info, **kwargs):
+        regs = EventRegistration.objects.filter(
+            (Q(order__isnull=True) | Q(order__transaction__isPaid=False))
+            & Q(event__price__gt=0) & Q(event__workshop__isnull=False)
+        )
+        print(regs.count())
+        for reg in regs:
+            username = ''
+            email = ''
+            if reg.user:
+                username = reg.user.first_name + ' ' + reg.user.last_name
+                email = reg.user.email
+            else:
+                username = reg.team.leader.first_name + ' ' + reg.team.leader.last_name
+                email = reg.team.leader.email
+            price = 0
+            if reg.event.isGSTAccounted:
+                price = reg.event.price
+            else:
+                price = 1.18 * reg.event.price
+
+            transactionID = 'n/a'
+            if reg.order and reg.order.transaction:
+                transactionID = reg.order.transaction.transactionID
+
+            orderID = 'n/a'
+            if reg.order:
+                orderID = reg.order.orderID
+
+            data = {
+                "username": username,
+                "email": email,
+                "eventName": reg.event.name,
+                "registrationID": reg.regID,
+                "orderID": orderID,
+                "transactionID": transactionID,
+                "amount": price
+            }
+            print(data)
+            htmly = get_template('./emails/complete-payment.html')
+
+            html_content = htmly.render(data)
+            send_mail(
+                'Pay for your ' + reg.event.name + ' Registration at Vidyut 2020',
+                strip_tags(html_content),
+                EMAIL_HOST_USER,
+                [email],
+                html_message=html_content,
+                fail_silently=False,
+            )
+        return True
 
     @login_required
     def resolve_sendPaymentConfirmationEmails(self, info, **kwargs):
