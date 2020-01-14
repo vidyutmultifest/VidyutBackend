@@ -50,7 +50,7 @@ class EditTeam(graphene.Mutation):
 
         # checks if team has already registered for some events
         rCount = EventRegistration.objects.filter(team=obj).count()
-        if rCount > 0:
+        if rCount > 0 and obj.allowEditing is False:
             raise APIException('You cannot edit a team after it has registered for an event.')
 
         # name change requested
@@ -125,7 +125,7 @@ class JoinTeam(graphene.Mutation):
 
             # checks if team has already registered for some events
             rCount = EventRegistration.objects.filter(team=obj).count()
-            if rCount > 0:
+            if rCount > 0 and obj.allowEditing is False:
                 raise APIException('You cannot join a team after it has registered for an event.')
 
             obj.members.add(user)
@@ -135,8 +135,37 @@ class JoinTeam(graphene.Mutation):
             raise APIException('Team does not exist or have been deleted')
 
 
+class UploadDocument(graphene.Mutation):
+    class Arguments:
+        teamHash = graphene.String(required=True)
+
+    Output = TeamUpdateStatusObj
+
+    @login_required
+    def mutate(self, info, teamHash, details):
+        user = info.context.user
+        obj = Team.objects.get(hash=teamHash)
+
+        # checks if team has already registered for some events
+        rCount = EventRegistration.objects.filter(team=obj).count()
+        if rCount > 0 and obj.allowEditing is False:
+            raise APIException('You cannot edit a team after it has registered for an event.')
+        if obj.leader == user:
+            if "document" in info.context.FILES:
+                document = info.context.FILES['document']
+                if document is not None:
+                    obj.document = document
+        else:
+            raise APIException('You need to be the leader of the team to upload document.')
+
+        obj.save()
+
+        return TeamUpdateStatusObj(status=True)
+
+
 class Mutation(graphene.ObjectType):
     createTeam = CreateTeam.Field()
     deleteTeam = DeleteTeam.Field()
     editTeam = EditTeam.Field()
     joinTeam = JoinTeam.Field()
+    uploadDocument = UploadDocument.Field()

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Feed, Story
+from .models import Feed, Story, Slide
 from easy_select2 import select2_modelform
 
 
@@ -10,6 +10,12 @@ class FeedAdmin(admin.ModelAdmin):
 
 
 @admin.register(Story)
-class FeedAdmin(admin.ModelAdmin):
+class StoryAdmin(admin.ModelAdmin):
     select2 = select2_modelform(Story, attrs={'width': '250px'})
+    form = select2
+
+
+@admin.register(Slide)
+class SlideAdmin(admin.ModelAdmin):
+    select2 = select2_modelform(Slide, attrs={'width': '250px'})
     form = select2

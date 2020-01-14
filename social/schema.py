@@ -27,13 +27,13 @@ class SlideFeedObj(graphene.ObjectType):
     name = graphene.String()
     slides = graphene.List(StoryObj)
 
-    def resolve_stories(self, info):
+    def resolve_slides(self, info):
         return Slide.objects.values().filter(feed=self['id']).order_by('-created')
 
 
 class Query(object):
     viewStories = graphene.List(StoryFeedObj)
-    viewSlides = graphene.List(SlideFeedObj)
+    viewSlides = graphene.List(SlideFeedObj, slug=graphene.String())
 
     @staticmethod
     def resolve_viewStories(self, info):
@@ -42,9 +42,9 @@ class Query(object):
 
     @staticmethod
     def resolve_viewSlides(self, info, **kwargs):
-        id = kwargs.get('feedID')
-        if id is None:
+        slug = kwargs.get('slug')
+        if slug is None:
             feeds = Slide.objects.all().values_list('feed', flat=True)
             return Feed.objects.values().filter(id__in=feeds)
         else:
-            return Feed.objects.values().filter(id=id)
+            return Feed.objects.values().filter(slug=slug)

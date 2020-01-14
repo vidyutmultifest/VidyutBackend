@@ -7,6 +7,7 @@ from django.utils.html import strip_tags
 from graphql_jwt.decorators import login_required
 
 from access.models import UserAccess
+from events.models import Department
 from framework.api.helper import APIException
 from participants.api.query.profile import SingleProfileObj
 from participants.models import Team, Profile
@@ -179,6 +180,27 @@ class RegStatObj(graphene.ObjectType):
         return EventRegistration.objects.filter(event_id=self.id)
 
 
+class DeptWiseCountObj(graphene.ObjectType):
+    name = graphene.String()
+    count = graphene.Field(RegCountObj)
+
+    def resolve_count(self, info):
+        regs = EventRegistration.objects.filter(
+            #Q(event__workshop__dept_id=self.id)
+            Q(event__competition__dept__id=self.id)
+        )
+        paid = regs.filter(order__transaction__isPaid=True)
+        return RegCountObj(
+            total=regs.count(),
+            paid=paid.count(),
+            paymentPending=regs.count() - paid.count(),
+            amritapurianPaid=paid.filter(
+                Q(user__email__contains='am.students.amrita.edu')
+                | Q(team__leader__email__contains='am.students.amrita.edu')
+            ).count()
+        )
+
+
 class RegistrationCountObj(graphene.ObjectType):
     total = graphene.Int()
     paid = graphene.Int()
@@ -190,6 +212,10 @@ class RegistrationCountObj(graphene.ObjectType):
     outsider = graphene.Int()
     insiderPaid = graphene.Int()
     outsiderPaid = graphene.Int()
+    deptWiseCount = graphene.List(DeptWiseCountObj)
+
+    def resolve_deptWiseCount(self, info):
+        return Department.objects.all()
 
     def resolve_total(self, info):
         return self.all().count()
@@ -319,7 +345,7 @@ class Query(graphene.ObjectType):
                 "transactionID": reg.order.transaction.transactionID,
                 "registrationID": reg.regID,
                 "paymentMode": mode,
-                "timestamp": reg.order.transaction.timestamp
+                "timestamp": reg.registrationTimestamp
             }
             htmly = get_template('./emails/registration-confirmation.html')
 

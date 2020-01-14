@@ -4,6 +4,7 @@ from django.db import models
 
 class Feed(models.Model):
     name = models.CharField(max_length=50)
+    slug = models.SlugField(max_length=50, null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -36,3 +37,8 @@ class Slide(models.Model):
     image = models.ImageField(upload_to=get_image_path)
     feed = models.ForeignKey(Feed, on_delete=models.CASCADE)
     link = models.URLField(null=True, blank=True)
+
+    def __str__(self):
+        if self.name is not None:
+            return str(self.name)
+        return str(self.id)

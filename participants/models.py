@@ -18,10 +18,17 @@ class College(models.Model):
 
 
 class Team(models.Model):
+    def get_document_path(self, filename):
+        ext = filename.split('.')[-1]
+        filename = "%s.%s" % (uuid.uuid4(), ext)
+        return 'static/uploads/teams/document/' + filename
+
     name = models.CharField(max_length=100)
     hash = models.UUIDField(unique=True, default=uuid.uuid4)
     leader = models.ForeignKey(User, related_name='TeamLeader', on_delete=models.PROTECT)
     members = models.ManyToManyField(User, blank=True, related_name='TeamMembers')
+    document = models.FileField(upload_to=get_document_path, null=True, blank=True)
+    allowEditing = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
