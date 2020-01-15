@@ -5,6 +5,7 @@ from participants.models import Team
 from participants.api.objects import TeamObj
 
 from framework.api.helper import APIException
+from registrations.models import EventRegistration
 
 
 class Query(graphene.ObjectType):
@@ -23,6 +24,9 @@ class Query(graphene.ObjectType):
                         "name": member.first_name + ' ' + member.last_name,
                         "username": member.username
                     })
+                isEditable = False
+                if EventRegistration.objects.filter(team=team).count() == 0 | team.allowEditing:
+                    isEditable = True
                 return TeamObj(
                     name=team.name,
                     leader={
@@ -32,7 +36,8 @@ class Query(graphene.ObjectType):
                     members=mlist,
                     membersCount=len(mlist),
                     hash=team.hash,
-                    isUserLeader=user == team.leader
+                    isUserLeader=user == team.leader,
+                    isEditable=isEditable
                 )
             else:
                 raise APIException("You should be a member of the team to retrieve details of the team.")
@@ -51,6 +56,9 @@ class Query(graphene.ObjectType):
                     "name": member.first_name + ' ' + member.last_name,
                     "username": member.username
                 })
+            isEditable = False
+            if EventRegistration.objects.filter(team=team).count() == 0 | team.allowEditing:
+                isEditable = True
             tlist.append({
                 "name": team.name,
                 "leader": {
@@ -60,6 +68,7 @@ class Query(graphene.ObjectType):
                 "members": mlist,
                 "membersCount": len(mlist),
                 "hash": team.hash,
-                "isUserLeader": user == team.leader
+                "isUserLeader": user == team.leader,
+                "isEditable": isEditable
             })
         return tlist

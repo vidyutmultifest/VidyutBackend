@@ -24,6 +24,7 @@ class TeamObj(graphene.ObjectType):
     membersCount = graphene.Int()
     isUserLeader = graphene.Boolean()
     hash = graphene.String()
+    isEditable = graphene.Boolean()
 
 
 class ProfileObj(graphene.ObjectType):
