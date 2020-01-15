@@ -142,7 +142,7 @@ class UploadDocument(graphene.Mutation):
     Output = TeamUpdateStatusObj
 
     @login_required
-    def mutate(self, info, teamHash, details):
+    def mutate(self, info, teamHash):
         user = info.context.user
         obj = Team.objects.get(hash=teamHash)
 
