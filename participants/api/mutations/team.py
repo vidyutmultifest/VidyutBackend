@@ -2,6 +2,7 @@ import graphene
 from django.contrib.auth.models import User
 from graphql_jwt.decorators import login_required
 
+from access.models import UserAccess
 from framework.api.helper import APIException
 from participants.models import Team
 from registrations.models import EventRegistration
@@ -163,9 +164,35 @@ class UploadDocument(graphene.Mutation):
         return TeamUpdateStatusObj(status=True)
 
 
+class UnlockTeamEditing(graphene.Mutation):
+    class Arguments:
+        teamHash = graphene.String(required=True)
+
+    Output = TeamUpdateStatusObj
+
+    @login_required
+    def mutate(self, info, teamHash):
+        user = info.context.user
+        try:
+            access = UserAccess.objects.get(user=user)
+            obj = Team.objects.get(hash=teamHash)
+            if (obj.id in access.productsManaged.all() or access.productsManaged.count() == 0) and access.canViewRegistrations:
+                if obj.allowEditing is False:
+                    obj.allowEditing = True
+                else:
+                    obj.allowEditing = False
+                obj.save()
+                return TeamUpdateStatusObj(status=True)
+            else:
+                raise APIException('Permission denied to do this action.')
+        except UserAccess.DoesNotExist:
+            raise APIException('You dont have access to perform this action')
+
+
 class Mutation(graphene.ObjectType):
     createTeam = CreateTeam.Field()
     deleteTeam = DeleteTeam.Field()
     editTeam = EditTeam.Field()
     joinTeam = JoinTeam.Field()
     uploadDocument = UploadDocument.Field()
+    unlockTeamEditing = UnlockTeamEditing.Field()

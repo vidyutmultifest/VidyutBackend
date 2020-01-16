@@ -108,6 +108,8 @@ class RegTeamObj(graphene.ObjectType):
     name = graphene.String()
     leader = graphene.Field(SingleProfileObj)
     members = graphene.List(SingleProfileObj)
+    allowEditing = graphene.Boolean()
+    hash = graphene.String()
 
     def resolve_leader(self, info):
         if self.leader is not None:

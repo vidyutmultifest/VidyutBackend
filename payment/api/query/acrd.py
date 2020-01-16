@@ -32,11 +32,14 @@ class Query(object):
         pt = Transaction.objects.filter(isOnline=True, isProcessed=False)
         for t in pt:
             payload = getTransactionPayload(t.amount, t.transactionID)
+            print(payload)
             f = requests.post(ACRD_ENDPOINT + '/doubleverifythirdparty', data=payload)
+            print(f.status_code)
             try:
                 k = f.json()
                 # Decrypt Response Data from ACRD, receives a JSON
                 data = decryptPayload(k["data"])
+                print(data)
 
                 if k["response"]:
                     try:

@@ -27,6 +27,9 @@ class Query(graphene.ObjectType):
                 isEditable = False
                 if EventRegistration.objects.filter(team=team).count() == 0 | team.allowEditing:
                     isEditable = True
+                documentURL = None
+                if team.document and hasattr(team.document, 'url'):
+                    documentURL = info.context.build_absolute_uri(team.document.url)
                 return TeamObj(
                     name=team.name,
                     leader={
@@ -37,7 +40,8 @@ class Query(graphene.ObjectType):
                     membersCount=len(mlist),
                     hash=team.hash,
                     isUserLeader=user == team.leader,
-                    isEditable=isEditable
+                    isEditable=isEditable,
+                    document=documentURL
                 )
             else:
                 raise APIException("You should be a member of the team to retrieve details of the team.")
@@ -59,6 +63,10 @@ class Query(graphene.ObjectType):
             isEditable = False
             if EventRegistration.objects.filter(team=team).count() == 0 | team.allowEditing:
                 isEditable = True
+
+            documentURL = None
+            if team.document and hasattr(team.document, 'url'):
+                documentURL = info.context.build_absolute_uri(team.document.url)
             tlist.append({
                 "name": team.name,
                 "leader": {
@@ -69,6 +77,7 @@ class Query(graphene.ObjectType):
                 "membersCount": len(mlist),
                 "hash": team.hash,
                 "isUserLeader": user == team.leader,
-                "isEditable": isEditable
+                "isEditable": isEditable,
+                "document": documentURL
             })
         return tlist
