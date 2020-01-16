@@ -1,7 +1,7 @@
 import graphene
 from datetime import datetime
 
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.utils.html import strip_tags
 
 from graphql_jwt.decorators import login_required
@@ -13,7 +13,7 @@ from participants.api.query.profile import SingleProfileObj
 from participants.models import Team, Profile
 from participants.api.objects import TeamObj
 from products.models import Product
-from payment.models import Order
+from payment.models import Order, Transaction
 from products.schema import ProductObj
 from payment.api.objects import OrderObj, TransactionObj
 
@@ -268,11 +268,27 @@ class RegistrationCountObj(graphene.ObjectType):
         ).count()
 
 
+class RegistrationAmountObj(graphene.ObjectType):
+    total = graphene.Int()
+    online = graphene.Int()
+    offline = graphene.Int()
+
+    def resolve_total(self, info):
+        return Order.objects.filter(id__in=self, transaction__isPaid=True).aggregate(Sum('transaction__amount'))['transaction__amount__sum']
+
+    def resolve_online(self, info):
+        return Order.objects.filter(id__in=self, transaction__isPaid=True, transaction__isOnline=True).aggregate(Sum('transaction__amount'))['transaction__amount__sum']
+
+    def resolve_offline(self, info):
+        return Order.objects.filter(id__in=self, transaction__isPaid=True, transaction__isOnline=False).aggregate(Sum('transaction__amount'))['transaction__amount__sum']
+
+
 class Query(graphene.ObjectType):
     myRegistrations = graphene.List(EventRegistrationObj, limit=graphene.Int())
     isAlreadyRegistered = graphene.Boolean(productID=graphene.String(required=True))
     listRegistrations = graphene.List(RegStatObj, eventType=graphene.String(), eventID=graphene.Int())
     registrationCount = graphene.Field(RegistrationCountObj)
+    registrationAmount = graphene.Field(RegistrationAmountObj)
     sendPaymentConfirmationEmails = graphene.Boolean()
     sendEmailsToFailedPayments = graphene.Boolean()
 
@@ -382,6 +398,21 @@ class Query(graphene.ObjectType):
                 return EventRegistration.objects.filter(event__in=access.productsManaged.all())
             else:
                 return EventRegistration.objects.all()
+        else:
+            raise APIException('Forbidden')
+
+    @login_required
+    def resolve_registrationAmount(self, info, **kwargs):
+        user = info.context.user
+        access = UserAccess.objects.get(user=user)
+        if access.adminAccess and access.canViewRegistrations:
+            if access.productsManaged.count() > 0:
+                return EventRegistration.objects.filter(
+                    event__in=access.productsManaged.all(),
+                    order__transaction__isPaid=True
+                ).values_list('order', flat=True)
+            else:
+                return EventRegistration.objects.filter(order__transaction__isPaid=True).values_list('order', flat=True)
         else:
             raise APIException('Forbidden')
 
