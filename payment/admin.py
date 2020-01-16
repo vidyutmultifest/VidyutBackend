@@ -90,10 +90,35 @@ class PaymentModeFilter(admin.SimpleListFilter):
         return queryset
 
 
+class EmailTypeFilter(admin.SimpleListFilter):
+    title = 'Email Type'
+    parameter_name = 'Email Type'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('gmail', 'GMail'),
+            ('amrita', 'Amrita ID'),
+        )
+
+    def queryset(self, request, queryset):
+        value = self.value()
+        if value == 'gmail':
+            return queryset.filter(user__email__contains='@gmail.com')
+        elif value == 'amrita':
+            return queryset.filter(user__email__contains='amrita.edu')
+        return queryset
+
+
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     list_display = ('orderID', 'user', 'timestamp', 'transactionStatus')
-    list_filter = (('timestamp', DateTimeRangeFilter), 'products', TransactionStatusFilter, PaymentModeFilter)
+    list_filter = (
+        ('timestamp', DateTimeRangeFilter),
+        'products',
+        TransactionStatusFilter,
+        PaymentModeFilter,
+        EmailTypeFilter
+    )
     filter_horizontal = ('products',)
     search_fields = ['orderID', 'user__username', 'transaction__transactionID', 'products__name']
     autocomplete_fields = ['transaction']
@@ -108,7 +133,10 @@ class OrderAdmin(admin.ModelAdmin):
                 if obj.transaction.isOnline:
                     return "Paid Online"
                 else:
-                    return "Paid Offline"
+                    if obj.transaction.issuer:
+                        return "Collected by " + obj.transaction.issuer.username
+                    else:
+                        return "Paid Offline"
             elif obj.transaction.isPending:
                 return "Pending"
             elif obj.transaction.isProcessed:

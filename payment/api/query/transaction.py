@@ -3,8 +3,21 @@ from graphql_jwt.decorators import login_required
 
 from access.models import UserAccess
 from framework.api.helper import APIException
-from payment.models import Transaction
+from payment.models import Transaction, Order
 from payment.api.objects import TransactionStatusObj, TransactionObj, TransactionDetailObj
+
+
+class TransactionFixObj(graphene.ObjectType):
+    email = graphene.String()
+    amount = graphene.Int()
+    oldTransaction = graphene.Field(TransactionObj)
+    newTransaction = graphene.Field(TransactionObj)
+
+
+class ExcessPaymentObj(graphene.ObjectType):
+    email = graphene.String()
+    amount = graphene.Int()
+    transactions = graphene.List(TransactionObj)
 
 
 class Query(graphene.ObjectType):
@@ -12,6 +25,8 @@ class Query(graphene.ObjectType):
     getTransactionsApproved = graphene.List(TransactionDetailObj)
     getTransactionStatus = graphene.Field(TransactionStatusObj, transactionID=graphene.String())
     getTransactionList = graphene.List(TransactionObj)
+    fixUnassociatedPayments = graphene.List(TransactionFixObj)
+    listExcessPayments = graphene.List(ExcessPaymentObj)
 
     @login_required
     def resolve_getTransactionDetail(self, info, **kwargs):
@@ -106,3 +121,61 @@ class Query(graphene.ObjectType):
         except UserAccess.DoesNotExist:
             raise APIException("Access denied: You are not allowed view all transactions.")
 
+    @login_required
+    def resolve_fixUnassociatedPayments(self, info, **kwargs):
+        user = info.context.user  # get request user
+        if user.is_superuser:  # only super user is allowed to perform this action
+            # find successful transactions that do not have a order associated
+            trans = Transaction.objects.filter(
+                isPaid=True,
+                order__isnull=True
+            )
+            log = []  # for logging
+            # for each of those transactions
+            for t in trans:
+                # try to find a matching order
+                orders = Order.objects.filter(
+                    # order should be the same user, of course!
+                    user=t.user,
+                    # trans associated should have same value in order to be replaced
+                    transaction__amount=t.amount,
+                    # existing associated trans should have failed in order to be replaced with the curr
+                    transaction__isPaid=False,
+                )
+                # if a single fixable match is found
+                if orders.count() == 1:
+                    order = orders.first()
+                    log.append({
+                        "email": t.user.email,
+                        "amount": t.amount,
+                        "oldTransaction": order.transaction,
+                        "newTransaction": t
+                    })
+                    # replace the failed transaction with the successful
+                    order.transaction = t
+                    order.save()  # save changes
+                # TODO how to handle if multiple failed orders exist with same amount?
+            return log
+        raise APIException('You should be a super user to perform this action')
+
+    @login_required
+    def resolve_listExcessPayments(self, info, **kwargs):
+        user = info.context.user
+        if user.is_superuser:
+            users = Transaction.objects.filter(
+                isPaid=True,
+                order__isnull=True
+            ).values_list('user', flat=True).distinct()
+            list = []
+            for u in users:
+                trans = Transaction.objects.filter(isPaid=True, user_id=u)
+                if trans.values('amount').distinct().count() == 1:
+                    data = {
+                        "email": trans.first().user.email,
+                        "amount": trans.first().amount,
+                        "transactions": trans
+                    }
+                    list.append(data)
+            return list
+        else:
+            raise APIException('You need to be a super-admin to do this.')

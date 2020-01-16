@@ -80,7 +80,10 @@ class EventRegAdmin(admin.ModelAdmin):
                     if obj.order.transaction.isOnline:
                         return "Paid Online"
                     else:
-                        return "Paid Offline"
+                        if obj.order.transaction.issuer:
+                            return "Collected by " + obj.order.transaction.issuer.username
+                        else:
+                            return "Paid Offline"
                 elif obj.order.transaction.isPending:
                     return "Pending"
                 elif obj.order.transaction.isProcessed:

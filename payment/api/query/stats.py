@@ -6,6 +6,8 @@ from django.db.models import Sum
 from graphql_jwt.decorators import login_required
 
 from access.models import UserAccess
+from events.models import Ticket
+from framework.api.helper import APIException
 from payment.models import Transaction, Order, OrderProduct
 from products.models import Product
 
@@ -289,14 +291,82 @@ class TransactionStatObject(graphene.ObjectType):
         return ilist
 
 
+class TicketSaleObj(graphene.ObjectType):
+    name = graphene.String()
+    productID = graphene.String()
+    total = graphene.Int()
+    online = graphene.Int()
+    offline = graphene.Int()
+    insider = graphene.Int()
+    insiderOnline = graphene.Int()
+    outsider = graphene.Int()
+    outsiderOnline = graphene.Int()
+
+    def resolve_total(self, info):
+        return Order.objects.filter(products=self, transaction__isPaid=True).count()
+
+    def resolve_online(self, info):
+        return Order.objects.filter(
+            products=self,
+            transaction__isPaid=True,
+            transaction__isOnline=True
+        ).count()
+
+    def resolve_offline(self, info):
+        return Order.objects.filter(
+            products=self,
+            transaction__isPaid=True,
+            transaction__isOnline=False
+        ).count()
+
+    def resolve_insider(self, info):
+        return Order.objects.filter(
+            products=self,
+            transaction__isPaid=True,
+            user__email__contains='am.students.amrita.edu'
+        ).count()
+
+    def resolve_insiderOnline(self, info):
+        return Order.objects.filter(
+            products=self,
+            transaction__isPaid=True,
+            user__email__contains='am.students.amrita.edu',
+            transaction__isOnline=True
+        ).count()
+
+    def resolve_outsider(self, info):
+        total = Order.objects.filter(products=self, transaction__isPaid=True)
+        return total.count() - total.filter(
+            user__email__contains='am.students.amrita.edu'
+        ).count()
+
+    def resolve_outsiderOnline(self, info):
+        total = Order.objects.filter(products=self, transaction__isPaid=True, transaction__isOnline=True)
+        return total.count() - total.filter(
+            user__email__contains='am.students.amrita.edu'
+        ).count()
+
+
 class Query(object):
     getTransactionStats = graphene.Field(
         TransactionStatObject,
         date=graphene.Date(),
     )
+    viewTicketSaleCount = graphene.List(TicketSaleObj)
 
     @login_required
     def resolve_getTransactionStats(self, info, **kwargs):
         user = info.context.user
         if UserAccess.objects.get(user=user).viewAllTransactions or user.is_superuser:
             return True
+        else:
+            raise APIException('Permission Denied.')
+
+    @login_required
+    def resolve_viewTicketSaleCount(self, info, **kwargs):
+        user = info.context.user
+        if UserAccess.objects.get(user=user).viewAllTransactions or user.is_superuser:
+            tickets = Ticket.objects.all()
+            return Product.objects.filter(ticket__in=tickets)
+        else:
+            raise APIException('Permission Denied.')
