@@ -178,6 +178,7 @@ class Workshop(models.Model):
     syllabus = RichTextField(null=True, blank=True)
     details = RichTextField(null=True, blank=True)
 
+    KTUActivityPoints = models.PositiveIntegerField(null=True, blank=True)
     fee = models.PositiveIntegerField(null=True, blank=True)
 
     contacts = models.ManyToManyField(ContactPerson, blank=True)
@@ -221,6 +222,7 @@ class Competition(models.Model):
     details = RichTextField(null=True, blank=True)
     judgingCriteria = RichTextField(null=True, blank=True)
     rules = RichTextField(null=True, blank=True)
+    KTUActivityPoints = models.PositiveIntegerField(null=True, blank=True)
 
     fee = models.PositiveIntegerField(null=True, blank=True)
     firstPrize = models.CharField(max_length=150, null=True, blank=True)

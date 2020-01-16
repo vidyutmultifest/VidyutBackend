@@ -269,6 +269,7 @@ class WorkshopObj(EventObj, graphene.ObjectType):
     schedule = graphene.List(DailyScheduleObj)
     accreditedBy = graphene.Field(PartnerObj)
     partners = graphene.List(PartnerObj)
+    KTUActivityPoints = graphene.Int()
 
     def resolve_accreditedBy(self, info):
         if Workshop.objects.get(slug=self['slug']).accreditedBy is not None:
@@ -318,6 +319,7 @@ class CompetitionObj(EventObj, graphene.ObjectType):
     formFields = graphene.List(FormFieldObj)
     schedule = graphene.List(DailyScheduleObj)
     category = graphene.Field(DepartmentObj)
+    KTUActivityPoints = graphene.Int()
 
     def resolve_schedule(self, info):
         return CompetitionSchedule.objects.values().filter(event__slug=self['slug'])

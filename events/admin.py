@@ -62,7 +62,8 @@ class CompetitionAdmin(admin.ModelAdmin):
                 ('cover', 'poster'),
                 'category',
                 ('dept', 'organiser', 'partners'),
-                'hasSelectionProcess'
+                'hasSelectionProcess',
+                'KTUActivityPoints'
             ]
         }),
         ('Competition Details', {
@@ -119,7 +120,8 @@ class WorkshopAdmin(admin.ModelAdmin):
                 ('name', 'slug'),
                 ('cover', 'poster'),
                 ('dept', 'organiser', 'partners'),
-                ('trainers', 'accreditedBy')
+                ('trainers', 'accreditedBy'),
+                'KTUActivityPoints'
             ]
         }),
         ('Workshop Details', {

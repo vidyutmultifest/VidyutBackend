@@ -357,6 +357,7 @@ class Query(graphene.ObjectType):
                 "paymentMode": mode,
                 "timestamp": reg.registrationTimestamp
             }
+            print(data)
             htmly = get_template('./emails/registration-confirmation.html')
 
             html_content = htmly.render(data)
