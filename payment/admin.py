@@ -22,7 +22,7 @@ class OPInline(admin.TabularInline):
 
 @admin.register(Transaction)
 class TransactionAdmin(ImportExportModelAdmin, admin.ModelAdmin):
-    list_display = ('transactionID', 'isProcessed', 'isPending', 'isPaid', 'amount', 'user', 'issuer', 'timestamp', 'issuerLocation')
+    list_display = ('transactionID', 'amount', 'user', 'isProcessed', 'isPending', 'isPaid', 'isOnline', 'issuer', 'timestamp')
     list_select_related = (
         'user',
         'issuer'
@@ -32,6 +32,7 @@ class TransactionAdmin(ImportExportModelAdmin, admin.ModelAdmin):
         'isPaid',
         'isPending',
         'isProcessed',
+        'isOnline',
         'amount',
     )
     date_hierarchy = 'timestamp'
@@ -70,10 +71,29 @@ class TransactionStatusFilter(admin.SimpleListFilter):
         return queryset
 
 
+class PaymentModeFilter(admin.SimpleListFilter):
+    title = 'Payment Mode'
+    parameter_name = 'Payment Mode'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('Online', 'Online'),
+            ('Offline', 'Offline'),
+        )
+
+    def queryset(self, request, queryset):
+        value = self.value()
+        if value == 'Online':
+            return queryset.filter(transaction__isOnline=True)
+        elif value == 'Offline':
+            return queryset.filter(transaction__isOnline=False)
+        return queryset
+
+
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     list_display = ('orderID', 'user', 'timestamp', 'transactionStatus')
-    list_filter = (('timestamp', DateTimeRangeFilter), 'products', TransactionStatusFilter)
+    list_filter = (('timestamp', DateTimeRangeFilter), 'products', TransactionStatusFilter, PaymentModeFilter)
     filter_horizontal = ('products',)
     search_fields = ['orderID', 'user__username', 'transaction__transactionID', 'products__name']
     autocomplete_fields = ['transaction']
@@ -85,7 +105,10 @@ class OrderAdmin(admin.ModelAdmin):
     def transactionStatus(self, obj):
         if obj.transaction:
             if obj.transaction.isPaid:
-                return "Paid"
+                if obj.transaction.isOnline:
+                    return "Paid Online"
+                else:
+                    return "Paid Offline"
             elif obj.transaction.isPending:
                 return "Pending"
             elif obj.transaction.isProcessed:

@@ -39,7 +39,6 @@ class Query(object):
                 k = f.json()
                 # Decrypt Response Data from ACRD, receives a JSON
                 data = decryptPayload(k["data"])
-                print(data)
 
                 if k["response"]:
                     try:
