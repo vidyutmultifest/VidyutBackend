@@ -214,6 +214,8 @@ class RegistrationCountObj(graphene.ObjectType):
     outsider = graphene.Int()
     insiderPaid = graphene.Int()
     outsiderPaid = graphene.Int()
+    onlinePaid = graphene.Int()
+    offlinePaid = graphene.Int()
     deptWiseCount = graphene.List(DeptWiseCountObj)
 
     def resolve_deptWiseCount(self, info):
@@ -224,6 +226,12 @@ class RegistrationCountObj(graphene.ObjectType):
 
     def resolve_paid(self, info):
         return self.filter(order__transaction__isPaid=True).count()
+
+    def resolve_onlinePaid(self, info):
+        return self.filter(order__transaction__isPaid=True, order__transaction__isOnline=True).count()
+
+    def resolve_offlinePaid(self, info):
+        return self.filter(order__transaction__isPaid=True, order__transaction__isOnline=False).count()
 
     def resolve_workshop(self, info):
         return self.filter(event__workshop__isnull=False).count()
