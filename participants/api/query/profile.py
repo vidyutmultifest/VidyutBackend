@@ -60,7 +60,7 @@ class SingleProfileObj(ProfileObj, graphene.ObjectType):
 
     def resolve_isAmritapurian(self, info):
         isAmritapurian = True
-        if self.user.email.split('@')[-1].find('am.students.amrita.edu') == -1:
+        if self.user.email.split('@')[-1].find('amrita.edu') == -1:
             isAmritapurian = False
         return isAmritapurian
 
