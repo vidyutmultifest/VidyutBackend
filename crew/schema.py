@@ -27,4 +27,4 @@ class Query(graphene.ObjectType):
     listCrew = graphene.List(MemberObj)
 
     def resolve_listCrew(self, info, **kwargs):
-        return Member.objects.all().distinct().order_by('-isCore', 'isFaculty', '-isHead', 'team__name', 'name')
+        return Member.objects.all().distinct().order_by('-isCore', '-isHead', 'team__name', 'name', 'isFaculty')
