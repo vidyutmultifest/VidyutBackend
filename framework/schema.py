@@ -11,7 +11,7 @@ from tickets.schema import Query as TicketQueries, Mutation as TicketMutations
 from registrations.schema import Mutation as RegMutations, Query as RegQueries
 from social.schema import Query as SocialQueries
 from forum.schema import Query as ForumQueries
-
+from crew.schema import Query as CrewQueries
 from framework.settings import *
 
 
@@ -40,6 +40,7 @@ class Query(
     RegQueries,
     SocialQueries,
     ForumQueries,
+    CrewQueries,
     graphene.ObjectType
 ):
     status = graphene.Field(StatusObj)

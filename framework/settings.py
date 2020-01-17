@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     'rangefilter',
     'import_export',
     'access',
+    'crew',
     'events',
     'forum',
     'participants',
