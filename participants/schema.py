@@ -8,6 +8,8 @@ from participants.api.query.profile import Query as ProfileQueries
 from participants.api.query.rekognition import Query as RekognitionQueries
 from participants.api.query.team import Query as TeamQueries
 from participants.api.query.college import Query as CollegeQueries
+from participants.api.query.myvidyut import Query as MyVidyutQueries
+from participants.api.query.mynotifications import Query as MyNotificationQueries
 
 
 class Mutation(
@@ -24,6 +26,8 @@ class Query(
     ProfileQueries,
     TeamQueries,
     CollegeQueries,
+    MyVidyutQueries,
+    MyNotificationQueries,
     graphene.ObjectType
 ):
     pass
