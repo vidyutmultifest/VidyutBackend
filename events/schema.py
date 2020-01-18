@@ -373,12 +373,18 @@ class CategoryObj(graphene.ObjectType):
         return Ticket.objects.values().filter(category=self).distinct().order_by('-isRecommended', 'name')
 
 
+class CategoryListObj(graphene.ObjectType):
+    name = graphene.String()
+    slug = graphene.String()
+
+
 class Query(PartnerQueries, object):
     getCompetition = graphene.Field(CompetitionObj, slug=graphene.String(required=True))
     getWorkshop = graphene.Field(WorkshopObj, slug=graphene.String(required=True))
     getTicketEvent = graphene.Field(TicketObj, slug=graphene.String(required=True))
     getMerchandise = graphene.Field(MerchandiseObj, slug=graphene.String(required=True))
     listDepartments = graphene.List(DepartmentListObj)
+    listCategories = graphene.List(CategoryListObj)
     listOrganizers = graphene.List(OrganizerObj, hasWorkshop=graphene.Boolean(required=False))
     listCompetitions = graphene.List(CompetitionObj)
     listWorkshops = graphene.List(WorkshopObj)
@@ -399,6 +405,10 @@ class Query(PartnerQueries, object):
     @staticmethod
     def resolve_listDepartments(self, info, **kwargs):
         return Department.objects.values().all().order_by('name')
+
+    @staticmethod
+    def resolve_listCategories(self, info, **kwargs):
+        return Category.objects.values().all().order_by('name')
 
     @staticmethod
     def resolve_listOrganizers(self, info, **kwargs):
