@@ -496,4 +496,4 @@ class Query(PartnerQueries, object):
 
     @staticmethod
     def resolve_listTicketEvents(self, info, **kwargs):
-        return Ticket.objects.values().filter(isPublished=True).order_by('name')
+        return Ticket.objects.values().filter(isPublished=True).order_by('-isRecommended', 'name')
