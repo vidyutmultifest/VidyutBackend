@@ -465,17 +465,17 @@ class Query(PartnerQueries, object):
                 return Workshop.objects.values().filter(
                     isPublished=True,
                     product__isSchoolOnly=True
-                ).distinct().order_by('-isRecommended', 'dept__name', 'name')
+                ).distinct().order_by('-isRecommended', 'accreditedBy__name', 'organiser', 'dept__name', 'name')
             elif profile.isFaculty:
                 return Workshop.objects.values().filter(
                     isPublished=True,
                     product__isFacultyOnly=True
-                ).distinct().order_by('-isRecommended', 'dept__name', 'name')
+                ).distinct().order_by('-isRecommended', 'accreditedBy__name', 'organiser', 'dept__name', 'name')
             return Workshop.objects.values().filter(
                 isPublished=True,
                 product__isSchoolOnly=False,
                 product__isFacultyOnly=False
-            ).distinct().order_by('-isRecommended', 'dept__name', 'name')
+            ).distinct().order_by('-isRecommended', 'accreditedBy__name', 'organiser', 'dept__name', 'name')
         else:
             return Workshop.objects.values().filter(isPublished=True).order_by('-isRecommended', 'dept__name', 'name')
 
