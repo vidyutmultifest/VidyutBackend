@@ -225,6 +225,8 @@ class Competition(models.Model):
     KTUActivityPoints = models.PositiveIntegerField(null=True, blank=True)
 
     fee = models.PositiveIntegerField(null=True, blank=True)
+
+    totalPrize = models.CharField(max_length=150, null=True, blank=True)
     firstPrize = models.CharField(max_length=150, null=True, blank=True)
     secondPrize = models.CharField(max_length=150, null=True, blank=True)
     thirdPrize = models.CharField(max_length=150, null=True, blank=True)

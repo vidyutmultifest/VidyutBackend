@@ -73,8 +73,13 @@ class CompetitionAdmin(admin.ModelAdmin):
                 'judgingCriteria',
                 'rules',
                 'fee',
-                ('firstPrize', 'secondPrize', 'thirdPrize'),
-                'otherPrizes'
+            ]
+        }),
+        ('Prizes', {
+            'fields': [
+                 'totalPrize',
+                 ('firstPrize', 'secondPrize', 'thirdPrize'),
+                 'otherPrizes'
             ]
         }),
         ('Contacts', {

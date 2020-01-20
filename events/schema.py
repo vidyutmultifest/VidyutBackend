@@ -310,6 +310,7 @@ class WorkshopObj(EventObj, graphene.ObjectType):
 
 class CompetitionObj(EventObj, graphene.ObjectType):
     entryFee = graphene.Int()
+    totalPrize = graphene.String()
     firstPrize = graphene.String()
     secondPrize = graphene.String()
     thirdPrize = graphene.String()
