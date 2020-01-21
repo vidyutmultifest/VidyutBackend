@@ -1,7 +1,9 @@
 import json
 import graphene
+from django.db.models import Count, Q
 
 from participants.models import Profile
+from registrations.models import EventRegistration
 from .models import *
 from pytz import timezone
 from datetime import datetime, timedelta
@@ -152,6 +154,15 @@ class EventObj(graphene.ObjectType):
     contacts = graphene.List(ContactPersonObj)
     productID = graphene.String()
     products = graphene.List(BasicProductDetailsObj)
+    isTrending = graphene.Boolean()
+
+    def resolve_isTrending(self, info):
+        now = datetime.now()
+        regs = EventRegistration.objects.filter(
+            Q(registrationTimestamp__gt=now-timedelta(days=5)) &
+            (Q(event__workshop_id=self['id']) | Q(event__competition=self['id']) | Q(event__ticket_id=self['id']))
+        ).count()
+        return regs > 12
 
     def resolve_cover(self, info):
         url = None
@@ -200,6 +211,7 @@ class TicketObj(EventObj, graphene.ObjectType):
             return Category.objects.values().get(id=self['category_id'])
         except Category.DoesNotExist:
             return None
+
 
 class MerchandiseObj(EventObj, graphene.ObjectType):
 
