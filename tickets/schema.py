@@ -9,6 +9,8 @@ from graphql_jwt.decorators import login_required
 from django.utils import timezone
 from framework import settings
 from access.models import UserAccess
+from participants.models import Profile
+from payment.models import Order
 from products.models import Product
 from .models import Ticket
 
@@ -41,9 +43,60 @@ class IssueTicket(graphene.Mutation):
 class Mutation(object):
     issueTicket = IssueTicket.Field()
 
+#
+# class TicketSoldStatObj(graphene.ObjectType):
+#     productID = graphene.String()
+#     insiderRollNumbers = graphene.List(graphene.String)
+#     buyerHashes = graphene.List(graphene.String)
+#
+#     def resolve_insiderRollNumbers(self, info):
+#         users = Order.objects.filter(orderproduct__product__productID=self.productID).values_list('user', flat=True)
+#         return Profile.objects.filter(user__id__in=users, rollNo__isnull=False).values_list('rollNo', flat=True)
+#
+#     def resolve_buyerHashes(self, info):
+#         users = Order.objects.filter(orderproduct__product__productID=self.productID).values_list('user', flat=True)
+#         return Profile.objects.filter(user__id__in=users, rollNo__isnull=False).values_list('vidyutHash', flat=True)
+
+
+class ValidateTicketObj(graphene.ObjectType):
+    status = graphene.Boolean()
+    productName = graphene.String()
+    userName = graphene.String()
+    rollNo = graphene.String()
+    photo = graphene.String()
+
 
 class Query(object):
+    validateTicket = graphene.Field(ValidateTicketObj, hash=graphene.String(), productID=graphene.String())
+    # viewTicketsSoldStats = graphene.List(TicketSoldStatObj)
     emailIssuedTicket = graphene.Boolean(ticketID=graphene.String(required=True), email=graphene.String(required=True))
+
+    @login_required
+    def resolve_validateTicket(self, info, **kwargs):
+        product = Product.objects.get(productID=kwargs.get('productID'))
+        profile = Profile.objects.get(vidyutHash=kwargs.get('hash'))
+        order = Order.objects.filter(
+            user=profile.user,
+            transaction__isPaid=True,
+            products=product
+        )
+        status = 0
+        if order.count() == 1:
+            status = 1
+        photo = None
+        if profile.photo and hasattr(profile.photo, 'url'):
+            photo = info.context.build_absolute_uri(profile.photo.url)
+        return ValidateTicketObj(
+            status=status,
+            userName=profile.user.first_name + ' ' + profile.user.last_name,
+            productName=product.name,
+            rollNo=profile.rollNo,
+            photo=photo
+        )
+
+    # @login_required
+    # def resolve_viewTicketsSoldStats(self, info, **kwargs):
+    #     return Product.objects.filter(ticket__isnull=False)
 
     @login_required
     def resolve_emailIssuedTicket(self, info, **kwargs):
