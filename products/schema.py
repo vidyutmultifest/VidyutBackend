@@ -3,6 +3,8 @@ import json
 import graphene
 from graphql_jwt.decorators import login_required
 from django.db.models import Q
+
+from payment.models import Order
 from .models import *
 from events.schema import FormFieldObj, EventObj
 
@@ -80,10 +82,33 @@ class ProductObj(graphene.ObjectType):
         }
 
 
+class FailingProductObj(graphene.ObjectType):
+    name = graphene.String()
+    sold = graphene.Int()
+
+    def resolve_name(self, info):
+        return self['product'].name
+
+
 class Query(object):
     listPromocodes = graphene.List(PromocodeObj)
     getProduct = graphene.Field(ProductObj, productID=graphene.String(required=True))
+    listFailingProducts = graphene.List(FailingProductObj)
 
+    @login_required
+    def resolve_listFailingProducts(self, info, **kwargs):
+        list = []
+        products = Product.objects.filter(Q(workshop__isnull=False))
+        for product in products:
+            sold = Order.objects.filter(transaction__isPaid=True, products=product).count()
+            if sold < 10:
+                list.append({
+                    "product": product,
+                    "sold": sold
+                })
+        return list
+
+#Q(competition__isnull=False)
     @login_required
     def resolve_listPromocodes(self, info, **kwargs):
         user = info.context.user

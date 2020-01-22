@@ -7,3 +7,16 @@ from .models import *
 class TicketAdmin(admin.ModelAdmin):
     select2 = select2_modelform(Ticket, attrs={'width': '250px'})
     form = select2
+
+
+@admin.register(CheckInSession)
+class CheckInSessionAdmin(admin.ModelAdmin):
+    select2 = select2_modelform(CheckInSession, attrs={'width': '250px'})
+    form = select2
+
+
+@admin.register(CheckIn)
+class CheckInAdmin(admin.ModelAdmin):
+    list_display = ('user', 'timestamp', 'session', 'issuer')
+    select2 = select2_modelform(CheckIn, attrs={'width': '250px'})
+    form = select2

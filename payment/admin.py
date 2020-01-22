@@ -22,7 +22,7 @@ class OPInline(admin.TabularInline):
 
 @admin.register(Transaction)
 class TransactionAdmin(ImportExportModelAdmin, admin.ModelAdmin):
-    list_display = ('transactionID', 'amount', 'user', 'isProcessed', 'isPending', 'isPaid', 'isOnline', 'issuer', 'timestamp')
+    list_display = ('transactionID', 'amount', 'user', 'isProcessed', 'isPending', 'isPaid', 'isOnline', 'issuer', 'timestamp', 'issuerLocation')
     list_select_related = (
         'user',
         'issuer'
@@ -34,6 +34,7 @@ class TransactionAdmin(ImportExportModelAdmin, admin.ModelAdmin):
         'isProcessed',
         'isOnline',
         'amount',
+        'issuer'
     )
     date_hierarchy = 'timestamp'
     search_fields = ['transactionID', 'user__username', 'issuer__username', 'isPaid', 'amount']

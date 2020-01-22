@@ -11,6 +11,7 @@ class UserAccessObj(graphene.ObjectType):
     canIssueTickets = graphene.Boolean()
     canViewProfiles = graphene.Boolean()
     canViewRegistrations = graphene.Boolean()
+    canCheckInUsers = graphene.Boolean()
 
 
 class Query(graphene.ObjectType):
