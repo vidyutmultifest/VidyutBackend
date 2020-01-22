@@ -52,13 +52,18 @@ class Profile(models.Model):
         related_name='Profile',
         verbose_name='User',
     )
+    # isInsider = models.BooleanField(default=False)
     isSchoolStudent = models.BooleanField(default=False)
     isFaculty = models.BooleanField(default=False)
+
     college = models.ForeignKey(College, on_delete=models.PROTECT, null=True, blank=True)
-    photo = models.ImageField(upload_to=get_selfie_path, null=True, blank=True)
-    idPhoto = models.ImageField(upload_to=get_id_path, null=True, blank=True)
     graduationYear = models.PositiveIntegerField(null=True, blank=True)
     rollNo = models.CharField(max_length=50, null=True, blank=True)
+    branch = models.CharField(max_length=50, null=True, blank=True)
+
+    photo = models.ImageField(upload_to=get_selfie_path, null=True, blank=True)
+    idPhoto = models.ImageField(upload_to=get_id_path, null=True, blank=True)
+
     phone = models.CharField(max_length=15, null=True, blank=True)
     location = models.CharField(max_length=50, null=True, blank=True)
     gender = models.CharField(max_length=1, null=True, blank=True)
@@ -87,6 +92,7 @@ def create_item(sender, instance, **kwargs):
             if instance.email.split('@')[-1].find('am.students.amrita.edu') == -1:
                 isAmritapurian = False
             if isAmritapurian:
+                isInsider = True
                 prefix = 'VAM'
         p.vidyutID = prefix + str(1000 + p.user.id)
 
