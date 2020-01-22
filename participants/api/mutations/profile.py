@@ -73,7 +73,7 @@ class UpdateProfile(graphene.Mutation):
             if details.degreeType is not None:
                 profile.degreeType = details.degreeType
             if details.graduationYear is not None:
-                profile.graduationYear = int(details.graduationYear)
+                profile.admissionYear = int(details.graduationYear)
             if details.isFaculty is not None:
                 profile.isFaculty = details.isFaculty
             if details.isSchoolStudent is not None:

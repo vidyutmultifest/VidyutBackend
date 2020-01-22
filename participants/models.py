@@ -57,7 +57,7 @@ class Profile(models.Model):
     isFaculty = models.BooleanField(default=False)
 
     college = models.ForeignKey(College, on_delete=models.PROTECT, null=True, blank=True)
-    graduationYear = models.PositiveIntegerField(null=True, blank=True)
+    admissionYear = models.PositiveIntegerField(null=True, blank=True)
     rollNo = models.CharField(max_length=50, null=True, blank=True)
     branch = models.CharField(max_length=50, null=True, blank=True)
 

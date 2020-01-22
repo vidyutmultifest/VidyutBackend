@@ -28,9 +28,9 @@ class TeamAdmin(admin.ModelAdmin):
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'vidyutID', 'graduationYear', 'college')
-    list_filter = ('college', 'graduationYear')
-    search_fields = ['vidyutID', 'user__username', 'phone', 'graduationYear']
+    list_display = ('user', 'vidyutID', 'admissionYear', 'college')
+    list_filter = ('college', 'admissionYear')
+    search_fields = ['vidyutID', 'user__username', 'phone', 'admissionYear']
     select2 = select2_modelform(Profile, attrs={'width': '250px'})
     form = select2
 
