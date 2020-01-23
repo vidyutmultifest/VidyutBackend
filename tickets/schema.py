@@ -10,8 +10,9 @@ from framework import settings
 from access.models import UserAccess
 from participants.models import Profile
 from payment.models import Order, OrderProduct
-from products.models import Product
 from .models import Ticket, CheckInSession, CheckIn
+
+from tickets.api.stats import Query as TicketStats
 
 to_tz = timezone.get_default_timezone()
 from_email = settings.EMAIL_HOST_USER
@@ -93,7 +94,7 @@ class ValidateTicketObj(graphene.ObjectType):
     photo = graphene.String()
 
 
-class Query(object):
+class Query(TicketStats, graphene.ObjectType):
     validateTicket = graphene.Field(ValidateTicketObj, hash=graphene.String(), sessionID=graphene.String())
     listSessions = graphene.List(graphene.String)
     # viewTicketsSoldStats = graphene.List(TicketSoldStatObj)
@@ -170,3 +171,4 @@ class Query(object):
             except Ticket.DoesNotExist:
                 return False
         return None
+

@@ -1,6 +1,14 @@
+import secrets
+import string
+
 import graphene
 import graphql_jwt
 import graphql_social_auth
+from django.contrib.auth.models import User
+from django.core.mail import send_mail
+from django.template.loader import get_template
+from django.utils.html import strip_tags
+from framework.settings import EMAIL_HOST_USER
 
 from access.schema import Query as AccessQueries
 from events.schema import Query as EventQueries
@@ -44,6 +52,36 @@ class Query(
     graphene.ObjectType
 ):
     status = graphene.Field(StatusObj)
+    emailPassword = graphene.Boolean(email=graphene.String())
+
+    @staticmethod
+    def resolve_emailPassword(self, info, **kwargs):
+        email = kwargs.get('email')
+        try:
+            user = User.objects.get(email=email)
+            alphabet = string.ascii_letters + string.digits
+            password = ''.join(secrets.choice(alphabet) for i in range(10))
+            user.set_password(password)
+            user.save()
+
+            data = {
+               "name": user.first_name + ' ' + user.last_name,
+               "username": user.username,
+               "password": password
+            }
+            htmly = get_template('./emails/password-reset.html')
+            html_content = htmly.render(data)
+            send_mail(
+                'Your password for Vidyut 2020',
+                strip_tags(html_content),
+                EMAIL_HOST_USER,
+                [email],
+                html_message=html_content,
+                fail_silently=False,
+            )
+            return True
+        except User.DoesNotExist:
+            return False
 
     @staticmethod
     def resolve_status(self, info, **kwargs):
