@@ -2,7 +2,7 @@ import graphene
 from datetime import datetime, timedelta
 
 from django.contrib.auth.models import User
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from graphql_jwt.decorators import login_required
 
 from access.models import UserAccess
@@ -64,7 +64,7 @@ class IssuerStatObj(graphene.ObjectType):
         for device in devices:
             if device is not None:
                 list.append({
-                    "browser":  device.split(',')[0],
+                    "browser": device.split(',')[0],
                     "os": device.split(',')[1],
                     "vendor": device.split(',')[2],
                     "model": device.split(',')[3],
@@ -152,10 +152,12 @@ class DailyTransactionStatObject(graphene.ObjectType):
     def resolve_productStats(self, info, **kwargs):
         plist = []
         productQueried = kwargs.get('productID')
-        products = Transaction.objects.filter(timestamp__date=self, isPaid=True).order_by().values_list('order__products__productID', flat=True).distinct()
+        products = Transaction.objects.filter(timestamp__date=self, isPaid=True).order_by().values_list(
+            'order__products__productID', flat=True).distinct()
         if productQueried is None:
             for productID in products:
-                trans = Transaction.objects.filter(timestamp__date=self, isPaid=True, order__products__productID=productID)
+                trans = Transaction.objects.filter(timestamp__date=self, isPaid=True,
+                                                   order__products__productID=productID)
                 orders = Order.objects.filter(
                     products__productID=productID,
                     transaction__isPaid=True,
@@ -168,7 +170,8 @@ class DailyTransactionStatObject(graphene.ObjectType):
                     "productID": productID
                 })
         else:
-            trans = Transaction.objects.filter(timestamp__date=self, isPaid=True, order__products__productID=productQueried)
+            trans = Transaction.objects.filter(timestamp__date=self, isPaid=True,
+                                               order__products__productID=productQueried)
             orders = Order.objects.filter(
                 products__productID=productQueried,
                 transaction__isPaid=True,
@@ -184,7 +187,8 @@ class DailyTransactionStatObject(graphene.ObjectType):
 
     def resolve_issuerStats(self, info):
         ilist = []
-        issuers = Transaction.objects.filter(timestamp__date=self, isPaid=True).order_by().values_list('issuer', flat=True).distinct()
+        issuers = Transaction.objects.filter(timestamp__date=self, isPaid=True).order_by().values_list('issuer',
+                                                                                                       flat=True).distinct()
         for issuer in issuers:
             issuer = User.objects.get(id=issuer)
             transactions = Transaction.objects.filter(timestamp__date=self, issuer=issuer)
@@ -228,7 +232,8 @@ class TransactionStatObject(graphene.ObjectType):
         return Transaction.objects.filter(isPaid=True).order_by().values_list('issuer', flat=True).distinct().count()
 
     def resolve_totalProductsSold(self, info):
-        return Order.objects.filter(transaction__isPaid=True).order_by().values_list('products', flat=True).distinct().count()
+        return Order.objects.filter(transaction__isPaid=True).order_by().values_list('products',
+                                                                                     flat=True).distinct().count()
 
     def resolve_totalSuccessfulTransactions(self, info):
         return Transaction.objects.filter(isPaid=True).count()
@@ -277,7 +282,6 @@ class TransactionStatObject(graphene.ObjectType):
             dates.append(date)
         return dates
 
-
     def resolve_issuerStats(self, info):
         ilist = []
         issuers = Transaction.objects.filter(isPaid=True).order_by().values_list('issuer', flat=True).distinct()
@@ -321,29 +325,29 @@ class TicketSaleObj(graphene.ObjectType):
 
     def resolve_insider(self, info):
         return Order.objects.filter(
-            products=self,
-            transaction__isPaid=True,
-            user__email__contains='am.students.amrita.edu'
+            Q(products=self) &
+            Q(transaction__isPaid=True) &
+            Q(Q(user__email__contains='am.students.amrita.edu') | Q(user__email__contains='ay.amrita.edu'))
         ).count()
 
     def resolve_insiderOnline(self, info):
         return Order.objects.filter(
-            products=self,
-            transaction__isPaid=True,
-            user__email__contains='am.students.amrita.edu',
-            transaction__isOnline=True
+            Q(products=self) &
+            Q(transaction__isPaid=True) &
+            Q(Q(user__email__contains='am.students.amrita.edu') | Q(user__email__contains='ay.amrita.edu')) &
+            Q(transaction__isOnline=True)
         ).count()
 
     def resolve_outsider(self, info):
         total = Order.objects.filter(products=self, transaction__isPaid=True)
-        return total.count() - total.filter(
-            user__email__contains='am.students.amrita.edu'
+        return total.exclude(
+            Q(Q(user__email__contains='am.students.amrita.edu') | Q(user__email__contains='ay.amrita.edu'))
         ).count()
 
     def resolve_outsiderOnline(self, info):
         total = Order.objects.filter(products=self, transaction__isPaid=True, transaction__isOnline=True)
-        return total.count() - total.filter(
-            user__email__contains='am.students.amrita.edu'
+        return total.exclude(
+            Q(Q(user__email__contains='am.students.amrita.edu') | Q(user__email__contains='ay.amrita.edu'))
         ).count()
 
 
@@ -365,7 +369,7 @@ class Query(object):
     @login_required
     def resolve_viewTicketSaleCount(self, info, **kwargs):
         user = info.context.user
-        if UserAccess.objects.get(user=user).viewAllTransactions or user.is_superuser:
+        if UserAccess.objects.get(user=user).canViewRegistrations or user.is_superuser:
             tickets = Ticket.objects.all()
             return Product.objects.filter(ticket__in=tickets)
         else:

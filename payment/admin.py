@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.db.models import Q
+
 from .models import *
 from easy_select2 import select2_modelform
 from rangefilter.filter import DateTimeRangeFilter
@@ -98,15 +100,18 @@ class EmailTypeFilter(admin.SimpleListFilter):
     def lookups(self, request, model_admin):
         return (
             ('gmail', 'GMail'),
-            ('amrita', 'Amrita ID'),
+            ('amrita-in', 'Amrita am.stu / ay ID'),
+            ('amrita-out', 'Amrita other ID'),
         )
 
     def queryset(self, request, queryset):
         value = self.value()
         if value == 'gmail':
             return queryset.filter(user__email__contains='@gmail.com')
-        elif value == 'amrita':
-            return queryset.filter(user__email__contains='amrita.edu')
+        elif value == 'amrita-in':
+            return queryset.filter(Q(user__email__contains='am.students.amrita.edu') | Q(user__email__contains='ay.amrita.edu'))
+        elif value == 'amrita-out':
+            return queryset.exclude(Q(user__email__contains='am.students.amrita.edu') | Q(user__email__contains='ay.amrita.edu')).filter(user__email__contains='amrita.edu')
         return queryset
 
 
