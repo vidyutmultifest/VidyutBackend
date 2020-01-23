@@ -165,8 +165,8 @@ class RegStatObj(graphene.ObjectType):
             "paid": regs.filter(order__transaction__isPaid=True).count(),
             "paymentPending": regs.count() - regs.filter(order__transaction__isPaid=True).count(),
             "amritapurianPaid": regs.filter(
-                order__transaction__isPaid=True,
-                order__user__email__contains='am.students.amrita.edu'
+                Q(order__transaction__isPaid=True) &
+                Q(Q(order__user__email__contains='am.students.amrita.edu') | Q(order__user__email__contains='ay.amrita.edu'))
             ).count()
         }
 
@@ -197,8 +197,8 @@ class DeptWiseCountObj(graphene.ObjectType):
             paid=paid.count(),
             paymentPending=regs.count() - paid.count(),
             amritapurianPaid=paid.filter(
-                Q(user__email__contains='am.students.amrita.edu')
-                | Q(team__leader__email__contains='am.students.amrita.edu')
+                Q(Q(user__email__contains='am.students.amrita.edu') | Q(user__email__contains='ay.amrita.edu'))
+                | Q(Q(team__leader__email__contains='am.students.amrita.edu') | Q(team__leader__email__contains='ay.amrita.edu'))
             ).count()
         )
 

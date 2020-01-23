@@ -2,6 +2,7 @@ import csv
 
 import graphene
 from django.db.models import Count
+from graphql_jwt.decorators import login_required
 
 from participants.models import Profile, College
 from payment.models import Order
@@ -63,9 +64,10 @@ class TicketViewObj(graphene.ObjectType):
 
 
 class Query(object):
-    insiderProshowStats = graphene.Field(ProshowStatObj)
-    listTickets = graphene.List(TicketViewObj)
-    generateTicketExport = graphene.Boolean()
+    pass
+    #insiderProshowStats = graphene.Field(ProshowStatObj)
+    #listTickets = graphene.List(TicketViewObj)
+    #generateTicketExport = graphene.Boolean()
 
     def resolve_generateTicketExport(self, info, **kwargs):
         list = []
@@ -100,27 +102,31 @@ class Query(object):
             writer.writerows(list)
         return True
 
+    @login_required
     def resolve_listTickets(self, info, **kwargs):
         data = []
-        products = Product.objects.filter(name__contains='Amritian Pass').values_list('id', flat=True)
-        orders = Order.objects.filter(transaction__isPaid=True, products__in=products)
-        for o in orders:
-            p = Profile.objects.get(user=o.user)
-            college = None
-            if p.college:
-                college = p.college.name
-            obj = {
-                "ticketName": o.products.first().name,
-                "name": o.user.first_name + ' ' + o.user.last_name,
-                "email": o.user.email,
-                "rollNo": p.rollNo,
-                "branch": p.branch,
-                "college": college
-            }
-            print(obj)
-            data.append(obj)
-        return data
+        if info.context.user.is_superuser():
+            products = Product.objects.filter(name__contains='Amritian Pass').values_list('id', flat=True)
+            orders = Order.objects.filter(transaction__isPaid=True, products__in=products)
+            for o in orders:
+                p = Profile.objects.get(user=o.user)
+                college = None
+                if p.college:
+                    college = p.college.name
+                obj = {
+                    "ticketName": o.products.first().name,
+                    "name": o.user.first_name + ' ' + o.user.last_name,
+                    "email": o.user.email,
+                    "rollNo": p.rollNo,
+                    "branch": p.branch,
+                    "college": college
+                }
+                print(obj)
+                data.append(obj)
+            return data
+        return None
 
-    def resolve_insiderProshowStats(self, info, **kwargs):
-        products = Product.objects.filter(name__contains='Amritian Pass').values_list('id', flat=True)
-        return Order.objects.filter(transaction__isPaid=True, products__in=products)
+    #
+    # def resolve_insiderProshowStats(self, info, **kwargs):
+    #     products = Product.objects.filter(name__contains='Amritian Pass').values_list('id', flat=True)
+    #     return Order.objects.filter(transaction__isPaid=True, products__in=products)
