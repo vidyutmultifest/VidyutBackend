@@ -1,12 +1,19 @@
+import codecs
 import csv
+import urllib.request
+from io import StringIO
 
 import graphene
+from django.core.mail import EmailMessage
 from django.db.models import Count
 from graphql_jwt.decorators import login_required
 
+from framework import settings
 from participants.models import Profile, College
 from payment.models import Order
 from products.models import Product
+
+from_email = settings.EMAIL_HOST_USER
 
 
 class branchWiseStatObj(graphene.ObjectType):
@@ -64,16 +71,29 @@ class TicketViewObj(graphene.ObjectType):
 
 
 class Query(object):
-    pass
     #insiderProshowStats = graphene.Field(ProshowStatObj)
     #listTickets = graphene.List(TicketViewObj)
-    #generateTicketExport = graphene.Boolean()
+    generateTicketMappingExport = graphene.Field(graphene.Boolean, email=graphene.String(), url=graphene.String())
 
-    def resolve_generateTicketExport(self, info, **kwargs):
-        list = []
-        products = Product.objects.filter(name__contains='Amritian Pass').values_list('id', flat=True)
-        with open('eng_data.csv', newline='') as csvfile:
-            d = csv.reader(csvfile, delimiter=',')
+    @login_required
+    def resolve_generateTicketMappingExport(self, info, **kwargs):
+        senderEmail = kwargs.get('email')
+        url = kwargs.get('url')
+        file = urllib.request.urlopen(url)
+        d = csv.reader(codecs.iterdecode(file, 'utf-8'))
+
+        if info.context.user.is_superuser:
+            list = []
+            products = Product.objects.filter(name__contains='Amritian Pass').values_list('id', flat=True)
+            list.append([
+                "name",
+                "status",
+                "rollNo",
+                "email",
+                "branch",
+                "division",
+                "year"
+            ])
             for user in d:
                 name = user[0]
                 rollNo = user[1]
@@ -95,12 +115,21 @@ class Query(object):
                 except Profile.DoesNotExist:
                     status = 'Not Registered'
                 obj = [name, status, rollNo, email, branch, division, year]
-                print(obj)
                 list.append(obj)
-        with open('genlist.csv', 'w', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerows(list)
-        return True
+            csvfile = StringIO()
+            csvwriter = csv.writer(csvfile)
+            csvwriter.writerows(list)
+
+            email = EmailMessage(
+                "Export of Data",
+                'Please find the attachment.',
+                from_email,
+                ['web@vidyut.amrita.edu', senderEmail],
+            )
+            email.attach('export.csv', csvfile.getvalue(), 'text/csv')
+            email.send()
+            return True
+        return False
 
     @login_required
     def resolve_listTickets(self, info, **kwargs):
