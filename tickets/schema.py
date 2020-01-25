@@ -1,16 +1,12 @@
 import graphene
-from datetime import datetime
 
-from django.core.mail import send_mail
-from django.template.loader import get_template
-from django.utils.html import strip_tags
 from graphql_jwt.decorators import login_required
 from django.utils import timezone
 from framework import settings
 from access.models import UserAccess
 from participants.models import Profile
 from payment.models import Order, OrderProduct
-from .models import Ticket, CheckInSession, CheckIn
+from .models import CheckInSession, CheckIn, PhysicalTicket
 
 from tickets.api.stats import Query as TicketStats
 
@@ -18,26 +14,35 @@ to_tz = timezone.get_default_timezone()
 from_email = settings.EMAIL_HOST_USER
 
 
-class SalesTicketObj(graphene.ObjectType):
-    ticketID = graphene.String()
-    purchaseTimestamp = graphene.String()
+class TicketGenerationObj(graphene.ObjectType):
+    status = graphene.Boolean()
+    message = graphene.String()
 
 
-# class IssueTicket(graphene.Mutation):
-#     class Arguments:
-#         productID = graphene.String(required=True)
-#
-#     Output = SalesTicketObj
-#
-#     @login_required
-#     def mutate(self, info, productID):
-#         issuer = info.context.user
-#         if UserAccess.objects.get(user=issuer).canIssueTickets:
-#             product = Product.objects.get(productID=productID)
-#             purchaseTimestamp = datetime.now().astimezone(to_tz)
-#             ticketObj = Ticket.objects.create(product=product, purchaseTimestamp=purchaseTimestamp, purchaser=issuer)
-#             return SalesTicketObj(ticketID=ticketObj.ticketID, purchaseTimestamp=purchaseTimestamp)
-#         return None
+class IssueTicket(graphene.Mutation):
+    class Arguments:
+        number = graphene.String(required=False)
+        vidyutHash = graphene.String(required=True)
+
+    Output = TicketGenerationObj
+
+    @login_required
+    def mutate(self, info, number, vidyutHash):
+        issuer = info.context.user
+        if UserAccess.objects.get(user=issuer).canIssueTickets:
+            user = Profile.objects.get(vidyutHash=vidyutHash)
+            if PhysicalTicket.objects.filter(user=user).count() == 0:
+                ticketNo = None
+                if number is not None:
+                    ticketNo = number
+                PhysicalTicket.objects.create(
+                    issuer=info.context.user,
+                    user=user.user,
+                    number=ticketNo
+                )
+                return TicketGenerationObj(status=True, message='Issued Successfully')
+            return TicketGenerationObj(status=False, message='Already Issued')
+        return TicketGenerationObj(status=False, message='Forbidden. You do not have permission to issue tickets.')
 
 
 class PerformCheckIn(graphene.Mutation):
@@ -69,6 +74,7 @@ class PerformCheckIn(graphene.Mutation):
 
 class Mutation(object):
     performCheckIn = PerformCheckIn.Field()
+    issueTicket = IssueTicket.Field()
 
 
 # class TicketSoldStatObj(graphene.ObjectType):
@@ -97,8 +103,9 @@ class ValidateTicketObj(graphene.ObjectType):
 class Query(TicketStats, graphene.ObjectType):
     validateTicket = graphene.Field(ValidateTicketObj, hash=graphene.String(), sessionID=graphene.String())
     listSessions = graphene.List(graphene.String)
+
     # viewTicketsSoldStats = graphene.List(TicketSoldStatObj)
-    emailIssuedTicket = graphene.Boolean(ticketID=graphene.String(required=True), email=graphene.String(required=True))
+    # emailIssuedTicket = graphene.Boolean(ticketID=graphene.String(required=True), email=graphene.String(required=True))
 
     @login_required
     def resolve_listSessions(self, info, **kwargs):
@@ -137,38 +144,3 @@ class Query(TicketStats, graphene.ObjectType):
             rollNo=profile.rollNo,
             photo=photo
         )
-
-    # @login_required
-    # def resolve_viewTicketsSoldStats(self, info, **kwargs):
-    #     return Product.objects.filter(ticket__isnull=False)
-
-    @login_required
-    def resolve_emailIssuedTicket(self, info, **kwargs):
-        issuer = info.context.user
-        if UserAccess.objects.get(user=issuer).canIssueTickets:
-            email = kwargs.get('email')
-            ticketID = kwargs.get('ticketID')
-            try:
-                tObj = Ticket.objects.get(ticketID=ticketID, purchaser=issuer, isCounterTicket=True, isActive=False)
-                htmly = get_template('./emails/email-issued-ticket.html')
-                d = {
-                    'ticketID': str(tObj.ticketID),
-                    'image': info.context.build_absolute_uri(tObj.product.product.cover.url),
-                    'productName': str(tObj.product.product.name),
-                    'amount': str(tObj.product.product.fee),
-                    'purchaser': tObj.purchaser.first_name
-                }
-                html_content = htmly.render(d)
-                send_mail(
-                    'You have received a pass for the ' + str(tObj.product.product.name),
-                    strip_tags(html_content),
-                    from_email,
-                    [email],
-                    html_message=html_content,
-                    fail_silently=False,
-                )
-                return True
-            except Ticket.DoesNotExist:
-                return False
-        return None
-

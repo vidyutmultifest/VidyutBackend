@@ -98,10 +98,10 @@ class Query(object):
     @login_required
     def resolve_listFailingProducts(self, info, **kwargs):
         list = []
-        products = Product.objects.filter(Q(workshop__isnull=False))
+        products = Product.objects.filter(Q(workshop__isnull=False) | Q(competition__isnull=False))
         for product in products:
             sold = Order.objects.filter(transaction__isPaid=True, products=product).count()
-            if sold < 10:
+            if sold < 15:
                 list.append({
                     "product": product,
                     "sold": sold
