@@ -35,6 +35,7 @@ class StatusObj(graphene.ObjectType):
     enableWorkshopRegistration = graphene.Boolean()
     enableCompetitionRegistration = graphene.Boolean()
     enableMerchandiseShopping = graphene.Boolean()
+    enableCheckIn = graphene.Boolean()
     pushNotification = graphene.String()
 
 
@@ -123,6 +124,7 @@ class Query(
             enableWorkshopRegistration=ENABLE_WORKSHOP_REGISTRATION,
             enableCompetitionRegistration=ENABLE_COMPETITION_REGISTRATION,
             enableMerchandiseShopping=ENABLE_MERCHANDISE_SHOPPING,
+            enableCheckIn=ENABLE_CHECKIN,
             pushNotification=PUSH_NOTIFICATION
         )
 

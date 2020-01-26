@@ -6,7 +6,7 @@ from framework import settings
 from access.models import UserAccess
 from framework.api.helper import APIException
 from participants.models import Profile
-from payment.models import Order, OrderProduct
+from payment.models import Order, OrderProduct, Product
 from .models import CheckInSession, CheckIn, PhysicalTicket
 
 from tickets.api.stats import Query as TicketStats
@@ -31,14 +31,14 @@ class IssueTicket(graphene.Mutation):
     def mutate(self, info, number, vidyutHash):
         issuer = info.context.user
         if UserAccess.objects.get(user=issuer).canIssueTickets:
-            user = Profile.objects.get(vidyutHash=vidyutHash)
+            user = Profile.objects.get(vidyutHash=vidyutHash).user
             if PhysicalTicket.objects.filter(user=user).count() == 0:
                 ticketNo = None
                 if number is not None:
                     ticketNo = number
                 PhysicalTicket.objects.create(
                     issuer=info.context.user,
-                    user=user.user,
+                    user=user,
                     number=ticketNo
                 )
                 return TicketGenerationObj(status=True, message='Issued Successfully')
@@ -78,23 +78,22 @@ class Mutation(object):
     issueTicket = IssueTicket.Field()
 
 
-# class TicketSoldStatObj(graphene.ObjectType):
-#     productID = graphene.String()
-#     insiderRollNumbers = graphene.List(graphene.String)
-#     buyerHashes = graphene.List(graphene.String)
-#
-#     def resolve_insiderRollNumbers(self, info):
-#         users = Order.objects.filter(orderproduct__product__productID=self.productID).values_list('user', flat=True)
-#         return Profile.objects.filter(user__id__in=users, rollNo__isnull=False).values_list('rollNo', flat=True)
-#
-#     def resolve_buyerHashes(self, info):
-#         users = Order.objects.filter(orderproduct__product__productID=self.productID).values_list('user', flat=True)
-#         return Profile.objects.filter(user__id__in=users).values_list('vidyutHash', flat=True)
-
-
 class SessionObj(graphene.ObjectType):
     name = graphene.String()
     sessionID = graphene.String()
+    isActive = graphene.Boolean()
+    products = graphene.List(graphene.String)
+    checkInCount = graphene.Int()
+    issuerCount = graphene.Int()
+
+    def resolve_products(self, info):
+        return Product.objects.filter(id__in=self.products.all()).values_list('name', flat=True)
+
+    def resolve_checkInCount(self, info):
+        return CheckIn.objects.filter(session__sessionID=self.sessionID).count()
+
+    def resolve_issuerCount(self, info):
+        return CheckIn.objects.filter(session__sessionID=self.sessionID).values_list('issuer_id', flat=True).distinct().count()
 
 
 class ValidateTicketObj(graphene.ObjectType):
@@ -104,6 +103,7 @@ class ValidateTicketObj(graphene.ObjectType):
     userName = graphene.String()
     rollNo = graphene.String()
     photo = graphene.String()
+    tShirtSize = graphene.String()
     isProfileComplete = graphene.Boolean()
 
 
@@ -111,9 +111,6 @@ class Query(TicketStats, graphene.ObjectType):
     checkForTicket = graphene.Field(ValidateTicketObj, hash=graphene.String())
     validateTicket = graphene.Field(ValidateTicketObj, hash=graphene.String(), sessionID=graphene.String())
     listSessions = graphene.List(SessionObj)
-
-    # viewTicketsSoldStats = graphene.List(TicketSoldStatObj)
-    # emailIssuedTicket = graphene.Boolean(ticketID=graphene.String(required=True), email=graphene.String(required=True))
 
     @login_required
     def resolve_listSessions(self, info, **kwargs):
@@ -131,7 +128,7 @@ class Query(TicketStats, graphene.ObjectType):
             status = False
             product = None
             if order.count() == 1:
-                product = order.first().products.all().first()
+                product = order.first().products.all().first().name
                 if PhysicalTicket.objects.filter(user=profile.user).count() == 0:
                     status = True
                     message = 'Eligible for ticket'
@@ -143,18 +140,22 @@ class Query(TicketStats, graphene.ObjectType):
             if profile.photo and hasattr(profile.photo, 'url'):
                 photo = info.context.build_absolute_uri(profile.photo.url)
             isProfileComplete = True
-            if profile.photo is None:
+            if not profile.photo or not hasattr(profile.photo, 'url'):
                 isProfileComplete = False
             if profile.rollNo is None:
                 isProfileComplete = False
             if profile.college is None:
                 isProfileComplete = False
+            if isProfileComplete is False:
+                status = False
+                message = 'Profile Incomplete'
             return ValidateTicketObj(
                 status=status,
                 message=message,
                 userName=profile.user.first_name + ' ' + profile.user.last_name,
                 productName=product,
                 rollNo=profile.rollNo,
+                tShirtSize=profile.shirtSize,
                 photo=photo,
                 isProfileComplete=isProfileComplete
             )
@@ -191,5 +192,6 @@ class Query(TicketStats, graphene.ObjectType):
             userName=profile.user.first_name + ' ' + profile.user.last_name,
             productName=product,
             rollNo=profile.rollNo,
+            tShirtSize=profile.shirtSize,
             photo=photo
         )
