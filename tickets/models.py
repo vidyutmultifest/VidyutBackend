@@ -7,6 +7,8 @@ from products.models import Product
 
 
 class CheckInSession(models.Model):
+    name = models.CharField(max_length=50, null=True, blank=True)
+    created = models.DateTimeField(auto_now=True)
     sessionID = models.UUIDField(unique=True, default=uuid.uuid1, editable=False)
     isActive = models.BooleanField(default=False)
     allowMultipleCheckIn = models.BooleanField(default=False)

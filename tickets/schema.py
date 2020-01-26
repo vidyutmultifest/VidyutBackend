@@ -4,6 +4,7 @@ from graphql_jwt.decorators import login_required
 from django.utils import timezone
 from framework import settings
 from access.models import UserAccess
+from framework.api.helper import APIException
 from participants.models import Profile
 from payment.models import Order, OrderProduct
 from .models import CheckInSession, CheckIn, PhysicalTicket
@@ -91,6 +92,11 @@ class Mutation(object):
 #         return Profile.objects.filter(user__id__in=users).values_list('vidyutHash', flat=True)
 
 
+class SessionObj(graphene.ObjectType):
+    name = graphene.String()
+    sessionID = graphene.String()
+
+
 class ValidateTicketObj(graphene.ObjectType):
     status = graphene.Boolean()
     message = graphene.String()
@@ -98,18 +104,61 @@ class ValidateTicketObj(graphene.ObjectType):
     userName = graphene.String()
     rollNo = graphene.String()
     photo = graphene.String()
+    isProfileComplete = graphene.Boolean()
 
 
 class Query(TicketStats, graphene.ObjectType):
+    checkForTicket = graphene.Field(ValidateTicketObj, hash=graphene.String())
     validateTicket = graphene.Field(ValidateTicketObj, hash=graphene.String(), sessionID=graphene.String())
-    listSessions = graphene.List(graphene.String)
+    listSessions = graphene.List(SessionObj)
 
     # viewTicketsSoldStats = graphene.List(TicketSoldStatObj)
     # emailIssuedTicket = graphene.Boolean(ticketID=graphene.String(required=True), email=graphene.String(required=True))
 
     @login_required
     def resolve_listSessions(self, info, **kwargs):
-        return CheckInSession.objects.all().values_list('sessionID', flat=True)
+        return CheckInSession.objects.all()
+
+    @login_required
+    def resolve_checkForTicket(self, info, **kwargs):
+        profile = Profile.objects.get(vidyutHash=kwargs.get('hash'))
+        if UserAccess.objects.get(user=info.context.user).canIssueTickets:
+            order = Order.objects.filter(
+                user=profile.user,
+                transaction__isPaid=True,
+                products__name__contains='Revel'
+            )
+            status = False
+            product = None
+            if order.count() == 1:
+                product = order.first().products.all().first()
+                if PhysicalTicket.objects.filter(user=profile.user).count() == 0:
+                    status = True
+                    message = 'Eligible for ticket'
+                else:
+                    message = 'Ticket already given.'
+            else:
+                message = 'No ticket exists for the user'
+            photo = None
+            if profile.photo and hasattr(profile.photo, 'url'):
+                photo = info.context.build_absolute_uri(profile.photo.url)
+            isProfileComplete = True
+            if profile.photo is None:
+                isProfileComplete = False
+            if profile.rollNo is None:
+                isProfileComplete = False
+            if profile.college is None:
+                isProfileComplete = False
+            return ValidateTicketObj(
+                status=status,
+                message=message,
+                userName=profile.user.first_name + ' ' + profile.user.last_name,
+                productName=product,
+                rollNo=profile.rollNo,
+                photo=photo,
+                isProfileComplete=isProfileComplete
+            )
+        raise APIException('Permission denied.')
 
     @login_required
     def resolve_validateTicket(self, info, **kwargs):
