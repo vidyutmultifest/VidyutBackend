@@ -81,34 +81,33 @@ class Query(
             )
             return True
         except User.DoesNotExist:
-            if "amrita.edu" in email:
-                username = email.split('@')[0]
-                alphabet = string.ascii_letters + string.digits
-                password = ''.join(secrets.choice(alphabet) for i in range(10))
-                user = User.objects.create_user(
-                    username=username,
-                    email='email',
-                    password=password
-                )
-                user.set_password(password)
-                user.first_name = username
-                user.save()
-                data = {
-                    "name": user.first_name + ' ' + user.last_name,
-                    "username": user.username,
-                    "password": password
-                }
-                htmly = get_template('./emails/password-reset.html')
-                html_content = htmly.render(data)
-                send_mail(
-                    'Your Account for Vidyut 2020',
-                    strip_tags(html_content),
-                    EMAIL_HOST_USER,
-                    [email],
-                    html_message=html_content,
-                    fail_silently=False,
-                )
-                return True
+            username = email.split('@')[0]
+            alphabet = string.ascii_letters + string.digits
+            password = ''.join(secrets.choice(alphabet) for i in range(10))
+            user = User.objects.create_user(
+                username=username,
+                email='email',
+                password=password
+            )
+            user.set_password(password)
+            user.first_name = username
+            user.save()
+            data = {
+                "name": user.first_name + ' ' + user.last_name,
+                "username": user.username,
+                "password": password
+            }
+            htmly = get_template('./emails/password-reset.html')
+            html_content = htmly.render(data)
+            send_mail(
+                'Your Account for Vidyut 2020',
+                strip_tags(html_content),
+                EMAIL_HOST_USER,
+                [email],
+                html_message=html_content,
+                fail_silently=False,
+            )
+            return True
 
     @staticmethod
     def resolve_status(self, info, **kwargs):
