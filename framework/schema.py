@@ -8,13 +8,18 @@ from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from django.template.loader import get_template
 from django.utils.html import strip_tags
+from graphql_jwt.decorators import login_required
+
 from framework.settings import EMAIL_HOST_USER
 
 from access.schema import Query as AccessQueries
 from events.schema import Query as EventQueries
+from participants.models import Profile, Team
 from participants.schema import Query as ParticipantQueries, Mutation as ParticipantMutation
+from payment.models import Order, Transaction
 from products.schema import Query as ProductQueries
 from payment.schema import Query as PaymentQueries, Mutation as PaymentMutations
+from registrations.models import EventRegistration
 from tickets.schema import Query as TicketQueries, Mutation as TicketMutations
 from registrations.schema import Mutation as RegMutations, Query as RegQueries
 from social.schema import Query as SocialQueries
@@ -54,6 +59,41 @@ class Query(
 ):
     status = graphene.Field(StatusObj)
     emailPassword = graphene.Boolean(email=graphene.String())
+    # mergeAccount = graphene.Boolean(oldEmail=graphene.String(), newEmail=graphene.String())
+    #
+    # @login_required
+    # def resolve_mergeAccount(self, info, **kwargs):
+    #     oldEmail = kwargs.get('oldEmail')
+    #     newEmail = kwargs.get('newEmail')
+    #     oldUser = User.objects.get(email='oldEmail')
+    #     newUser = User.objects.get(email='newEmail')
+    #
+    #     oldProfile = Profile.objects.get(user__email=oldEmail)
+    #     oldProfile.user = newUser
+    #     oldProfile.save()
+    #
+    #     oldOrders = Order.objects.filter(user=oldUser)
+    #     for o in oldOrders:
+    #         o.orders.user = newUser
+    #         o.save()
+    #
+    #     oldTransactions = Transaction.objects.filter(user=oldUser)
+    #     for o in oldTransactions:
+    #         o.user = newUser
+    #         o.save()
+    #
+    #     eventRegs = EventRegistration.objects.filter(user=oldUser)
+    #     for e in eventRegs:
+    #         e.user = newUser
+    #         e.save()
+    #
+    #     teams = Team.objects.filter(members=oldUser)
+    #     for t in teams:
+    #         if t.leader == oldUser:
+    #             t.leader = newUser
+    #         t.members.remove(oldUser)
+    #         t.members.add(newUser)
+    #         t.save()
 
     @staticmethod
     def resolve_emailPassword(self, info, **kwargs):
@@ -87,7 +127,7 @@ class Query(
             password = ''.join(secrets.choice(alphabet) for i in range(10))
             user = User.objects.create_user(
                 username=username,
-                email='email',
+                email=email,
                 password=password
             )
             user.set_password(password)
