@@ -10,10 +10,11 @@ from access.models import UserAccess
 from framework.server_settings import EMAIL_HOST_USER
 from participants.api.objects import ProfileObj
 from participants.models import Profile, College
-from payment.models import Transaction
+from payment.models import Transaction, Order
 from registrations.models import EventRegistration
 
 from framework.api.helper import APIException
+from tickets.models import PhysicalTicket
 
 
 def is_valid_uuid(val):
@@ -116,7 +117,6 @@ class CollegeStatObj(graphene.ObjectType):
         users = Transaction.objects.filter(isPaid=True).order_by('user').values_list('user', flat=True).distinct()
         return Profile.objects.filter(college=self[0], user__in=users).count()
 
-
 class ProfileStatObj(graphene.ObjectType):
     profilesCount = graphene.Int()
     incompleteProfilesCount = graphene.Int()
@@ -147,13 +147,76 @@ class ProfileStatObj(graphene.ObjectType):
         return Profile.objects.filter(user__in=users)
 
 
+class ProfileCompletionObj(graphene.ObjectType):
+    status = graphene.Boolean()
+    message = graphene.String()
+
+
+class ProfileDetailedStats(SingleProfileObj, graphene.ObjectType):
+    registrations = graphene.List(graphene.String)
+    proshowTicket = graphene.String()
+    profileCompletion = graphene.Field(ProfileCompletionObj)
+    physicalTicket = graphene.String()
+
+    def resolve_physicalTicket(self, info):
+        try:
+            return PhysicalTicket.objects.get(user=self.user).number
+        except PhysicalTicket.DoesNotExist:
+            return None
+
+    def resolve_profileCompletion(self, info):
+        profile = self
+        isProfileComplete = True
+        profilemsg = 'Profile Incomplete - '
+        if not profile.photo or not hasattr(profile.photo, 'url'):
+            isProfileComplete = False
+            profilemsg += ' Selfie, '
+        if not profile.idPhoto or not hasattr(profile.idPhoto, 'url'):
+            isProfileComplete = False
+            profilemsg += ' ID Card, '
+        if profile.gender is None or len(profile.gender) < 1:
+            isProfileComplete = False
+            profilemsg += ' Gender, '
+        if profile.phone is None or len(profile.phone) < 10:
+            isProfileComplete = False
+            profilemsg += ' Phone No., '
+        if profile.college is None:
+            isProfileComplete = False
+            profilemsg += ' College Name, '
+        profilemsg += ' to be updated'
+
+        message = 'Profile Complete'
+        status = True
+        if isProfileComplete is False:
+            status = False
+            message = profilemsg
+        return ProfileCompletionObj(status=status, message=message)
+
+    def resolve_registrations(self, info):
+        return EventRegistration.objects.filter(
+            Q(order__transaction__isPaid=True) &
+            Q(Q(team__members=self.user) | Q(user=self.user))
+        )
+
+    def resolve_proshowTicket(self, info):
+        tickets = Order.objects.filter(
+            Q(transaction__isPaid=True) &
+            Q(user=self.user) &
+            Q(products__name__contains='Revel')
+        )
+        if tickets.count() > 0:
+            return tickets.first().products.first().name
+        else:
+            return 'No Ticket Found'
+
+
 class Query(object):
     isProfileComplete = graphene.Boolean()
     myProfile = graphene.Field(SingleProfileObj)
-    getProfile = graphene.Field(SingleProfileObj, key=graphene.String(required=True))
+    getProfile = graphene.Field(ProfileDetailedStats, key=graphene.String(required=True))
     listIncompleteProfiles = graphene.List(SingleProfileObj)
-    getProfileStats = graphene.Field(ProfileStatObj)
-    emailIncompleteInsiders = graphene.Boolean()
+    # getProfileStats = graphene.Field(ProfileStatObj)
+    # emailIncompleteInsiders = graphene.Boolean()
 
     # listEmails = graphene.String()
     #
@@ -168,32 +231,32 @@ class Query(object):
     #         a.append(l)
     #     return a
 
-    @login_required
-    def resolve_emailIncompleteInsiders(self, info, **kwargs):
-        users = Profile.objects.filter(
-            Q(user__email__contains='am.students.amrita.edu') &
-            (Q(rollNo__isnull=True) | Q(college__isnull=True) | Q(shirtSize__isnull=True) |
-             Q(phone__isnull=True)) & Q(user__transactionUser__isPaid=True)
-        )
-        i = 231
-        for u in users[231:]:
-            data = {
-                "username": u.user.first_name + ' ' + u.user.last_name,
-                "vidyutID": u.vidyutID
-            }
-            htmly = get_template('./emails/complete-profile.html')
-            html_content = htmly.render(data)
-            send_mail(
-                'Please complete your Vidyut Profile',
-                strip_tags(html_content),
-                EMAIL_HOST_USER,
-                [u.user.email],
-                html_message=html_content,
-                fail_silently=False,
-            )
-            print(i)
-            i = i + 1
-        return True
+    # @login_required
+    # def resolve_emailIncompleteInsiders(self, info, **kwargs):
+    #     users = Profile.objects.filter(
+    #         Q(user__email__contains='am.students.amrita.edu') &
+    #         (Q(rollNo__isnull=True) | Q(college__isnull=True) | Q(shirtSize__isnull=True) |
+    #          Q(phone__isnull=True)) & Q(user__transactionUser__isPaid=True)
+    #     )
+    #     i = 231
+    #     for u in users[231:]:
+    #         data = {
+    #             "username": u.user.first_name + ' ' + u.user.last_name,
+    #             "vidyutID": u.vidyutID
+    #         }
+    #         htmly = get_template('./emails/complete-profile.html')
+    #         html_content = htmly.render(data)
+    #         send_mail(
+    #             'Please complete your Vidyut Profile',
+    #             strip_tags(html_content),
+    #             EMAIL_HOST_USER,
+    #             [u.user.email],
+    #             html_message=html_content,
+    #             fail_silently=False,
+    #         )
+    #         print(i)
+    #         i = i + 1
+    #     return True
 
     @login_required
     def resolve_isProfileComplete(self, info, **kwargs):
@@ -236,7 +299,3 @@ class Query(object):
         return Profile.objects.filter(
             Q(photo=None) | Q(college=None) | Q(phone=None)
         )[:10]
-
-    @login_required
-    def resolve_getProfileStats(self, info):
-        return False

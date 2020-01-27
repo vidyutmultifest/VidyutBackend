@@ -59,41 +59,46 @@ class Query(
 ):
     status = graphene.Field(StatusObj)
     emailPassword = graphene.Boolean(email=graphene.String())
-    # mergeAccount = graphene.Boolean(oldEmail=graphene.String(), newEmail=graphene.String())
-    #
-    # @login_required
-    # def resolve_mergeAccount(self, info, **kwargs):
-    #     oldEmail = kwargs.get('oldEmail')
-    #     newEmail = kwargs.get('newEmail')
-    #     oldUser = User.objects.get(email='oldEmail')
-    #     newUser = User.objects.get(email='newEmail')
-    #
-    #     oldProfile = Profile.objects.get(user__email=oldEmail)
-    #     oldProfile.user = newUser
-    #     oldProfile.save()
-    #
-    #     oldOrders = Order.objects.filter(user=oldUser)
-    #     for o in oldOrders:
-    #         o.orders.user = newUser
-    #         o.save()
-    #
-    #     oldTransactions = Transaction.objects.filter(user=oldUser)
-    #     for o in oldTransactions:
-    #         o.user = newUser
-    #         o.save()
-    #
-    #     eventRegs = EventRegistration.objects.filter(user=oldUser)
-    #     for e in eventRegs:
-    #         e.user = newUser
-    #         e.save()
-    #
-    #     teams = Team.objects.filter(members=oldUser)
-    #     for t in teams:
-    #         if t.leader == oldUser:
-    #             t.leader = newUser
-    #         t.members.remove(oldUser)
-    #         t.members.add(newUser)
-    #         t.save()
+    transfer = graphene.Boolean(oldEmail=graphene.String(), newEmail=graphene.String())
+
+    @login_required
+    def resolve_mergeAccount(self, info, **kwargs):
+        if info.context.user.is_superuser():
+            oldEmail = kwargs.get('oldEmail')
+            newEmail = kwargs.get('newEmail')
+            oldUser = User.objects.get(email=oldEmail)
+            newUser = User.objects.get(email=newEmail)
+
+            # transfer orders
+            oldOrders = Order.objects.filter(user=oldUser)
+            for o in oldOrders:
+                o.orders.user = newUser
+                o.save()
+
+            # transfer transactions
+            oldTransactions = Transaction.objects.filter(user=oldUser)
+            for o in oldTransactions:
+                o.user = newUser
+                o.save()
+
+            # transfer registrations
+            eventRegs = EventRegistration.objects.filter(user=oldUser)
+            for e in eventRegs:
+                e.user = newUser
+                e.save()
+
+            # transfer team registrations
+            teams = Team.objects.filter(members=oldUser)
+            for t in teams:
+                if t.leader == oldUser:
+                    t.leader = newUser
+                t.members.remove(oldUser)
+                t.members.add(newUser)
+                t.save()
+
+            return True
+        return False
+
 
     @staticmethod
     def resolve_emailPassword(self, info, **kwargs):

@@ -11,6 +11,7 @@ class CheckInSession(models.Model):
     created = models.DateTimeField(auto_now=True)
     sessionID = models.UUIDField(unique=True, default=uuid.uuid1, editable=False)
     isActive = models.BooleanField(default=False)
+    isGeneralCheckIn = models.BooleanField(default=False)
     allowMultipleCheckIn = models.BooleanField(default=False)
     allowCheckOut = models.BooleanField(default=False)
     products = models.ManyToManyField(Product)
@@ -30,7 +31,7 @@ class CheckIn(models.Model):
 
 
 class PhysicalTicket(models.Model):
-    number = models.CharField(max_length=15, null=True, blank=True, unique=True)
+    number = models.CharField(max_length=15, unique=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='PhysicalTicketUser')
     issuer = models.ForeignKey(User, on_delete=models.PROTECT, related_name='PhysicalTicketIssuer')
     timestamp = models.DateTimeField(auto_now=True)
