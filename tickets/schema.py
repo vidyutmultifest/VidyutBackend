@@ -133,18 +133,24 @@ class Query(TicketStats, graphene.ObjectType):
                 product = order.first().products.all().first().name
                 if PhysicalTicket.objects.filter(user=profile.user).count() == 0:
                     status = True
-                    message = 'Eligible for ticket'
+                    message = 'Eligible for ticket - ' + product
                     profilemsg = 'Profile Incomplete - '
                     if not profile.photo or not hasattr(profile.photo, 'url'):
                         isProfileComplete = False
                         profilemsg += ' Selfie, '
-                    if profile.rollNo is None:
+                    if profile.gender is None or len(profile.gender) < 1:
+                        isProfileComplete = False
+                        profilemsg += ' Gender, '
+                    if profile.phone is None or len(profile.phone) < 10:
+                        isProfileComplete = False
+                        profilemsg += ' Phone No., '
+                    if profile.rollNo is None or len(profile.rollNo) < 5:
                         isProfileComplete = False
                         profilemsg += ' Roll No., '
                     if profile.college is None:
                         isProfileComplete = False
                         profilemsg += ' College Name, '
-                    if profile.shirtSize is None:
+                    if profile.shirtSize is None or len(profile.shirtSize) < 1:
                         isProfileComplete = False
                         profilemsg += ' T-Shirt Size, '
                     profilemsg += ' to be updated'

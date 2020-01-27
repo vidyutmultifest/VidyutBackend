@@ -5,6 +5,8 @@ from .models import *
 
 @admin.register(PhysicalTicket)
 class PhysicalTicketAdmin(admin.ModelAdmin):
+    list_display = ('user', 'timestamp', 'number', 'issuer')
+    search_fields = ('user__username', 'issuer__username', 'number')
     select2 = select2_modelform(PhysicalTicket, attrs={'width': '250px'})
     form = select2
 
