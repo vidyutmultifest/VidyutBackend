@@ -30,8 +30,8 @@ class CheckIn(models.Model):
 
 
 class PhysicalTicket(models.Model):
-    number = models.CharField(max_length=15, null=True, blank=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='PhysicalTicketUser')
+    number = models.CharField(max_length=15, null=True, blank=True, unique=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='PhysicalTicketUser')
     issuer = models.ForeignKey(User, on_delete=models.PROTECT, related_name='PhysicalTicketIssuer')
     timestamp = models.DateTimeField(auto_now=True)
 
