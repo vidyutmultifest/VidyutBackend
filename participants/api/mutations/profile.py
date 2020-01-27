@@ -3,6 +3,7 @@ from graphql_jwt.decorators import login_required
 
 from framework.api.helper import APIException
 from participants.models import Profile, College
+from tickets.models import PhysicalTicket
 
 
 class UpdateProfileObj(graphene.ObjectType):
@@ -37,8 +38,8 @@ class UpdateProfile(graphene.Mutation):
     def mutate(self, info, details=None):
         user = info.context.user
         profile = Profile.objects.get(user=user)
-
-        if info.context.FILES is not None:
+        physicalTicket = PhysicalTicket.objects.filter(user=info.context.user)
+        if info.context.FILES is not None and physicalTicket.count() == 0:
             if "profilePhoto" in info.context.FILES:
                 profilePhoto = info.context.FILES['profilePhoto']
                 if profilePhoto is not None:
@@ -68,7 +69,7 @@ class UpdateProfile(graphene.Mutation):
                 profile.emergencyContactName = details.emergencyContactName
             if details.foodPreference is not None:
                 profile.foodPreference = details.foodPreference
-            if details.shirtSize is not None:
+            if details.shirtSize is not None and physicalTicket.count() == 0:
                 profile.shirtSize = details.shirtSize
             if details.degreeType is not None:
                 profile.degreeType = details.degreeType
