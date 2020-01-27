@@ -127,28 +127,36 @@ class Query(TicketStats, graphene.ObjectType):
             )
             status = False
             product = None
+            photo = None
+            isProfileComplete = True
             if order.count() == 1:
                 product = order.first().products.all().first().name
                 if PhysicalTicket.objects.filter(user=profile.user).count() == 0:
                     status = True
                     message = 'Eligible for ticket'
+                    profilemsg = 'Profile Incomplete - '
+                    if not profile.photo or not hasattr(profile.photo, 'url'):
+                        isProfileComplete = False
+                        profilemsg += ' Selfie, '
+                    if profile.rollNo is None:
+                        isProfileComplete = False
+                        profilemsg += ' Roll No., '
+                    if profile.college is None:
+                        isProfileComplete = False
+                        profilemsg += ' College Name, '
+                    if profile.shirtSize is None:
+                        isProfileComplete = False
+                        profilemsg += ' T-Shirt Size, '
+                    profilemsg += ' to be updated'
+                    if isProfileComplete is False:
+                        status = False
+                        message = profilemsg
                 else:
                     message = 'Ticket already given.'
             else:
                 message = 'No ticket exists for the user'
-            photo = None
             if profile.photo and hasattr(profile.photo, 'url'):
                 photo = info.context.build_absolute_uri(profile.photo.url)
-            isProfileComplete = True
-            if not profile.photo or not hasattr(profile.photo, 'url'):
-                isProfileComplete = False
-            if profile.rollNo is None:
-                isProfileComplete = False
-            if profile.college is None:
-                isProfileComplete = False
-            if isProfileComplete is False:
-                status = False
-                message = 'Profile Incomplete'
             return ValidateTicketObj(
                 status=status,
                 message=message,
