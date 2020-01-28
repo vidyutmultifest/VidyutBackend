@@ -337,6 +337,7 @@ class Query(graphene.ObjectType):
     listRegistrations = graphene.List(RegStatObj, eventType=graphene.String(), eventID=graphene.Int())
     getRegistrations = graphene.List(RegDetailsObj, eventID=graphene.Int(), isPaid=graphene.Boolean())
     getWorkshopStats = graphene.List(CompetitionStatsObj)
+    getCompetitionStats = graphene.List(CompetitionStatsObj)
     registrationCount = graphene.Field(RegistrationCountObj)
     registrationAmount = graphene.Field(RegistrationAmountObj)
     sendPaymentConfirmationEmails = graphene.Boolean()
@@ -345,6 +346,10 @@ class Query(graphene.ObjectType):
     @login_required
     def resolve_getWorkshopStats(self, info, **kwargs):
         return Product.objects.filter(workshop__isnull=False)
+
+    @login_required
+    def resolve_getCompetitionStats(self, info, **kwargs):
+        return Product.objects.filter(competition__isnull=False)
 
     @login_required
     def resolve_getRegistrations(self, info, **kwargs):
