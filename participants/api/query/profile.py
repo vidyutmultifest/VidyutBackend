@@ -14,7 +14,7 @@ from payment.models import Transaction, Order
 from registrations.models import EventRegistration
 
 from framework.api.helper import APIException
-from tickets.models import PhysicalTicket
+from tickets.models import PhysicalTicket, CheckIn
 
 
 def is_valid_uuid(val):
@@ -157,6 +157,10 @@ class ProfileDetailedStats(SingleProfileObj, graphene.ObjectType):
     proshowTicket = graphene.String()
     profileCompletion = graphene.Field(ProfileCompletionObj)
     physicalTicket = graphene.String()
+    hasCheckedIn = graphene.Boolean()
+
+    def resolve_hasCheckedIn(self, info):
+        return CheckIn.objects.filter(user=self.user, generalCheckIn=True).count() > 0
 
     def resolve_physicalTicket(self, info):
         try:
