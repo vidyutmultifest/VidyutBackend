@@ -42,7 +42,7 @@ class ProductAdmin(admin.ModelAdmin):
             ]
         }),
     ]
-    list_display = ('name', 'price', 'requireRegistration', 'isAmritapurianOnly', 'requireRegistration')
+    list_display = ('name', 'price', 'slots', 'requireRegistration', 'isAmritapurianOnly', 'requireRegistration')
     list_filter = ('isAvailable', 'requireRegistration', 'isAmritapurianOnly', 'isFacultyOnly', 'isSchoolOnly', 'isOutsideOnly', 'isGSTAccounted')
     select2 = select2_modelform(Product, attrs={'width': '250px'})
     form = select2

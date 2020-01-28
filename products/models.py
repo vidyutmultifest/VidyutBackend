@@ -16,7 +16,7 @@ class Product(models.Model):
     price = models.PositiveIntegerField(null=True, blank=True)
     isAvailable = models.BooleanField(default=True)
     isGSTAccounted = models.BooleanField(default=False)
-    slots = models.PositiveIntegerField(null=True, blank=True)
+    slots = models.PositiveIntegerField()
 
     requireRegistration = models.BooleanField(default=False)
     requireEventRegistration = models.BooleanField(default=False)

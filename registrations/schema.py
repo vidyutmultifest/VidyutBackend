@@ -40,18 +40,25 @@ class Register(graphene.Mutation):
 
     @login_required
     def mutate(self, info, productID, formData=None, teamHash=None):
-        rObj = EventRegistration.objects.create(
-            registrationTimestamp=datetime.now(),
-            event=Product.objects.get(productID=productID)
-        )
-        if formData is not None:
-            rObj.formData = formData
-        if teamHash is not None:
-            rObj.team = Team.objects.get(hash=teamHash)
-        else:
-            rObj.user = info.context.user
-        rObj.save()
-        return RegisterObj(regID=rObj.regID)
+        product = Product.objects.get(productID=productID).slots
+        regCount = EventRegistration.objects.filter(
+            event__productID=productID,
+            order__transaction__isPaid=True,
+        ).count()
+        if product.slots == 0 or product.slots > regCount:
+            rObj = EventRegistration.objects.create(
+                registrationTimestamp=datetime.now(),
+                event=Product.objects.get(productID=productID)
+            )
+            if formData is not None:
+                rObj.formData = formData
+            if teamHash is not None:
+                rObj.team = Team.objects.get(hash=teamHash)
+            else:
+                rObj.user = info.context.user
+            rObj.save()
+            return RegisterObj(regID=rObj.regID)
+        return False
 
 
 class Mutation(object):
@@ -288,6 +295,7 @@ class RegistrationAmountObj(graphene.ObjectType):
 
 class CompetitionStatsObj(graphene.ObjectType):
     name = graphene.String()
+    slots = graphene.Int()
     pulse = graphene.Int()
     pulsePaid = graphene.Int()
     totalRegs = graphene.Int()
@@ -295,6 +303,9 @@ class CompetitionStatsObj(graphene.ObjectType):
     unpaidRegs = graphene.Int()
     insiderPaid = graphene.Int()
     outsiderPaid = graphene.Int()
+
+    def resolve_slots(self, info):
+        return self.slots
 
     def resolve_pulse(self, info):
         return EventRegistration.objects.filter(
