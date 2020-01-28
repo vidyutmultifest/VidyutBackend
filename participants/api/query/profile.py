@@ -196,7 +196,7 @@ class ProfileDetailedStats(SingleProfileObj, graphene.ObjectType):
         return EventRegistration.objects.filter(
             Q(order__transaction__isPaid=True) &
             Q(Q(team__members=self.user) | Q(user=self.user))
-        )
+        ).values_list('event__name', flat=True)
 
     def resolve_proshowTicket(self, info):
         tickets = Order.objects.filter(
