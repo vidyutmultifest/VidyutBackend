@@ -151,6 +151,7 @@ class RegDetailsObj(graphene.ObjectType):
 
 
 class RegStatObj(graphene.ObjectType):
+    id = graphene.Int()
     name = graphene.String()
     count = graphene.Field(RegCountObj)
     registrations = graphene.List(RegDetailsObj, isPaid=graphene.Boolean())
@@ -287,10 +288,24 @@ class Query(graphene.ObjectType):
     myRegistrations = graphene.List(EventRegistrationObj, limit=graphene.Int())
     isAlreadyRegistered = graphene.Boolean(productID=graphene.String(required=True))
     listRegistrations = graphene.List(RegStatObj, eventType=graphene.String(), eventID=graphene.Int())
+    getRegistrations = graphene.List(RegDetailsObj, eventID=graphene.Int(), isPaid=graphene.Boolean())
     registrationCount = graphene.Field(RegistrationCountObj)
     registrationAmount = graphene.Field(RegistrationAmountObj)
     sendPaymentConfirmationEmails = graphene.Boolean()
     sendEmailsToFailedPayments = graphene.Boolean()
+
+    @login_required
+    def resolve_getRegistrations(self, info, **kwargs):
+        isPaid = kwargs.get('isPaid')
+        id = kwargs.get('eventID')
+        product = Product.objects.get(id=id)
+        if product.competition is not None and product.competition.hasSelectionProcess is True:
+            return EventRegistration.objects.filter(event_id=id)
+        if product.price == 0:
+            return EventRegistration.objects.filter(event_id=id)
+        if isPaid is not None:
+            return EventRegistration.objects.filter(event__id=id, order__transaction__isPaid=isPaid)
+        return EventRegistration.objects.filter(event_id=id)
 
     @login_required
     def resolve_sendEmailsToFailedPayments(self, info, **kwargs):
