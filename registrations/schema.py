@@ -365,6 +365,49 @@ class CompetitionStatsObj(graphene.ObjectType):
         ).count()
 
 
+class RegisteredParticipantCountObj(graphene.ObjectType):
+    total = graphene.Int()
+    insider = graphene.Int()
+
+    def resolve_total(self, info):
+        list = []
+
+        indregs = self.filter(team=None).values_list('user__id', flat=True).distinct()
+        for u in indregs:
+            if u not in list:
+                list.append(u)
+
+        teamregs = self.filter(user=None)
+        for t in teamregs:
+            for u in t.team.members.all():
+                if u.id not in list:
+                    list.append(u.id)
+
+        return len(list)
+
+    def resolve_insider(self, info):
+        list = []
+        print(self)
+        indregs = self.filter(team=None).filter(
+            Q(user__email__contains='am.students.amrita.edu') |
+            Q(user__email__contains='ay.amrita.edu')
+        ).values_list('user__id', flat=True).distinct()
+        for u in indregs:
+            if u not in list:
+                list.append(u)
+
+        teamregs = self.filter(user=None).filter(
+            Q(team__leader__email__contains='am.students.amrita.edu') |
+            Q(team__leader__email__contains='ay.amrita.edu')
+        )
+        for t in teamregs:
+            for u in t.team.members.all():
+                if u.id not in list:
+                    list.append(u.id)
+
+        return len(list)
+
+
 class Query(graphene.ObjectType):
     myRegistrations = graphene.List(EventRegistrationObj, limit=graphene.Int())
     isAlreadyRegistered = graphene.Boolean(productID=graphene.String(required=True))
@@ -374,8 +417,16 @@ class Query(graphene.ObjectType):
     getCompetitionStats = graphene.List(CompetitionStatsObj)
     registrationCount = graphene.Field(RegistrationCountObj)
     registrationAmount = graphene.Field(RegistrationAmountObj)
+    registeredParticipantCount = graphene.Field(RegisteredParticipantCountObj)
     sendPaymentConfirmationEmails = graphene.Boolean()
     sendEmailsToFailedPayments = graphene.Boolean()
+
+    @login_required
+    def resolve_registeredParticipantCount(self, info, **kwargs):
+        return EventRegistration.objects.filter(
+            order__transaction__isPaid=True
+        )
+
 
     @login_required
     def resolve_getWorkshopStats(self, info, **kwargs):

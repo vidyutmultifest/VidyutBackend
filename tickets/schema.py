@@ -73,8 +73,30 @@ class PerformCheckIn(graphene.Mutation):
         return False
 
 
+class PerformGeneralCheckIn(graphene.Mutation):
+    class Arguments:
+        hash = graphene.String(required=True)
+
+    Output = graphene.Boolean
+
+    @login_required
+    def mutate(self, info, hash):
+        issuer = info.context.user
+        user = Profile.objects.get(vidyutHash=hash).user
+        access = UserAccess.objects.get(user=issuer)
+        if access.canCheckInUsers:
+            CheckIn.objects.create(
+                user=user,
+                issuer=issuer,
+                generalCheckIn=True
+            )
+            return True
+        return False
+
+
 class Mutation(object):
     performCheckIn = PerformCheckIn.Field()
+    performGeneralCheckIn = PerformGeneralCheckIn.Field()
     issueTicket = IssueTicket.Field()
 
 
