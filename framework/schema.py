@@ -63,7 +63,7 @@ class Query(
 
     @login_required
     def resolve_transfer(self, info, **kwargs):
-        if info.context.user.is_superuser():
+        if info.context.user.is_superuser:
             oldEmail = kwargs.get('oldEmail')
             newEmail = kwargs.get('newEmail')
             oldUser = User.objects.get(email=oldEmail)
@@ -72,7 +72,7 @@ class Query(
             # transfer orders
             oldOrders = Order.objects.filter(user=oldUser)
             for o in oldOrders:
-                o.orders.user = newUser
+                o.user = newUser
                 o.save()
 
             # transfer transactions
