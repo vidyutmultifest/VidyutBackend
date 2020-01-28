@@ -1,7 +1,7 @@
 from asyncio import events
 
 import graphene
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from django.db.models import Q, Sum
 from django.utils.html import strip_tags
@@ -288,11 +288,26 @@ class RegistrationAmountObj(graphene.ObjectType):
 
 class CompetitionStatsObj(graphene.ObjectType):
     name = graphene.String()
+    pulse = graphene.Int()
+    pulsePaid = graphene.Int()
     totalRegs = graphene.Int()
     paidRegs = graphene.Int()
     unpaidRegs = graphene.Int()
     insiderPaid = graphene.Int()
     outsiderPaid = graphene.Int()
+
+    def resolve_pulse(self, info):
+        return EventRegistration.objects.filter(
+            event=self,
+            order__transaction__timestamp__gte=datetime.now() - timedelta(hours=5)
+        ).count()
+
+    def resolve_pulsePaid(self, info):
+        return EventRegistration.objects.filter(
+            event=self,
+            order__transaction__isPaid=True,
+            order__transaction__timestamp__gte=datetime.now() - timedelta(hours=5)
+        ).count()
 
     def resolve_totalRegs(self, info):
         return EventRegistration.objects.filter(event=self).count()
