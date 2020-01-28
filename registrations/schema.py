@@ -1,3 +1,5 @@
+from asyncio import events
+
 import graphene
 from datetime import datetime
 
@@ -284,15 +286,65 @@ class RegistrationAmountObj(graphene.ObjectType):
         return Order.objects.filter(id__in=self, transaction__isPaid=True, transaction__isOnline=False).aggregate(Sum('transaction__amount'))['transaction__amount__sum']
 
 
+class CompetitionStatsObj(graphene.ObjectType):
+    name = graphene.String()
+    totalRegs = graphene.Int()
+    paidRegs = graphene.Int()
+    unpaidRegs = graphene.Int()
+    insiderPaid = graphene.Int()
+    outsiderPaid = graphene.Int()
+
+    def resolve_totalRegs(self, info):
+        return EventRegistration.objects.filter(event=self).count()
+
+    def resolve_paidRegs(self, info):
+        return EventRegistration.objects.filter(
+            event=self, order__transaction__isPaid=True
+        ).count()
+
+    def resolve_unpaidRegs(self, info):
+        return EventRegistration.objects.filter(
+            event=self
+        ).exclude(order__transaction__isPaid=True).count()
+
+    def resolve_insiderPaid(self, info):
+        return EventRegistration.objects.filter(
+            Q(event=self) & Q(order__transaction__isPaid=True)
+            & Q(
+                Q(user__email__contains='am.students.amrita.edu') |
+                Q(user__email__contains='ay.amrita.edu') |
+                Q(team__leader__email__contains='am.students.amrita.edu') |
+                Q(team__leader__email__contains='ay.amrita.edu')
+            )
+        ).count()
+
+    def resolve_outsiderPaid(self, info):
+        return EventRegistration.objects.filter(
+            Q(event=self) & Q(order__transaction__isPaid=True)
+        ).exclude(
+            Q(
+                Q(user__email__contains='am.students.amrita.edu') |
+                Q(user__email__contains='ay.amrita.edu') |
+                Q(team__leader__email__contains='am.students.amrita.edu') |
+                Q(team__leader__email__contains='ay.amrita.edu')
+            )
+        ).count()
+
+
 class Query(graphene.ObjectType):
     myRegistrations = graphene.List(EventRegistrationObj, limit=graphene.Int())
     isAlreadyRegistered = graphene.Boolean(productID=graphene.String(required=True))
     listRegistrations = graphene.List(RegStatObj, eventType=graphene.String(), eventID=graphene.Int())
     getRegistrations = graphene.List(RegDetailsObj, eventID=graphene.Int(), isPaid=graphene.Boolean())
+    getWorkshopStats = graphene.List(CompetitionStatsObj)
     registrationCount = graphene.Field(RegistrationCountObj)
     registrationAmount = graphene.Field(RegistrationAmountObj)
     sendPaymentConfirmationEmails = graphene.Boolean()
     sendEmailsToFailedPayments = graphene.Boolean()
+
+    @login_required
+    def resolve_getWorkshopStats(self, info, **kwargs):
+        return Product.objects.filter(workshop__isnull=False)
 
     @login_required
     def resolve_getRegistrations(self, info, **kwargs):
