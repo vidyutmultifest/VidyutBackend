@@ -303,6 +303,7 @@ class CompetitionStatsObj(graphene.ObjectType):
     unpaidRegs = graphene.Int()
     insiderPaid = graphene.Int()
     outsiderPaid = graphene.Int()
+    counterFailed = graphene.Int()
 
     def resolve_slots(self, info):
         return self.slots
@@ -332,6 +333,13 @@ class CompetitionStatsObj(graphene.ObjectType):
         return EventRegistration.objects.filter(
             event=self
         ).exclude(order__transaction__isPaid=True).count()
+
+    def resolve_counterFailed(self, info):
+        return EventRegistration.objects.filter(
+            event=self,
+            order__transaction__isPaid=False,
+            order__transaction__isOnline=False
+        ).count()
 
     def resolve_insiderPaid(self, info):
         return EventRegistration.objects.filter(
