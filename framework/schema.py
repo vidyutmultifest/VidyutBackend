@@ -62,7 +62,7 @@ class Query(
     transfer = graphene.Boolean(oldEmail=graphene.String(), newEmail=graphene.String())
 
     @login_required
-    def resolve_mergeAccount(self, info, **kwargs):
+    def resolve_transfer(self, info, **kwargs):
         if info.context.user.is_superuser():
             oldEmail = kwargs.get('oldEmail')
             newEmail = kwargs.get('newEmail')
