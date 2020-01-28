@@ -129,7 +129,7 @@ class Query(TicketStats, graphene.ObjectType):
             product = None
             photo = None
             isProfileComplete = True
-            if order.count() == 1:
+            if order.count() > 0:
                 product = order.first().products.all().first().name
                 if PhysicalTicket.objects.filter(user=profile.user).count() == 0:
                     status = True
