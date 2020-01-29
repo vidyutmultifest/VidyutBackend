@@ -81,7 +81,10 @@ class Query(graphene.ObjectType):
                         ),
             "competitions": EventRegistration.objects.filter(
                     Q(Q(user=user) | Q(team__members=user)) &
-                    Q(order__transaction__isPaid=True) &
+                    Q(
+                        Q(order__transaction__isPaid=True) |
+                        Q(event__price=0)
+                    ) &
                     Q(event__competition__isnull=False)
                 ),
             "tickets": Order.objects.filter(

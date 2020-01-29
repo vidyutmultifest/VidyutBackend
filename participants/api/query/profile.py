@@ -199,7 +199,7 @@ class ProfileDetailedStats(SingleProfileObj, graphene.ObjectType):
 
     def resolve_registrations(self, info):
         return EventRegistration.objects.filter(
-            Q(order__transaction__isPaid=True) &
+            Q(Q(order__transaction__isPaid=True) | Q(event__price=0)) &
             Q(Q(team__members=self.user) | Q(user=self.user))
         ).values_list('event__name', flat=True)
 
