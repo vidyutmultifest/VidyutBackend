@@ -40,7 +40,7 @@ class Register(graphene.Mutation):
 
     @login_required
     def mutate(self, info, productID, formData=None, teamHash=None):
-        product = Product.objects.get(productID=productID).slots
+        product = Product.objects.get(productID=productID)
         regCount = EventRegistration.objects.filter(
             event__productID=productID,
             order__transaction__isPaid=True,
