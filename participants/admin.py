@@ -21,6 +21,7 @@ class UserAdmin(ImportExportModelAdmin, ExportActionMixin, DefaultUserAdmin):
 
 @admin.register(Team)
 class TeamAdmin(admin.ModelAdmin):
+    search_fields = ['name']
     select2 = select2_modelform(Team, attrs={'width': '250px'})
     list_display = ('name', 'leader', 'allowEditing',)
     form = select2
