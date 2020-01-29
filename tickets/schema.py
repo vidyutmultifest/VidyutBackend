@@ -155,7 +155,7 @@ class Query(TicketStats, graphene.ObjectType):
             isProfileComplete = True
             isHeadbanger = False
             if order.count() > 0:
-                product = order.first().products.all().first().name
+                product = order.first().products.all().first()
                 if "Headbangers" in product.name:
                     isHeadbanger = True
                 if PhysicalTicket.objects.filter(user=profile.user).count() == 0:

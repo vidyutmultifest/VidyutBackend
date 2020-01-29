@@ -420,6 +420,15 @@ class Query(graphene.ObjectType):
     registeredParticipantCount = graphene.Field(RegisteredParticipantCountObj)
     sendPaymentConfirmationEmails = graphene.Boolean()
     sendEmailsToFailedPayments = graphene.Boolean()
+    changeEvent = graphene.Boolean(regID=graphene.Int(required=True), eventID=graphene.Int(required=True))
+
+    @login_required
+    def resolve_changeEvent(self, info, **kwargs):
+        reg = EventRegistration.objects.get(regID=kwargs.get('regID'))
+        event = Product.objects.get(productID=kwargs.get('eventID'))
+        reg.event = event
+        reg.save()
+        return True
 
     @login_required
     def resolve_registeredParticipantCount(self, info, **kwargs):
