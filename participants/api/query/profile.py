@@ -1,10 +1,12 @@
 import uuid
 import graphene
 from django.core.mail import send_mail
+from django.db.models.functions import Concat
 from django.template.loader import get_template
 from django.utils.html import strip_tags
 from graphql_jwt.decorators import login_required
 from django.db.models import Q, Count
+from django.db.models import Value
 
 from access.models import UserAccess
 from framework.server_settings import EMAIL_HOST_USER
@@ -198,10 +200,19 @@ class ProfileDetailedStats(SingleProfileObj, graphene.ObjectType):
         return ProfileCompletionObj(status=status, message=message)
 
     def resolve_registrations(self, info):
-        return EventRegistration.objects.filter(
+        list = []
+        q = EventRegistration.objects.filter(
             Q(Q(order__transaction__isPaid=True) | Q(event__price=0)) &
             Q(Q(team__members=self.user) | Q(user=self.user))
-        ).values_list('event__name', flat=True)
+        )
+        for r in q:
+            type = ' / '
+            if r.event.workshop is not None:
+                type = 'Workshop'
+            elif r.event.competition is not None:
+                type = 'Competition'
+            list.append(r.event.name + ' - ' + type)
+        return list
 
     def resolve_proshowTicket(self, info):
         tickets = Order.objects.filter(
