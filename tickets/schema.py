@@ -84,7 +84,7 @@ class PerformGeneralCheckIn(graphene.Mutation):
         issuer = info.context.user
         user = Profile.objects.get(vidyutHash=hash).user
         access = UserAccess.objects.get(user=issuer)
-        if access.canCheckInUsers:
+        if access.canGeneralCheckIn:
             CheckIn.objects.create(
                 user=user,
                 issuer=issuer,

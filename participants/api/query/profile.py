@@ -117,6 +117,7 @@ class CollegeStatObj(graphene.ObjectType):
         users = Transaction.objects.filter(isPaid=True).order_by('user').values_list('user', flat=True).distinct()
         return Profile.objects.filter(college=self[0], user__in=users).count()
 
+
 class ProfileStatObj(graphene.ObjectType):
     profilesCount = graphene.Int()
     incompleteProfilesCount = graphene.Int()
