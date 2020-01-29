@@ -11,7 +11,11 @@ class UserAccessObj(graphene.ObjectType):
     canIssueTickets = graphene.Boolean()
     canViewProfiles = graphene.Boolean()
     canViewRegistrations = graphene.Boolean()
+    canGeneralCheckIn = graphene.Boolean()
     canCheckInUsers = graphene.Boolean()
+
+    def resolve_canViewAllTransactions(self, info):
+        return self.viewAllTransactions
 
 
 class Query(graphene.ObjectType):
@@ -21,7 +25,7 @@ class Query(graphene.ObjectType):
     def resolve_myPermissions(self, info, **kwargs):
         user = info.context.user
         try:
-            access = UserAccess.objects.values().get(user=user)
+            access = UserAccess.objects.get(user=user)
         except UserAccess.DoesNotExist:
             access = None
         return access

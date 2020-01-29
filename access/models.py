@@ -14,6 +14,7 @@ class UserAccess(models.Model):
     canViewProfiles = models.BooleanField(default=False)
     canViewRegistrations = models.BooleanField(default=False)
     productsManaged = models.ManyToManyField(Product, blank=True)
+    canGeneralCheckIn = models.BooleanField(default=False)
     canCheckInUsers = models.BooleanField(default=False)
     sessionsManaged = models.ManyToManyField(CheckInSession, blank=True)
 

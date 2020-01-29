@@ -3,6 +3,7 @@ from graphql_jwt.decorators import login_required
 
 from access.models import UserAccess
 from framework.api.helper import APIException
+from participants.models import Profile
 from payment.models import Transaction, Order
 from payment.api.objects import TransactionStatusObj, TransactionObj, TransactionDetailObj
 
@@ -22,7 +23,7 @@ class ExcessPaymentObj(graphene.ObjectType):
 
 class Query(graphene.ObjectType):
     getTransactionDetail = graphene.Field(TransactionDetailObj, transactionID=graphene.String())
-    getTransactionsApproved = graphene.List(TransactionDetailObj)
+    getTransactionsApproved = graphene.List(TransactionDetailObj, vid=graphene.String(required=False))
     getTransactionStatus = graphene.Field(TransactionStatusObj, transactionID=graphene.String())
     getTransactionList = graphene.List(TransactionObj)
     fixUnassociatedPayments = graphene.List(TransactionFixObj)
@@ -67,16 +68,28 @@ class Query(graphene.ObjectType):
     # TODO: API name confuses
     @login_required
     def resolve_getTransactionsApproved(self, info, **kwargs):
+        vid = kwargs.get('vid')
         user = info.context.user
-        try:
-            if UserAccess.objects.get(user=user).canAcceptPayment:
-                return Transaction.objects.values().filter(issuer=user, isPaid=True)
-            else:
-                raise APIException(
-                    "This API is for volunteer's who can collect payment. You don't have permission to view this."
-                )
-        except UserAccess.DoesNotExist:
-            raise APIException("You don't have access to view this.")
+        if vid is None:
+            try:
+                if UserAccess.objects.get(user=user).canAcceptPayment:
+                    return Transaction.objects.filter(issuer=user, isPaid=True)
+                else:
+                    raise APIException(
+                        "This API is for volunteer's who can collect payment. You don't have permission to view this."
+                    )
+            except UserAccess.DoesNotExist:
+                raise APIException("You don't have access to view this.")
+        else:
+            try:
+                if UserAccess.objects.get(user=user).viewAllTransactions:
+                    return Transaction.objects.filter(issuer=Profile.objects.get(vidyutID=vid).user, isPaid=True)
+                else:
+                    raise APIException(
+                        "You don't have permission to view this."
+                    )
+            except UserAccess.DoesNotExist:
+                raise APIException("You don't have access to view this")
 
     @login_required
     def resolve_getTransactionStatus(self, info, **kwargs):
