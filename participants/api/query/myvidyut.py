@@ -1,4 +1,5 @@
 import graphene
+from django.db.models import Q
 from django.utils import timezone
 from graphql_jwt.decorators import login_required
 
@@ -79,10 +80,10 @@ class Query(graphene.ObjectType):
                             event__workshop__isnull=False
                         ),
             "competitions": EventRegistration.objects.filter(
-                            user=user,
-                            order__transaction__isPaid=True,
-                            event__competition__isnull=False
-                        ),
+                    Q(Q(user=user) | Q(team__members=user)) &
+                    Q(order__transaction__isPaid=True) &
+                    Q(event__competition__isnull=False)
+                ),
             "tickets": Order.objects.filter(
                 user=user,
                 orderproduct__product__ticket__isnull=False,
