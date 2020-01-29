@@ -1,4 +1,4 @@
-from asyncio import events
+import uuid
 
 import graphene
 from datetime import datetime, timedelta
@@ -24,6 +24,14 @@ from .models import EventRegistration
 from django.core.mail import send_mail
 from django.template.loader import get_template
 from framework.settings import EMAIL_HOST_USER
+
+
+def is_valid_uuid(val):
+    try:
+        uuid.UUID(str(val))
+        return True
+    except ValueError:
+        return False
 
 
 class RegisterObj(graphene.ObjectType):
@@ -133,11 +141,15 @@ class RegTeamObj(graphene.ObjectType):
 
 class RegDetailsObj(graphene.ObjectType):
     regID = graphene.String()
+    eventName = graphene.String()
     userProfile = graphene.Field(SingleProfileObj)
     teamProfile = graphene.Field(RegTeamObj)
     transaction = graphene.Field(TransactionObj)
     registrationTimestamp = graphene.DateTime()
     formData = graphene.String()
+
+    def resolve_eventName(self, info):
+        return self.event.name
 
     def resolve_userProfile(self, info):
         if self.user is not None:
@@ -420,15 +432,43 @@ class Query(graphene.ObjectType):
     registeredParticipantCount = graphene.Field(RegisteredParticipantCountObj)
     sendPaymentConfirmationEmails = graphene.Boolean()
     sendEmailsToFailedPayments = graphene.Boolean()
-    changeEvent = graphene.Boolean(regID=graphene.Int(required=True), eventID=graphene.Int(required=True))
+    listUserRegistrations = graphene.List(RegDetailsObj, key=graphene.String())
+    changeEvent = graphene.Boolean(regID=graphene.String(required=True), eventID=graphene.String(required=True))
+
+    @login_required
+    def resolve_listUserRegistrations(self, info, **kwargs):
+        key = kwargs.get('key')
+        user = info.context.user
+        try:
+            if UserAccess.objects.get(user=user).canGeneralCheckIn:
+                try:
+                    if is_valid_uuid(key):
+                        user = Profile.objects.get(vidyutHash=key).user
+                    else:
+                        user = Profile.objects.get(
+                            Q(vidyutID=key) | Q(user__username=key) | Q(user__email=key)
+                        ).user
+                    return EventRegistration.objects.filter(Q(user=user) | Q(team__leader=user))
+                except Profile.DoesNotExist:
+                    return None
+            else:
+                return None
+        except UserAccess.DoesNotExist:
+            return None
 
     @login_required
     def resolve_changeEvent(self, info, **kwargs):
-        reg = EventRegistration.objects.get(regID=kwargs.get('regID'))
-        event = Product.objects.get(productID=kwargs.get('eventID'))
-        reg.event = event
-        reg.save()
-        return True
+        user = info.context.user
+        try:
+            if UserAccess.objects.get(user=user).canGeneralCheckIn:
+                reg = EventRegistration.objects.get(regID=kwargs.get('regID'))
+                event = Product.objects.get(productID=kwargs.get('eventID'))
+                reg.event = event
+                reg.save()
+                return True
+            return False
+        except UserAccess.DoesNotExist:
+            return False
 
     @login_required
     def resolve_registeredParticipantCount(self, info, **kwargs):

@@ -92,8 +92,13 @@ class FailingProductObj(graphene.ObjectType):
 
 class Query(object):
     listPromocodes = graphene.List(PromocodeObj)
+    listProducts = graphene.List(ProductObj)
     getProduct = graphene.Field(ProductObj, productID=graphene.String(required=True))
     listFailingProducts = graphene.List(FailingProductObj)
+
+    @login_required
+    def resolve_listProducts(self, info, **kwargs):
+        return Product.objects.all()
 
     @login_required
     def resolve_listFailingProducts(self, info, **kwargs):
