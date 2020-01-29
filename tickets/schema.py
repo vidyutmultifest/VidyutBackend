@@ -123,6 +123,7 @@ class ValidateTicketObj(graphene.ObjectType):
     message = graphene.String()
     ticketNo = graphene.String()
     productName = graphene.String()
+    isHeadBanger = graphene.Boolean()
     userName = graphene.String()
     rollNo = graphene.String()
     photo = graphene.String()
@@ -152,8 +153,11 @@ class Query(TicketStats, graphene.ObjectType):
             product = None
             photo = None
             isProfileComplete = True
+            isHeadbanger = False
             if order.count() > 0:
                 product = order.first().products.all().first().name
+                if "Headbangers" in product.name:
+                    isHeadbanger = True
                 if PhysicalTicket.objects.filter(user=profile.user).count() == 0:
                     status = True
                     message = 'Eligible for ticket - ' + product
@@ -194,6 +198,7 @@ class Query(TicketStats, graphene.ObjectType):
                 status=status,
                 message=message,
                 ticketNo=ticketNo,
+                isHeadBanger=isHeadbanger,
                 userName=profile.user.first_name + ' ' + profile.user.last_name,
                 productName=product,
                 rollNo=profile.rollNo,
@@ -211,6 +216,7 @@ class Query(TicketStats, graphene.ObjectType):
         status = 0
         product = 'n/a'
         message = 'Allow Check-In'
+        isHeadbanger = False
         if session.allowMultipleCheckIn or CheckIn.objects.filter(user=profile.user, session__sessionID=kwargs.get(
                 'sessionID')).count() == 0:
             order = Order.objects.filter(
@@ -220,6 +226,8 @@ class Query(TicketStats, graphene.ObjectType):
             )
             if order.count() == 1:
                 product = OrderProduct.objects.get(order=order.first()).product
+                if "Headbangers" in product.name:
+                    isHeadbanger = True
                 status = 1
             else:
                 message = 'Not Valid / Not Purchased'
@@ -236,6 +244,7 @@ class Query(TicketStats, graphene.ObjectType):
             status=status,
             message=message,
             ticketNo=ticketNo,
+            isHeadBanger=isHeadbanger,
             userName=profile.user.first_name + ' ' + profile.user.last_name,
             productName=product,
             rollNo=profile.rollNo,
