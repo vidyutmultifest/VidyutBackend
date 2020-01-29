@@ -121,6 +121,7 @@ class SessionObj(graphene.ObjectType):
 class ValidateTicketObj(graphene.ObjectType):
     status = graphene.Boolean()
     message = graphene.String()
+    ticketNo = graphene.String()
     productName = graphene.String()
     userName = graphene.String()
     rollNo = graphene.String()
@@ -183,11 +184,16 @@ class Query(TicketStats, graphene.ObjectType):
                     message = 'Ticket already given.'
             else:
                 message = 'No ticket exists for the user'
+            ticket = PhysicalTicket.objects.filter(user=profile.user)
+            ticketNo = 'No Physical Ticket'
+            if ticket.count() == 1:
+                ticketNo = ticket.first().number
             if profile.photo and hasattr(profile.photo, 'url'):
                 photo = info.context.build_absolute_uri(profile.photo.url)
             return ValidateTicketObj(
                 status=status,
                 message=message,
+                ticketNo=ticketNo,
                 userName=profile.user.first_name + ' ' + profile.user.last_name,
                 productName=product,
                 rollNo=profile.rollNo,
@@ -219,12 +225,17 @@ class Query(TicketStats, graphene.ObjectType):
                 message = 'Not Valid / Not Purchased'
         else:
             message = 'Already Checked-In'
+        ticket = PhysicalTicket.objects.filter(user=profile.user)
+        ticketNo = 'No Physical Ticket'
+        if ticket.count() == 1:
+            ticketNo = ticket.first().number
         photo = None
         if profile.photo and hasattr(profile.photo, 'url'):
             photo = info.context.build_absolute_uri(profile.photo.url)
         return ValidateTicketObj(
             status=status,
             message=message,
+            ticketNo=ticketNo,
             userName=profile.user.first_name + ' ' + profile.user.last_name,
             productName=product,
             rollNo=profile.rollNo,
