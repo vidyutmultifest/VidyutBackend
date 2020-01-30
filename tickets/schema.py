@@ -160,7 +160,7 @@ class Query(TicketStats, graphene.ObjectType):
                     isHeadbanger = True
                 if PhysicalTicket.objects.filter(user=profile.user).count() == 0:
                     status = True
-                    message = 'Eligible for ticket - ' + product
+                    message = 'Eligible for ticket - ' + product.name
                     profilemsg = 'Profile Incomplete - '
                     if not profile.photo or not hasattr(profile.photo, 'url'):
                         isProfileComplete = False
