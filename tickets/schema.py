@@ -225,7 +225,7 @@ class Query(TicketStats, graphene.ObjectType):
                 products__in=products
             )
             if order.count() == 1:
-                product = OrderProduct.objects.get(order=order.first()).product.name
+                product = OrderProduct.objects.get(order=order.first()).product
                 if "Headbangers" in product.name:
                     isHeadbanger = True
                 status = 1
