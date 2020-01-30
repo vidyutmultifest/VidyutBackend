@@ -171,9 +171,6 @@ class Query(TicketStats, graphene.ObjectType):
                     if profile.phone is None or len(profile.phone) < 10:
                         isProfileComplete = False
                         profilemsg += ' Phone No., '
-                    if profile.rollNo is None or len(profile.rollNo) < 5:
-                        isProfileComplete = False
-                        profilemsg += ' Roll No., '
                     if profile.college is None:
                         isProfileComplete = False
                         profilemsg += ' College Name, '
