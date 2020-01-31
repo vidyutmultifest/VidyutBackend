@@ -138,7 +138,7 @@ class Query(TicketStats, graphene.ObjectType):
 
     @login_required
     def resolve_listSessions(self, info, **kwargs):
-        return CheckInSession.objects.all()
+        return CheckInSession.objects.filter(isActive=True)
 
     @login_required
     def resolve_checkForTicket(self, info, **kwargs):

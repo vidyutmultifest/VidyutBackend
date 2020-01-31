@@ -21,7 +21,7 @@ class CheckInSession(models.Model):
 
 
 class CheckIn(models.Model):
-    session = models.ForeignKey(CheckInSession, on_delete=models.PROTECT, null=True, blank=True)
+    session = models.ForeignKey(CheckInSession, on_delete=models.CASCADE, null=True, blank=True)
     generalCheckIn = models.BooleanField(default=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='checkInUser')
     issuer = models.ForeignKey(User, on_delete=models.PROTECT, related_name='checkInIssuer')
