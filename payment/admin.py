@@ -22,6 +22,12 @@ class OPInline(admin.TabularInline):
     form = select2
 
 
+@admin.register(Refund)
+class RefundAdmin(admin.ModelAdmin):
+    list_display = ('amount', 'issuer')
+    select2 = select2_modelform(Refund, attrs={'width': '250px'})
+    form = select2
+
 @admin.register(Transaction)
 class TransactionAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     list_display = ('transactionID', 'amount', 'user', 'isProcessed', 'isPending', 'isPaid', 'isOnline', 'issuer', 'timestamp', 'issuerLocation')

@@ -51,6 +51,11 @@ class OrderProduct(models.Model):
         verbose_name = "Order Product"
 
 
+class Refund(models.Model):
+    amount = models.PositiveIntegerField()
+    transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE)
+    timestamp = models.DateTimeField()
+    issuer = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
 # @receiver(post_save, sender=Transaction)
 # def onPayTrans(sender, instance, **kwargs):
 #     if instance.isPaid:
