@@ -28,6 +28,7 @@ class RefundAdmin(admin.ModelAdmin):
     select2 = select2_modelform(Refund, attrs={'width': '250px'})
     form = select2
 
+
 @admin.register(Transaction)
 class TransactionAdmin(ImportExportModelAdmin, admin.ModelAdmin):
     list_display = ('transactionID', 'amount', 'user', 'isProcessed', 'isPending', 'isPaid', 'isOnline', 'issuer', 'timestamp', 'issuerLocation')
